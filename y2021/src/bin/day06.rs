@@ -85,7 +85,7 @@ fn solve_sum<const RLEN: usize>(exp_mat: &[u128], fishy: &[u128]) -> u128 {
     let mut sum = 0;
     for i in 0..RLEN {
         for j in 0..RLEN {
-            sum += exp_mat[m_idx::<RLEN>(i, j)] * fishy[j] as u128;
+            sum += exp_mat[m_idx::<RLEN>(i, j)] * fishy[j];
         }
     }
     sum
