@@ -26,20 +26,20 @@ fn main() -> io::Result<()> {
                 let (round_pts, pt2_round_pts) = match (partial, point_val) {
                     // Generated with the following:
                     // ```zsh
-                    // print -lr '('{ROCK,PAPER,SCISSORS}', '{'ROCK) => (_, LOSE + _)','PAPER) => (_, DRAW + _)','SCISSORS) => (_, WIN + _)'}
+                    // print -lr '('{ROCK,PAPER,SCISSORS}', '{'ROCK) => (_ + ROCK, LOSE + _)','PAPER) => (_ + PAPER, DRAW + _)','SCISSORS) => (_ + SCISSORS, WIN + _)'}
                     // ```
-                    (ROCK, ROCK) => (DRAW, LOSE + SCISSORS),
-                    (ROCK, PAPER) => (WIN, DRAW + ROCK),
-                    (ROCK, SCISSORS) => (LOSE, WIN + PAPER),
-                    (PAPER, ROCK) => (LOSE, LOSE + ROCK),
-                    (PAPER, PAPER) => (DRAW, DRAW + PAPER),
-                    (PAPER, SCISSORS) => (WIN, WIN + SCISSORS),
-                    (SCISSORS, ROCK) => (WIN, LOSE + PAPER),
-                    (SCISSORS, PAPER) => (LOSE, DRAW + SCISSORS),
-                    (SCISSORS, SCISSORS) => (DRAW, WIN + ROCK),
+                    (ROCK, ROCK) => (DRAW + ROCK, LOSE + SCISSORS),
+                    (ROCK, PAPER) => (WIN + PAPER, DRAW + ROCK),
+                    (ROCK, SCISSORS) => (LOSE + SCISSORS, WIN + PAPER),
+                    (PAPER, ROCK) => (LOSE + ROCK, LOSE + ROCK),
+                    (PAPER, PAPER) => (DRAW + PAPER, DRAW + PAPER),
+                    (PAPER, SCISSORS) => (WIN + SCISSORS, WIN + SCISSORS),
+                    (SCISSORS, ROCK) => (WIN + ROCK, LOSE + PAPER),
+                    (SCISSORS, PAPER) => (LOSE + PAPER, DRAW + SCISSORS),
+                    (SCISSORS, SCISSORS) => (DRAW + SCISSORS, WIN + ROCK),
                     _ => panic!("Invalid input of {val}"),
                 };
-                (acc + point_val + round_pts, acc2 + pt2_round_pts, 0)
+                (acc + round_pts, acc2 + pt2_round_pts, 0)
             } else {
                 let point_val = (val - LHS_PLAY) as u64;
                 (acc, acc2, point_val)
