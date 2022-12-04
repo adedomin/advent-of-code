@@ -1,7 +1,7 @@
 #![feature(iter_array_chunks)]
 
 use std::io;
-use y2022::{read_input, AoCTokenizer, Token};
+use y2022::{destructure_or_none, read_input, AoCTokenizer, Token};
 
 const PRI_LOW: u8 = b'a' - 1;
 const PRI_HIGH: u8 = b'A' - 1;
@@ -36,13 +36,7 @@ fn main() -> io::Result<()> {
     let input = read_input()?;
     let tokenizer = AoCTokenizer::new(&input);
     let (part1, part2) = tokenizer
-        .flat_map(|token| {
-            if let Token::Something(rucksack) = token {
-                Some(rucksack)
-            } else {
-                None
-            }
-        })
+        .flat_map(|token| destructure_or_none!(Token::Something, token))
         .array_chunks()
         .fold((0u64, 0u64), |(p1_acc, p2_acc), elf_group: [&[u8]; 3]| {
             (
