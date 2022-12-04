@@ -23,6 +23,18 @@ use std::{
     ops::{Add, Mul},
 };
 
+/// Helper to destructure enums like Token::Something
+#[macro_export]
+macro_rules! destructure_or_none {
+    ($name:path, $value:expr) => {
+        if let $name(val) = $value {
+            Some(val)
+        } else {
+            None
+        }
+    };
+}
+
 pub type Vec2D<T> = Vec<Vec<T>>;
 
 use num::cast::AsPrimitive;
@@ -66,6 +78,17 @@ where
     acc * 10.as_() + (chr - b'0').as_()
 }
 
+/// Intended to be used with: .iter().fold(num, fold_decimal)
+pub fn fold_decimal_from<T>(number: &[u8]) -> T
+where
+    T: Copy + 'static,
+    T: Add<Output = T>,
+    T: Mul<Output = T>,
+    u8: num::traits::AsPrimitive<T>,
+{
+    number.iter().fold(0.as_(), fold_decimal)
+}
+
 #[derive(Debug)]
 pub enum Token<'a> {
     Something(&'a [u8]),
@@ -77,21 +100,21 @@ pub enum Token<'a> {
 }
 
 /// simple type for mapping over or getting the default
-pub enum Sigil<T> {
+pub enum Sentinel<T> {
     Unset(T),
     Value(T),
 }
 
-impl<T> Sigil<T> {
-    pub fn map<F: FnOnce(&T) -> T>(&self, fun: F) -> Sigil<T> {
+impl<T> Sentinel<T> {
+    pub fn map<F: FnOnce(&T) -> T>(&self, fun: F) -> Sentinel<T> {
         match self {
-            Sigil::Unset(v) => Sigil::Value(fun(v)),
-            Sigil::Value(v) => Sigil::Value(fun(v)),
+            Sentinel::Unset(v) => Sentinel::Value(fun(v)),
+            Sentinel::Value(v) => Sentinel::Value(fun(v)),
         }
     }
 
     pub fn is_unset(&self) -> bool {
-        matches!(self, Sigil::Unset(_))
+        matches!(self, Sentinel::Unset(_))
     }
 }
 

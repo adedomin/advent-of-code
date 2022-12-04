@@ -1,20 +1,20 @@
 #![feature(if_let_guard)]
 
 use std::io;
-use y2022::{fold_decimal, read_input, AoCTokenizer, Sigil, Token};
+use y2022::{fold_decimal, read_input, AoCTokenizer, Sentinel, Token};
 
 fn main() -> io::Result<()> {
     let input = read_input()?;
     let tokenizer = AoCTokenizer::new(&input);
 
-    let (top3, _) = tokenizer.fold(([0; 3], Sigil::Unset(0)), |(top3, total), token| {
+    let (top3, _) = tokenizer.fold(([0; 3], Sentinel::Unset(0)), |(top3, total), token| {
         match token {
             Token::Something(word) => {
                 let kcal = word.iter().fold(0, fold_decimal);
                 (top3, total.map(|&tot| tot + kcal))
             }
-            Token::DoubleNewline | Token::End if let Sigil::Value(total) = total => {
-                let unset = Sigil::Unset(0);
+            Token::DoubleNewline | Token::End if let Sentinel::Value(total) = total => {
+                let unset = Sentinel::Unset(0);
                 if top3[0] < total {
                     ([total, top3[0], top3[1]], unset)
                 } else if top3[1] < total {
