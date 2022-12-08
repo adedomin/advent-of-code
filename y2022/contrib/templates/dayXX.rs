@@ -1,4 +1,5 @@
 use std::io;
+use y2022::{read_input, AoCTokenizer, Token};
 
 type Output = Vec<something>;
 type Solved = i64;
@@ -7,11 +8,9 @@ fn parse_input(input: Vec<u8>) -> Output {
     let tokenizer = AoCTokenizer::new(&input);
 }
 
-fn part1_sol(input: Output) -> Solved  {
-}
+fn part1_sol(input: Output) -> Solved {}
 
-fn part2_sol(input: Output) -> Solved{
-}
+fn part2_sol(input: Output) -> Solved {}
 
 fn main() -> io::Result<()> {
     let input = read_input()?;
@@ -21,4 +20,3 @@ fn main() -> io::Result<()> {
     println!("Part1: {part1}, Part2: {part2}");
     Ok(())
 }
-
