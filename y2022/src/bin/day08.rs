@@ -45,7 +45,7 @@ fn solve_p1(trees: &FlatVec2D<Tree>) -> usize {
     }
 
     // 2 * (l+h)
-    let perimeter = (2 * ((xdim - 1) + (ydim - 1)));
+    let perimeter = 2 * ((xdim - 1) + (ydim - 1));
     vis_map.iter().filter(|&&v| v).count() + perimeter
 }
 

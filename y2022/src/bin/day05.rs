@@ -39,7 +39,6 @@ impl Display for Crates {
 }
 
 type Parsed = (Crates, Vec<Instructions>);
-type Solved = i64;
 
 const ALPHA_START: u8 = b'A' - 1;
 
