@@ -179,6 +179,13 @@ impl<T> Sentinel<T> {
         }
     }
 
+    pub fn map_mv<F: FnOnce(T)>(self, fun: F) {
+        match self {
+            Sentinel::Unset(v) => fun(v),
+            Sentinel::Value(v) => fun(v),
+        }
+    }
+
     pub fn is_unset(&self) -> bool {
         matches!(self, Sentinel::Unset(_))
     }
