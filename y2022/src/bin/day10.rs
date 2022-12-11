@@ -94,20 +94,6 @@ fn solve(input: &[Instruction]) -> (i64, CrtStates) {
         sum_arr[pc] = x_reg;
     });
 
-    //println!("{sum_arr:?}");
-
-    // let twenty = sum_arr[0..20].iter().sum::<i64>();
-    // let sixty = twenty + sum_arr[20..60].iter().sum::<i64>();
-    // let hundred = sixty + sum_arr[60..100].iter().sum::<i64>();
-    // let hundred_forty = hundred + sum_arr[100..140].iter().sum::<i64>();
-    // let hundred_eighty = hundred_forty + sum_arr[140..180].iter().sum::<i64>();
-    // let two_hundred_twenty = hundred_eighty + sum_arr[180..220].iter().sum::<i64>();
-    // let part1 = (twenty * 20)
-    //     + (sixty * 60)
-    //     + (hundred * 100)
-    //     + (hundred_forty * 140)
-    //     + (hundred_eighty * 180)
-    //     + (two_hundred_twenty * 220);
     let part1 = (sum_arr[19] * 20)
         + (sum_arr[59] * 60)
         + (sum_arr[99] * 100)
