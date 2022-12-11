@@ -69,7 +69,7 @@ fn parse_input(input: Vec<u8>) -> Parsed {
     crates.iter_mut().for_each(|stack| stack.reverse());
 
     let instructions = tokenizer
-        .flat_map(|token| destructure_or_none!(Token::Something, token))
+        .flat_map(|token| destructure_or_none!(Token::Something|word| = token))
         .filter(|token| !matches!(token, &b"move" | &b"from" | &b"to"))
         .array_chunks()
         .map(|[count, from, to]| {

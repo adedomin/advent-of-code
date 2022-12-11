@@ -36,7 +36,7 @@ fn main() -> io::Result<()> {
     let input = read_input()?;
     let tokenizer = AoCTokenizer::new(&input);
     let (part1, part2) = tokenizer
-        .flat_map(|token| destructure_or_none!(Token::Something, token))
+        .flat_map(|token| destructure_or_none!(Token::Something|word| = token))
         .array_chunks()
         .fold((0u64, 0u64), |(p1_acc, p2_acc), elf_group: [&[u8]; 3]| {
             (

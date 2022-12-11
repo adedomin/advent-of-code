@@ -5,7 +5,6 @@ use y2022::read_input;
 const START_OF_HEAD_OFF: usize = 4;
 const START_OF_MSG_OFF: usize = 14;
 
-/// macros are weird as fuck
 macro_rules! ne_for_all_permut {
     ($($el:ident),* $(,)?) => {
         ne_for_all_permut!(@inner $($el)*; $($el)*)

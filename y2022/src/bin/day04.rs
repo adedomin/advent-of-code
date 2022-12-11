@@ -8,7 +8,7 @@ type ElfPairs = ((i64, i64), (i64, i64));
 fn parse_input(input: Vec<u8>) -> Vec<ElfPairs> {
     let tokenizer = AoCTokenizer::new(&input);
     tokenizer
-        .flat_map(|token| destructure_or_none!(Token::Something, token))
+        .flat_map(|token| destructure_or_none!(Token::Something|word| = token))
         .map(fold_decimal_from)
         .array_chunks()
         .map(|[a1, a2, b1, b2]| ((a1, a2), (b1, b2)))

@@ -24,11 +24,16 @@ use std::{
 };
 
 /// Helper to destructure enums like Token::Something
+/// unfortunately Rust won't allow ( ) after a path capture
+///
+///  # Example
+///
+/// `destructure_or_none!(x::y::z|your, list, of, patterns| = val)`
 #[macro_export]
 macro_rules! destructure_or_none {
-    ($name:path, $value:expr) => {
-        if let $name(val) = $value {
-            Some(val)
+    ($name:path |$($parts:ident),* $(,)?| = $value:expr) => {
+        if let $name($($parts)*) = $value {
+            Some($($parts)*)
         } else {
             None
         }
