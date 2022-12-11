@@ -1,4 +1,3 @@
-#![feature(array_windows)]
 use std::io;
 use y2022::{fold_decimal, read_input, AoCTokenizer, Token};
 
@@ -65,7 +64,7 @@ fn manhattan_slope(lhs: (usize, usize), rhs: (usize, usize)) -> (isize, isize) {
 //     })
 // }
 
-fn windows_mut_each<T, const N: usize>(arr: &mut [T], mut f: impl FnMut(&mut [T; N])) {
+fn array_windows_mut_each<T, const N: usize>(arr: &mut [T], mut f: impl FnMut(&mut [T; N])) {
     let mut start = 0;
     let mut end = N;
     while end <= arr.len() {
@@ -89,7 +88,7 @@ fn solution(input: &[Instruction], rope: &mut [(usize, usize)]) -> usize {
                 Dir::Right => rope[0].1 += 1,
             }
             let mut iter = 1;
-            windows_mut_each(rope, |[(heady, headx), (taily, tailx)]| {
+            array_windows_mut_each(rope, |[(heady, headx), (taily, tailx)]| {
                 match manhattan_slope((*heady, *headx), (*taily, *tailx)) {
                     // need to move down
                     (-2, 0) => *taily -= 1,
