@@ -22,9 +22,9 @@ impl Display for CrtStates {
             let col = (i % CRT_W) as i64;
 
             if x_reg - 1 == col || x_reg == col || x_reg + 1 == col {
-                f.write_char('#')?;
+                f.write_char('█')?;
             } else {
-                f.write_char('.')?;
+                f.write_char('▁')?;
             }
 
             if col == 39 {
