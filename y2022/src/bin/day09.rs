@@ -100,66 +100,23 @@ fn solution(input: &[Instruction], rope: &mut [(usize, usize)]) -> usize {
                     (0, 2) => *tailx += 1,
 
                     // need to move down+left
-                    (-2, -1) => {
+                    (-2, -1) | (-1, -2) | (-2, -2) => {
                         *taily -= 1;
                         *tailx -= 1;
                     }
                     // need to move up+right
-                    (2, 1) => {
+                    (2, 1) | (1, 2) | (2, 2) => {
                         *taily += 1;
                         *tailx += 1;
                     }
                     // need to move down+right
-                    (-2, 1) => {
+                    (-2, 1) | (-1, 2) | (-2, 2) => {
                         *taily -= 1;
                         *tailx += 1;
                     }
                     // need to move up+left
-                    (2, -1) => {
+                    (2, -1) | (1, -2) | (2, -2) => {
                         *taily += 1;
-                        *tailx -= 1;
-                    }
-
-                    // need to move down+left
-                    (-1, -2) => {
-                        *taily -= 1;
-                        *tailx -= 1;
-                    }
-                    // need to move up+right
-                    (1, 2) => {
-                        *taily += 1;
-                        *tailx += 1;
-                    }
-                    // need to move down+right
-                    (-1, 2) => {
-                        *taily -= 1;
-                        *tailx += 1;
-                    }
-                    // need to move up+left
-                    (1, -2) => {
-                        *taily += 1;
-                        *tailx -= 1;
-                    }
-
-                    // longer rope situations only
-                    // up+right
-                    (2, 2) if rope_pairs > 1 => {
-                        *taily += 1;
-                        *tailx += 1;
-                    }
-                    // down+right
-                    (-2, 2) if rope_pairs > 1 => {
-                        *taily -= 1;
-                        *tailx += 1;
-                    }
-                    // up+left
-                    (2, -2) if rope_pairs > 1 => {
-                        *taily += 1;
-                        *tailx -= 1;
-                    }
-                    // down+left
-                    (-2, -2) if rope_pairs > 1 => {
-                        *taily -= 1;
                         *tailx -= 1;
                     }
 
