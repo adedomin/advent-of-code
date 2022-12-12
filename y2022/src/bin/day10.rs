@@ -2,7 +2,7 @@ use std::{
     fmt::{Display, Write},
     io,
 };
-use y2022::{fold_decimal, read_input, AoCTokenizer, Sentinel, Token};
+use y2022::{fold_decimal, read_input, AoCTokenizer, Token};
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 enum Instruction {
@@ -39,11 +39,17 @@ fn parse_input(input: Vec<u8>) -> Vec<Instruction> {
     let tokenizer = AoCTokenizer::new(&input);
     tokenizer
         .fold(
-            (Vec::new(), Sentinel::Unset(Instruction::Noop), false),
+            (Vec::new(), None, false),
             |(mut acc, instruction, is_neg), token| match token {
-                Token::Something(word) if instruction.is_unset() => match word {
-                    b"noop" => (acc, Sentinel::Value(Instruction::Noop), false),
-                    b"addx" => (acc, Sentinel::Value(Instruction::Add), false),
+                Token::Something(word) if instruction.is_none() => match word {
+                    b"noop" => {
+                        acc.push(Instruction::Noop);
+                        (acc, None, false)
+                    }
+                    b"addx" => {
+                        acc.push(Instruction::Add);
+                        (acc, Some(Instruction::Add), false)
+                    }
                     _ => {
                         let word = word.escape_ascii();
                         panic!("Invalid instruction: {word}")
@@ -51,27 +57,15 @@ fn parse_input(input: Vec<u8>) -> Vec<Instruction> {
                 },
                 Token::Something(word) => {
                     let num = word.iter().fold(0, fold_decimal) * if is_neg { -1 } else { 1 };
-                    (
-                        acc,
-                        instruction.map(|&instr| {
-                            if instr == Instruction::Add {
-                                Instruction::AddX(num)
-                            } else {
-                                instr
-                            }
-                        }),
-                        false,
-                    )
-                }
-                Token::Delimiter(is_neg) if is_neg == b'-' => (acc, instruction, true),
-                Token::Newline | Token::End if !instruction.is_unset() => {
-                    instruction.map_mv(|instr| {
+                    if let Some(instr) = instruction {
                         if instr == Instruction::Add {
-                            panic!("add operator does not have a value!.");
+                            acc.push(Instruction::AddX(num));
                         }
-                        acc.push(instr);
-                    });
-                    (acc, Sentinel::Unset(Instruction::Noop), false)
+                    }
+                    (acc, None, false)
+                }
+                Token::Delimiter(delim) if instruction.is_some() => {
+                    (acc, instruction, delim == b'-')
                 }
                 _ => (acc, instruction, is_neg),
             },
@@ -80,19 +74,18 @@ fn parse_input(input: Vec<u8>) -> Vec<Instruction> {
 }
 
 fn solve(input: &[Instruction]) -> (i64, CrtStates) {
-    let mut sum_arr = vec![0i64; input.len() * 2];
-    sum_arr[0] = 1;
-    let mut x_reg = sum_arr[0];
-    let mut pc = 0usize;
-    input.iter().for_each(|&instr| {
-        pc += 1;
-        if let Instruction::AddX(val) = instr {
-            sum_arr[pc] = x_reg;
-            pc += 1;
-            x_reg += val;
-        }
-        sum_arr[pc] = x_reg;
-    });
+    let sum_arr = input
+        .iter()
+        .fold((vec![1], 1i64), |(mut acc, sum), &instr| {
+            let sum = if let Instruction::AddX(val) = instr {
+                val + sum
+            } else {
+                sum
+            };
+            acc.push(sum);
+            (acc, sum)
+        })
+        .0;
 
     let part1 = (sum_arr[19] * 20)
         + (sum_arr[59] * 60)
