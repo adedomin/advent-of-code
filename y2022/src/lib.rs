@@ -127,6 +127,32 @@ pub fn read_input_to_string() -> io::Result<String> {
     }
 }
 
+/// simple type for mapping over or getting the default
+pub enum Sentinel<T> {
+    Unset(T),
+    Value(T),
+}
+
+impl<T> Sentinel<T> {
+    pub fn map<F: FnOnce(&T) -> T>(&self, fun: F) -> Sentinel<T> {
+        match self {
+            Sentinel::Unset(v) => Sentinel::Value(fun(v)),
+            Sentinel::Value(v) => Sentinel::Value(fun(v)),
+        }
+    }
+
+    pub fn map_mv<F: FnOnce(T)>(self, fun: F) {
+        match self {
+            Sentinel::Unset(v) => fun(v),
+            Sentinel::Value(v) => fun(v),
+        }
+    }
+
+    pub fn is_unset(&self) -> bool {
+        matches!(self, Sentinel::Unset(_))
+    }
+}
+
 pub struct AoCTokenizer<'a> {
     head: usize,
     done: bool,
@@ -155,7 +181,7 @@ where
     number.iter().fold(0.as_(), fold_decimal)
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub enum Token<'a> {
     Something(&'a [u8]),
     Delimiter(u8),
@@ -163,32 +189,6 @@ pub enum Token<'a> {
     DoubleNewline,
     Space,
     End,
-}
-
-/// simple type for mapping over or getting the default
-pub enum Sentinel<T> {
-    Unset(T),
-    Value(T),
-}
-
-impl<T> Sentinel<T> {
-    pub fn map<F: FnOnce(&T) -> T>(&self, fun: F) -> Sentinel<T> {
-        match self {
-            Sentinel::Unset(v) => Sentinel::Value(fun(v)),
-            Sentinel::Value(v) => Sentinel::Value(fun(v)),
-        }
-    }
-
-    pub fn map_mv<F: FnOnce(T)>(self, fun: F) {
-        match self {
-            Sentinel::Unset(v) => fun(v),
-            Sentinel::Value(v) => fun(v),
-        }
-    }
-
-    pub fn is_unset(&self) -> bool {
-        matches!(self, Sentinel::Unset(_))
-    }
 }
 
 impl<'a> AoCTokenizer<'a> {
@@ -247,5 +247,36 @@ impl<'a> Iterator for AoCTokenizer<'a> {
             b' ' => Some(Token::Space),
             x => Some(Token::Delimiter(x)),
         }
+    }
+}
+
+pub struct RecordGrouper<'a> {
+    token_tmp: Vec<Token<'a>>,
+    tokenizer: AoCTokenizer<'a>,
+}
+
+impl<'a> RecordGrouper<'a> {
+    pub fn new(input: &'a [u8]) -> Self {
+        RecordGrouper {
+            token_tmp: vec![],
+            tokenizer: AoCTokenizer::new(input),
+        }
+    }
+}
+
+impl<'a> Iterator for RecordGrouper<'a> {
+    type Item = Vec<Token<'a>>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        for token in self.tokenizer.by_ref() {
+            if (token == Token::DoubleNewline || token == Token::End) && !self.token_tmp.is_empty()
+            {
+                return Some(std::mem::take(&mut self.token_tmp));
+            }
+
+            self.token_tmp.push(token);
+        }
+
+        None
     }
 }
