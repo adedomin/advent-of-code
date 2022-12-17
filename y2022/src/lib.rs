@@ -253,6 +253,7 @@ impl<'a> Iterator for AoCTokenizer<'a> {
 pub struct RecordGrouper<'a> {
     token_tmp: Vec<Token<'a>>,
     tokenizer: AoCTokenizer<'a>,
+    record_sep: Token<'a>,
 }
 
 impl<'a> RecordGrouper<'a> {
@@ -260,6 +261,15 @@ impl<'a> RecordGrouper<'a> {
         RecordGrouper {
             token_tmp: vec![],
             tokenizer: AoCTokenizer::new(input),
+            record_sep: Token::DoubleNewline,
+        }
+    }
+
+    pub fn new_with_rs(input: &'a [u8], record_sep: Token<'a>) -> Self {
+        RecordGrouper {
+            token_tmp: vec![],
+            tokenizer: AoCTokenizer::new(input),
+            record_sep,
         }
     }
 }
@@ -269,8 +279,7 @@ impl<'a> Iterator for RecordGrouper<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         for token in self.tokenizer.by_ref() {
-            if (token == Token::DoubleNewline || token == Token::End) && !self.token_tmp.is_empty()
-            {
+            if (token == self.record_sep || token == Token::End) && !self.token_tmp.is_empty() {
                 return Some(std::mem::take(&mut self.token_tmp));
             }
 
