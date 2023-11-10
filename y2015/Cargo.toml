@@ -1,0 +1,18 @@
+[package]
+name = "y2015"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+num = "0.4.1"
+aoc-shared = { path = "../aoc-shared" }
+md5 = "0.7.0"
+rayon = "1.8.0"
+itoa = "1.0.9"
+
+[dependencies.regex]
+version = "1.10.2"
+default-features = false
+features = ["std", "perf"]

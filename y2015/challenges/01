@@ -1,0 +1,74 @@
+[1]Advent of Code
+
+     * [2][About]
+     * [3][Events]
+     * [4][Shop]
+     * [5][Settings]
+     * [6][Log Out]
+
+   adedomin
+
+  {:year [7]2015}
+
+     * [8][Calendar]
+     * [9][AoC++]
+     * [10][Sponsors]
+     * [11][Leaderboard]
+     * [12][Stats]
+
+--- Day 1: Not Quite Lisp ---
+
+   Santa was hoping for a white Christmas, but his weather machine's
+   "snow" function is powered by stars, and he's fresh out! To save
+   Christmas, he needs you to collect fifty stars by December 25th.
+
+   Collect stars by helping Santa solve puzzles. Two puzzles will be made
+   available on each day in the Advent calendar; the second puzzle is
+   unlocked when you complete the first. Each puzzle grants one star. Good
+   luck!
+
+   Here's an easy puzzle to warm you up.
+
+   Santa is trying to deliver presents in a large apartment building, but
+   he can't find the right floor - the directions he got are a little
+   confusing. He starts on the ground floor (floor 0) and then follows the
+   instructions one character at a time.
+
+   An opening parenthesis, (, means he should go up one floor, and a
+   closing parenthesis, ), means he should go down one floor.
+
+   The apartment building is very tall, and the basement is very deep; he
+   will never find the top or bottom floors.
+
+   For example:
+     * (()) and ()() both result in floor 0.
+     * ((( and (()(()( both result in floor 3.
+     * ))((((( also results in floor 3.
+     * ()) and ))( both result in floor -1 (the first basement level).
+     * ))) and )())()) both result in floor -3.
+
+   To what floor do the instructions take Santa?
+
+   To begin, [13]get your puzzle input.
+
+   Answer: ____________________ [Submit]
+
+   You can also [Shareon [14]Twitter [15]Mastodon] this puzzle.
+
+References
+
+   1. file:///
+   2. file:///2015/about
+   3. file:///2015/events
+   4. https://teespring.com/stores/advent-of-code
+   5. file:///2015/settings
+   6. file:///2015/auth/logout
+   7. file:///2015
+   8. file:///2015
+   9. file:///2015/support
+  10. file:///2015/sponsors
+  11. file:///2015/leaderboard
+  12. file:///2015/stats
+  13. file:///home/prussian/1/input
+  14. https://twitter.com/intent/tweet?text="Not+Quite+Lisp"+-+Day+1+-+Advent+of+Code+2015&url=https://adventofcode.com/2015/day/1&related=ericwastl&hashtags=AdventOfCode
+  15. javascript:void(0);
