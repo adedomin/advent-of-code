@@ -1,7 +1,6 @@
-#![feature(array_windows)]
 use std::io;
 
-use aoc_shared::{read_input, AoCTokenizer, Token};
+use aoc_shared::{array_windows, read_input, AoCTokenizer, Token};
 
 const ALPHAMAX: usize = 26;
 const ALPHADIM: usize = 26 * 26;
@@ -20,7 +19,7 @@ fn parse(input: Vec<u8>) -> ([u64; ALPHADIM], [(usize, usize); ALPHADIM], u8) {
     let (start_cond, rules) = input.split_at(input.iter().position(|&chr| chr == b'\n').unwrap());
 
     let mut vector_hist = [0u64; ALPHADIM];
-    start_cond.array_windows::<2>().for_each(|&[st, ed]| {
+    array_windows(&start_cond).for_each(|&[st, ed]| {
         vector_hist[pair_to_num((st, ed))] += 1;
     });
 

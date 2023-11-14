@@ -17,6 +17,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+mod array_window;
+pub use array_window::*;
+
 use std::{
     env, fs,
     io::{self, Read},
@@ -36,6 +39,16 @@ macro_rules! destructure_or_none {
             Some($($parts)*)
         } else {
             None
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! debug {
+    ($($args:tt)*) => {
+        #[cfg(debug_assertions)]
+        {
+            println!($($args)+)
         }
     };
 }

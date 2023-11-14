@@ -1,7 +1,7 @@
 #![feature(iter_array_chunks)]
 
-use std::io;
 use aoc_shared::{destructure_or_none, read_input, AoCTokenizer, Token};
+use std::io;
 
 const PRI_LOW: u8 = b'a' - 1;
 const PRI_HIGH: u8 = b'A' - 1;

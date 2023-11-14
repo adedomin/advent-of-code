@@ -1,7 +1,5 @@
-#![feature(if_let_guard)]
-
-use std::io;
 use aoc_shared::{read_input, AoCTokenizer, Token};
+use std::io;
 
 const LHS_PLAY: u8 = b'A' - 1u8;
 // const LHS_START: u8 = b'A';

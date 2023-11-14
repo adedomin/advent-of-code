@@ -1,6 +1,6 @@
 use std::io;
 
-use y2015::{fold_decimal_from, read_input};
+use aoc_shared::{fold_decimal_from, read_input};
 
 #[derive(Debug)]
 struct Present {

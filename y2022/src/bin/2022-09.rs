@@ -1,5 +1,5 @@
-use std::io;
 use aoc_shared::{fold_decimal, read_input, AoCTokenizer, Token};
+use std::io;
 
 #[derive(Debug, Clone, Copy)]
 enum Dir {

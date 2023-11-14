@@ -1,12 +1,10 @@
-#![feature(array_windows)]
 use std::io;
 
-use aoc_shared::read_input_to_string;
+use aoc_shared::{array_windows, read_input_to_string};
 
 /// Where N - 1 is the window size
 pub fn solve<const N: usize>(input: &[u64]) -> u64 {
-    input
-        .array_windows::<N>()
+    array_windows::<_, N>(input)
         .filter(|&w| w[0] < w[N - 1])
         .count() as u64
 }
