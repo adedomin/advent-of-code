@@ -55,6 +55,15 @@ macro_rules! debug {
 
 pub struct FlatVec2D<T>(pub Vec<T>, pub usize, pub usize);
 
+impl<T> FlatVec2D<T> {
+    pub fn new(xdim: usize, ydim: usize) -> Self
+    where
+        T: Default + Clone,
+    {
+        FlatVec2D(vec![T::default(); xdim * ydim], xdim, ydim)
+    }
+}
+
 impl<T> Index<(usize, usize)> for FlatVec2D<T> {
     type Output = T;
 
@@ -89,6 +98,22 @@ pub fn flat_coord_rot(x: usize, y: usize, xdim: usize, ydim: usize, rot: Rot2D) 
         Rot2D::Clock90 => flat_coord((ydim - 1) - y, x, ydim),
         Rot2D::Clock180 => flat_coord((xdim - 1) - x, (ydim - 1) - y, xdim),
         Rot2D::Clock270 => flat_coord(y, (xdim - 1) - x, ydim),
+    }
+}
+
+impl<T> Index<(usize, usize, Rot2D)> for FlatVec2D<T> {
+    type Output = T;
+
+    fn index(&self, index: (usize, usize, Rot2D)) -> &Self::Output {
+        let (x, y, rot) = index;
+        &self.0[flat_coord_rot(x, y, self.1, self.2, rot)]
+    }
+}
+
+impl<T> IndexMut<(usize, usize, Rot2D)> for FlatVec2D<T> {
+    fn index_mut(&mut self, index: (usize, usize, Rot2D)) -> &mut Self::Output {
+        let (x, y, rot) = index;
+        &mut self.0[flat_coord_rot(x, y, self.1, self.2, rot)]
     }
 }
 
@@ -192,6 +217,60 @@ where
     u8: num::traits::AsPrimitive<T>,
 {
     number.iter().fold(0.as_(), fold_decimal)
+}
+
+pub struct AtoiErr {
+    radix: u8,
+    value: u8,
+    idx: usize,
+}
+
+impl std::fmt::Debug for AtoiErr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(self, f)
+    }
+}
+
+impl std::fmt::Display for AtoiErr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!(
+            "value {}, parsed at idx {}, is too large for base {}.",
+            self.value, self.idx, self.radix
+        ))
+    }
+}
+
+/// Function to convert a byte array into a integer of type T using a base of 2 through 36.
+/// RADIX has to be between 2 and 36, or it will runtime panic.
+/// Function returns None, if the bytes cannot be parsed into a correct number.
+pub fn atoi<T, const RADIX: u8>(number: &[u8]) -> Result<T, AtoiErr>
+where
+    T: Copy + 'static,
+    T: Add<Output = T>,
+    T: Mul<Output = T>,
+    u8: num::traits::AsPrimitive<T>,
+{
+    assert!(RADIX > 1 && RADIX < 37);
+    number
+        .iter()
+        .enumerate()
+        .try_fold(0.as_(), |acc, (pos, &chr)| {
+            let val = (match chr {
+                b'0'..=b'9' => chr,
+                b'A'..=b'Z' => chr - 7, // b'9' to b'A' has 7 other chars between
+                b'a'..=b'z' => chr - 39, // b'9' to b'a' has 39 other chars between it.
+                _ => 255,               // junk.
+            } - b'0');
+            if RADIX <= val {
+                Err(AtoiErr {
+                    radix: RADIX,
+                    value: val,
+                    idx: pos,
+                })
+            } else {
+                Ok(acc * RADIX.as_() + val.as_())
+            }
+        })
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
