@@ -17,20 +17,20 @@ enum OpTreeTok {
     NOOP,
 }
 
-enum Either<T> {
-    Left(T),
-    Right(T),
+enum Dir {
+    Left,
+    Right,
 }
 
 #[derive(Clone, Debug)]
 struct Op(OpTreeTok, Option<OpTreeTok>, Option<OpTreeTok>);
 
 impl Op {
-    fn eval(&self) -> Result<u16, Either<u16>> {
+    fn eval(&self) -> Result<u16, (Dir, u16)> {
         use OpTreeTok::*;
-        fn get_rhs_and(op: OpTreeTok, lhs: u16, rhs: OpTreeTok) -> Result<u16, Either<u16>> {
+        fn get_rhs_and(op: OpTreeTok, lhs: u16, rhs: OpTreeTok) -> Result<u16, (Dir, u16)> {
             match rhs {
-                Ident(i) => Err(Either::Right(i)),
+                Ident(i) => Err((Dir::Right, i)),
                 Literal(val) => match op {
                     OpOr => Ok(lhs | val),
                     OpAnd => Ok(lhs & val),
@@ -44,7 +44,7 @@ impl Op {
         let Op(op, lhs, rhs) = self;
         if let Some(lhs) = lhs {
             match lhs {
-                Ident(i) => Err(Either::Left(*i)),
+                Ident(i) => Err((Dir::Left, *i)),
                 Literal(lhs) => match op {
                     NOOP => Ok(*lhs),
                     OpNot => Ok(!*lhs),
@@ -132,36 +132,32 @@ fn part1_sol(input: &Output, solve_for: u16) -> Solved {
     let mut stack = vec![(solve_for, start_op)];
     while let Some((var, op)) = stack.pop() {
         debug!("{:-width$} <- {op:?}", var, width = stack.len());
+        if stack.len() == input.len() {
+            panic!("We're probably infinite looping.");
+        }
         match op.eval() {
             Ok(solved) => {
                 resolved[var as usize] = Some(solved);
             }
-            Err(unident) => match unident {
-                Either::Left(lhs) => {
-                    if let Some(val) = resolved[lhs as usize] {
-                        stack.push((var, Op(op.0, Some(OpTreeTok::Literal(val)), op.2)));
-                    } else {
-                        stack.push((var, op));
-                        let solve_op = input
-                            .get(&lhs)
-                            .expect("no such value to solve for.")
-                            .clone();
-                        stack.push((lhs, solve_op))
+            Err((direction, unident)) => {
+                if let Some(val) = resolved[unident as usize] {
+                    match direction {
+                        Dir::Left => {
+                            stack.push((var, Op(op.0, Some(OpTreeTok::Literal(val)), op.2)))
+                        }
+                        Dir::Right => {
+                            stack.push((var, Op(op.0, op.1, Some(OpTreeTok::Literal(val)))))
+                        }
                     }
+                } else {
+                    stack.push((var, op));
+                    let solve_op = input
+                        .get(&unident)
+                        .expect("no such value to solve for.")
+                        .clone();
+                    stack.push((unident, solve_op))
                 }
-                Either::Right(rhs) => {
-                    if let Some(val) = resolved[rhs as usize] {
-                        stack.push((var, Op(op.0, op.1, Some(OpTreeTok::Literal(val)))));
-                    } else {
-                        stack.push((var, op));
-                        let solve_op = input
-                            .get(&rhs)
-                            .expect("no such value to solve for.")
-                            .clone();
-                        stack.push((rhs, solve_op))
-                    }
-                }
-            },
+            }
         };
     }
     resolved[solve_for as usize].expect("Could not resolve given variable.")
@@ -170,8 +166,8 @@ fn part1_sol(input: &Output, solve_for: u16) -> Solved {
 fn main() -> io::Result<()> {
     let input = read_input()?;
     let mut parsed_input = parse_input(input);
-    let part1 = part1_sol(&parsed_input, atoi::<u16, 36>(b"a"));
-    // part2 requires making a new rule: part1 -> b and rerunning, solving for a.
+    let part1 = part1_sol(&parsed_input, atoi::<_, 36>(b"a"));
+    // part2 requires changing a rule for wire b: part1 -> b, and rerunning, solving for wire a.
     parsed_input.insert(
         atoi::<_, 36>(b"b"),
         Op(OpTreeTok::NOOP, Some(OpTreeTok::Literal(part1)), None),
