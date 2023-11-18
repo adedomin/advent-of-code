@@ -1,3 +1,5 @@
+use std::iter::FusedIterator;
+
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum Token<'a> {
     Something(&'a [u8]),
@@ -111,3 +113,5 @@ impl<'a> Iterator for RecordGrouper<'a> {
         None
     }
 }
+
+impl<'a> FusedIterator for AoCTokenizer<'a> {}

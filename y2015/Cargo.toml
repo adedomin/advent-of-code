@@ -11,6 +11,7 @@ aoc-shared = { path = "../aoc-shared" }
 md5 = "0.7.0"
 rayon = "1.8.0"
 itoa = "1.0.9"
+itertools = "0.12.0"
 
 [dependencies.regex]
 version = "1.10.2"
