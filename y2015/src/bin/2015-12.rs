@@ -63,52 +63,56 @@ impl<'a> Add<&'a Obj> for Obj {
 
 // same as first, but with more annoyances.
 fn parse_and_solve_p2(input: &[u8]) -> i64 {
-    let (stack, _, _, _, objsum) = AoCTokenizer::new(input).fold(
-        (Vec::new(), 1, false, false, Obj::default()),
-        |(mut stack, sign, in_str, in_prop, objsum), token| match token {
-            Token::Something(word) if !in_str => {
-                let parsed = Obj::Sum(sign * atoi::<i64, 10>(word));
-                (stack, 1, in_str, false, objsum + parsed)
-            }
-            Token::Something(word) if in_prop => {
-                let new_obj = if word == b"red" { Obj::Red } else { objsum };
-                (stack, sign, in_str, false, new_obj)
-            }
-            Token::Delimiter(delim) if delim == b'-' && !in_str => {
-                (stack, -1, in_str, false, objsum)
-            }
-            Token::Delimiter(delim) if delim == b'"' && in_str => {
-                (stack, sign, false, false, objsum)
-            }
-            // This is the only case, other than b':", where we preserve
-            // if it's an object property.
-            Token::Delimiter(delim) if delim == b'"' && !in_str => {
-                (stack, sign, true, in_prop, objsum)
-            }
-            // Who cares about arrays? "red" the value only matters
-            // if it's an object property. so ya.
-            Token::Delimiter(delim) if delim == b':' && !in_str => {
-                (stack, sign, in_str, true, objsum)
-            }
-            Token::Delimiter(delim) if delim == b'{' && !in_str => {
-                stack.push(objsum);
-                (stack, sign, in_str, false, Obj::default())
-            }
-            Token::Delimiter(delim) if delim == b'}' && !in_str => {
-                let old_obj = stack.pop().expect("expected at least one object on stack");
-                let objsum = match objsum {
-                    Obj::Red => Obj::default(),
-                    Obj::Sum(_) => objsum,
-                } + old_obj;
-                (stack, sign, in_str, false, objsum)
-            }
-            _ => (stack, sign, in_str, false, objsum),
-        },
-    );
-
-    if !stack.is_empty() {
-        panic!("expected stack to be empty!");
-    }
+    let objsum = AoCTokenizer::new(input)
+        .fold(
+            (Vec::new(), 1, false, false, Obj::default()),
+            |(mut stack, sign, in_str, in_prop, objsum), token| match token {
+                Token::Something(word) if !in_str => {
+                    let parsed = Obj::Sum(sign * atoi::<i64, 10>(word));
+                    (stack, 1, in_str, false, objsum + parsed)
+                }
+                Token::Something(word) if in_prop => {
+                    let new_obj = if word == b"red" { Obj::Red } else { objsum };
+                    (stack, sign, in_str, false, new_obj)
+                }
+                Token::Delimiter(delim) if delim == b'-' && !in_str => {
+                    (stack, -1, in_str, false, objsum)
+                }
+                Token::Delimiter(delim) if delim == b'"' && in_str => {
+                    (stack, sign, false, false, objsum)
+                }
+                // This is the only case, other than b':", where we preserve
+                // if it's an object property.
+                Token::Delimiter(delim) if delim == b'"' && !in_str => {
+                    (stack, sign, true, in_prop, objsum)
+                }
+                // Who cares about arrays? "red" the value only matters
+                // if it's an object property. so ya.
+                Token::Delimiter(delim) if delim == b':' && !in_str => {
+                    (stack, sign, in_str, true, objsum)
+                }
+                Token::Delimiter(delim) if delim == b'{' && !in_str => {
+                    stack.push(objsum);
+                    (stack, sign, in_str, false, Obj::default())
+                }
+                Token::Delimiter(delim) if delim == b'}' && !in_str => {
+                    let old_obj = stack.pop().expect("expected at least one object on stack");
+                    let objsum = match objsum {
+                        Obj::Red => Obj::default(),
+                        Obj::Sum(_) => objsum,
+                    } + old_obj;
+                    (stack, sign, in_str, false, objsum)
+                }
+                Token::End => {
+                    if !stack.is_empty() {
+                        panic!("Invalid json. Not enough closing brackets.")
+                    }
+                    (stack, sign, in_str, false, objsum)
+                }
+                _ => (stack, sign, in_str, false, objsum),
+            },
+        )
+        .4;
     match objsum {
         Obj::Red => 0,
         Obj::Sum(val) => val,
