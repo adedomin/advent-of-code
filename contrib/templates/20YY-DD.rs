@@ -1,16 +1,16 @@
 use aoc_shared::{read_input, AoCTokenizer, Token};
 use std::io;
 
-type Output = Vec<something>;
+type Output = Vec<!>;
 type Solved = i64;
 
 fn parse_input(input: Vec<u8>) -> Output {
     let tokenizer = AoCTokenizer::new(&input);
 }
 
-fn part1_sol(input: Output) -> Solved {}
+fn part1_sol(input: &Output) -> Solved {}
 
-fn part2_sol(input: Output) -> Solved {}
+fn part2_sol(input: &Output) -> Solved {}
 
 fn main() -> io::Result<()> {
     let input = read_input()?;
