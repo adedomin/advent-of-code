@@ -306,8 +306,8 @@ fn parse(input: Vec<u8>) -> Vec<Snailnum> {
             }
             Token::Delimiter(sep) if sep == b']' => {
                 let right = stack.pop().expect("Malformed Snailnum.");
-                let left = stack.pop().expect("Mailformed Snailnum.");
-                let root = stack.pop().expect("Mailformed Snailnum.");
+                let left = stack.pop().expect("Malformed Snailnum.");
+                let root = stack.pop().expect("Malformed Snailnum.");
 
                 match root {
                     Either::Left(node) => {

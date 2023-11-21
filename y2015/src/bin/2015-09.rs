@@ -1,4 +1,4 @@
-use aoc_shared::{debug, fold_decimal, read_input};
+use aoc_shared::{fold_decimal, read_input};
 use itertools::Itertools;
 use regex::bytes::Regex;
 use std::{
