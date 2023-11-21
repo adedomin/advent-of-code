@@ -115,3 +115,13 @@ impl<'a> Iterator for RecordGrouper<'a> {
 }
 
 impl<'a> FusedIterator for AoCTokenizer<'a> {}
+
+pub trait Tokenize<'a> {
+    fn tokenize(self) -> AoCTokenizer<'a>;
+}
+
+impl<'a> Tokenize<'a> for &'a [u8] {
+    fn tokenize(self) -> AoCTokenizer<'a> {
+        AoCTokenizer::new(self)
+    }
+}
