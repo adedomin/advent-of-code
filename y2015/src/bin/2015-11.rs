@@ -86,7 +86,7 @@ mod test {
         assert!(!ts_contains_req(ts_to_u64(b"hijklmmn")));
         assert!(!ts_contains_req(ts_to_u64(b"abbceffg")));
         assert!(!ts_contains_req(ts_to_u64(b"abbcegjk")));
-        assert!(ts_contains_req(ts_to_u64(b"abcdfaaa")));
+        assert!(!ts_contains_req(ts_to_u64(b"abcdfaaa")));
         assert!(ts_contains_req(ts_to_u64(b"abcdffaa")));
         assert!(ts_contains_req(ts_to_u64(b"ghjaabcc")));
     }

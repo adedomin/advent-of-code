@@ -1,4 +1,7 @@
-use std::ops::{Index, IndexMut};
+use std::{
+    fmt::Write,
+    ops::{Index, IndexMut},
+};
 
 pub struct FlatVec2D<T>(pub Vec<T>, pub usize, pub usize);
 
@@ -24,6 +27,18 @@ impl<T> IndexMut<(usize, usize)> for FlatVec2D<T> {
     fn index_mut(&mut self, index: (usize, usize)) -> &mut Self::Output {
         let (x, y) = index;
         &mut self.0[flat_coord(x, y, self.1)]
+    }
+}
+
+impl<T: std::fmt::Debug> std::fmt::Debug for FlatVec2D<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for i in 0..self.1 {
+            for j in 0..self.2 {
+                std::fmt::Debug::fmt(&self[(i, j)], f)?;
+            }
+            f.write_char('\n')?;
+        }
+        Ok(())
     }
 }
 
