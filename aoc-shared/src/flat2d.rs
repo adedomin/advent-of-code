@@ -3,6 +3,7 @@ use std::{
     ops::{Index, IndexMut},
 };
 
+#[derive(Clone)]
 pub struct FlatVec2D<T>(pub Vec<T>, pub usize, pub usize);
 
 impl<T> FlatVec2D<T> {
@@ -11,6 +12,24 @@ impl<T> FlatVec2D<T> {
         T: Default + Clone,
     {
         FlatVec2D(vec![T::default(); xdim * ydim], xdim, ydim)
+    }
+
+    /// Get all adjacent (including diagonal) neighbors, filtering for those out of bounds.
+    pub fn get_neigh(&self, x: usize, y: usize) -> Vec<&T> {
+        let x = x as isize;
+        let y = y as isize;
+        #[rustfmt::skip]
+        let mut ret = vec![
+            (x - 1, y - 1), (x, y - 1), (x + 1, y - 1),
+            (x - 1, y    ),             (x + 1, y    ),
+            (x - 1, y + 1), (x, y + 1), (x + 1, y + 1),
+        ];
+        ret.drain(..)
+            .filter(|&(x, y)| {
+                (x > -1 && x < (self.1 as isize)) && (y > -1 && y < (self.2 as isize))
+            })
+            .map(|(x, y)| &self[(x as usize, y as usize)])
+            .collect::<Vec<&T>>()
     }
 }
 
@@ -32,9 +51,9 @@ impl<T> IndexMut<(usize, usize)> for FlatVec2D<T> {
 
 impl<T: std::fmt::Debug> std::fmt::Debug for FlatVec2D<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for i in 0..self.1 {
-            for j in 0..self.2 {
-                std::fmt::Debug::fmt(&self[(i, j)], f)?;
+        for y in 0..self.2 {
+            for x in 0..self.1 {
+                std::fmt::Debug::fmt(&self[(x, y)], f)?;
             }
             f.write_char('\n')?;
         }
