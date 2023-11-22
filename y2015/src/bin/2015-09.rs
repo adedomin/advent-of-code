@@ -60,11 +60,7 @@ fn part1_2_sol<'a>(
         .permutations(cities.len())
         .flat_map(|perm| {
             perm.iter().tuple_windows().try_fold(0u64, |acc, (c1, c2)| {
-                if let Some(cost) = costs.get(&gen_city_pair(c1, c2)) {
-                    Some(acc + cost)
-                } else {
-                    None
-                }
+                costs.get(&gen_city_pair(c1, c2)).map(|cost| acc + cost)
             })
         })
         .fold((u64::MAX, u64::MIN), |(min, max), costs| {

@@ -55,7 +55,7 @@ fn solve(segments: &[u8]) -> u64 {
                 sixers |= (segment as u32) << (pos * 8);
                 sixers = set_len_bit_arr(sixers, pos + 1);
             }
-            5 | 6 | 7 => (),
+            5..=7 => (),
             _ => panic!("bad input"),
         }
     }

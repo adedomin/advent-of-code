@@ -86,10 +86,10 @@ impl CodeCharSz for Escaped {
     }
 }
 
-fn parse_input<'a>(input: &'a [u8]) -> Output {
+fn parse_input(input: &[u8]) -> Output {
     use Escaped::*;
     use NToken::*;
-    let (tokens, _, _) = AoCTokenizer::new(&input)
+    let (tokens, _, _) = AoCTokenizer::new(input)
         .map(|token| match token {
             Token::Something(word) => Chars(word),
             Token::Delimiter(delim) if delim == b'\\' => UknkEsc,
@@ -150,13 +150,13 @@ fn parse_input<'a>(input: &'a [u8]) -> Output {
     tokens
 }
 
-fn part1_sol<'a>(input: &'a [NToken]) -> Solved {
+fn part1_sol(input: &[NToken]) -> Solved {
     let code_size: i64 = input.iter().map(|tok| tok.code_size()).sum();
     let mem_size: i64 = input.iter().map(|tok| tok.mem_size()).sum();
     code_size - mem_size
 }
 
-fn part2_sol<'a>(input: &'a [NToken]) -> Solved {
+fn part2_sol(input: &[NToken]) -> Solved {
     let double_esc_size: i64 = input.iter().map(|tok| tok.as_escaped_size()).sum();
     let code_size: i64 = input.iter().map(|tok| tok.code_size()).sum();
     debug!(

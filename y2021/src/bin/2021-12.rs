@@ -56,7 +56,7 @@ fn calc_map_ident(id: &[u8]) -> (CaveSize, u64) {
             })
             .0
     };
-    let cave_size = if (b'a'..=b'z').contains(&id[0]) {
+    let cave_size = if id[0].is_ascii_lowercase() {
         CaveSize::Small
     } else {
         CaveSize::Large

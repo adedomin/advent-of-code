@@ -50,7 +50,9 @@ struct MonkeyScript {
 }
 
 #[derive(PartialEq, Eq)]
+#[derive(Default)]
 enum Step {
+    #[default]
     Uknk,
     Item,
     Oper,
@@ -60,11 +62,7 @@ enum Step {
     TestCondF,
 }
 
-impl Default for Step {
-    fn default() -> Self {
-        Step::Uknk
-    }
-}
+
 
 #[derive(Default, Debug)]
 struct MonkeyPartial {

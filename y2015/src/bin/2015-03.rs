@@ -18,8 +18,8 @@ fn p1<const N: usize>(input: &[u8]) -> usize {
         (HashSet::from([(0, 0)]), [(0, 0); N]),
         |(mut visited, mut santas), chunks| {
             santas.iter_mut().zip(chunks).for_each(|(coord, &dir)| {
-                *coord = move_coord(coord.clone(), dir);
-                visited.insert(coord.clone());
+                *coord = move_coord(*coord, dir);
+                visited.insert(*coord);
             });
             (visited, santas)
         },

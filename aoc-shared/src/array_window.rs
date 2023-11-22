@@ -91,7 +91,7 @@ impl<'a, T, const N: usize> DoubleEndedIterator for ArrayWindows<'a, T, N> {
 // }
 
 /// unlike upstream, this is a free function and not attached to slice impl.
-pub fn array_windows<'a, T, const N: usize>(data: &'a [T]) -> ArrayWindows<'a, T, N> {
+pub fn array_windows<T, const N: usize>(data: &[T]) -> ArrayWindows<'_, T, N> {
     assert_ne!(N, 0);
 
     let num_windows = data.len().saturating_sub(N - 1);

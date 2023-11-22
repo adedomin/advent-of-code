@@ -94,8 +94,8 @@ impl Debug for Octopi {
 fn irridate_neighbors(octopi: &mut Octopi, flashset: &mut Vec2D<bool>, x: usize, y: usize) {
     let mut stack = vec![(x, y)];
 
-    while !stack.is_empty() {
-        let (x, y) = stack.pop().unwrap();
+    while let Some((x, y)) = stack.pop() {
+        
         let octopus = &mut octopi[y][x];
         if *octopus == BORDER || flashset[y - 1][x - 1] {
             continue;

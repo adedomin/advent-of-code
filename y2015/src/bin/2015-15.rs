@@ -138,7 +138,7 @@ fn solve_p1(grams: u8, calorie_target: i64, ingredients: &[Ingredient]) -> (i64,
             Recur::Loop(pos, current, target) => {
                 loop_scores[pos] = ingredients[pos].scores(current as i64);
 
-                if current + 1 <= target {
+                if current < target {
                     loop_ctrs.push(Recur::Loop(pos, current + 1, target));
                 }
 

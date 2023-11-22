@@ -8,7 +8,7 @@ fn solve<const LEADING: usize>(key: &str) -> Option<u64> {
         let mut buffer = itoa::Buffer::new();
         let postfix = buffer.format(num);
         let mut message = key.to_owned();
-        message.extend(postfix.chars());
+        message.push_str(postfix);
         let res = format!("{:?}", md5::compute(&message));
 
         &res.as_bytes()[..LEADING] == &leading
@@ -30,6 +30,6 @@ fn main() -> io::Result<()> {
     } else {
         print!("No answer");
     }
-    println!("");
+    println!();
     Ok(())
 }
