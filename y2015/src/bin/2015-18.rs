@@ -1,4 +1,4 @@
-use aoc_shared::{parse_to_flat2d, read_input, FlatVec2D};
+use aoc_shared::{parse_to_flat2d, read_input, FlatVec2D, Neighbor};
 use std::io;
 
 #[cfg(debug_assertions)]
@@ -42,7 +42,7 @@ fn part1_sol(iter: u8, stuck_corners: bool, mut input: FlatVec2D<u8>) -> usize {
                 let neigh_on_cnt = input
                     .get_neigh(x, y)
                     .iter()
-                    .filter(|&&&chr| chr == b'#')
+                    .filter(|Neighbor(chr, _, _)| **chr == b'#')
                     .count();
                 if input[(x, y)] != b'#' {
                     if neigh_on_cnt == 3 {
