@@ -1,0 +1,2 @@
+#!/bin/sh
+exec mpv --no-correct-pts --fps=15 --scale=nearest --autofit=100%x800 "${1:--}"

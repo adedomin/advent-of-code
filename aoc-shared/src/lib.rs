@@ -27,8 +27,9 @@ mod atoi;
 pub use atoi::*;
 
 use std::{
+    collections::HashMap,
     env, fs,
-    io::{self, Read},
+    io::{self, Read, Write},
 };
 
 /// Helper to destructure enums like Token::Something
@@ -80,7 +81,53 @@ pub fn read_input_to_string() -> io::Result<String> {
     }
 }
 
-/// simple type for mapping over or getting the default
+pub fn advanced_cli() -> (Vec<u8>, Option<impl Write>, HashMap<String, String>) {
+    let (r, w, o) = env::args().skip(1).fold(
+        (None, None, HashMap::new()),
+        |(read, write, mut opt), arg| {
+            let eq_at = arg.find('=');
+            if let Some(eq) = eq_at {
+                let (k, v) = arg.split_at(eq);
+                let v = &v[1..];
+                match k {
+                    "i" | "input" => (
+                        Some(fs::read(v).expect("Expected to be able to open input.")),
+                        write,
+                        opt,
+                    ),
+                    "o" | "output" => (
+                        read,
+                        Some(
+                            std::fs::File::create(v).expect("Expected to be able to open output."),
+                        ),
+                        opt,
+                    ),
+                    _ => {
+                        opt.insert(k.to_owned(), v.to_owned());
+                        (read, write, opt)
+                    }
+                }
+            } else {
+                (
+                    Some(fs::read(arg).expect("Expected to be able to open input.")),
+                    write,
+                    opt,
+                )
+            }
+        },
+    );
+    if let Some(read) = r {
+        (read, w, o)
+    } else {
+        let mut buf = vec![];
+        io::stdin()
+            .lock()
+            .read_to_end(&mut buf)
+            .expect("Expected to read STDIN.");
+        (buf, w, o)
+    }
+}
+
 pub enum Sentinel<T> {
     Unset(T),
     Value(T),

@@ -1,5 +1,6 @@
 use std::{
-    fmt::Write,
+    fmt::Write as FmtWrite,
+    io::Write,
     ops::{Index, IndexMut},
 };
 
@@ -51,6 +52,15 @@ impl<T> FlatVec2D<T> {
             })
             .map(|(x, y)| Neighbor(&self[(x as usize, y as usize)], x as usize, y as usize))
             .collect::<Vec<Neighbor<&T>>>()
+    }
+}
+
+impl FlatVec2D<u8> {
+    pub fn write_pgm(&self, writable: &mut impl Write) -> std::io::Result<()> {
+        let header = format!("P5\n{} {}\n127\n", self.1, self.2).into_bytes();
+        writable.write_all(&header)?;
+        writable.write_all(&self.0[..])?;
+        Ok(())
     }
 }
 

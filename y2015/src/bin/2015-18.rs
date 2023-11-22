@@ -1,26 +1,12 @@
-use aoc_shared::{parse_to_flat2d, read_input, FlatVec2D, Neighbor};
-use std::io;
+use aoc_shared::{advanced_cli, parse_to_flat2d, FlatVec2D, Neighbor};
+use std::io::{self, Write};
 
-#[cfg(debug_assertions)]
-fn animate(input: &FlatVec2D<u8>, clear: bool) {
-    if clear {
-        println!("{}", "\x1b[2J\x1b[H");
-    } else {
-        println!("---------------------");
-    }
-    for y in 0..input.2 {
-        for x in 0..input.1 {
-            if input[(x, y)] == b'#' {
-                print!("#");
-            } else {
-                print!(".");
-            }
-        }
-        println!("");
-    }
-}
-
-fn part1_sol(iter: u8, stuck_corners: bool, mut input: FlatVec2D<u8>) -> usize {
+fn part1_sol(
+    iter: u16,
+    stuck_corners: bool,
+    writable: &mut Option<impl Write>,
+    mut input: FlatVec2D<u8>,
+) -> usize {
     let xmax = input.1;
     let ymax = input.2;
     if stuck_corners {
@@ -31,10 +17,8 @@ fn part1_sol(iter: u8, stuck_corners: bool, mut input: FlatVec2D<u8>) -> usize {
     }
 
     for _ in 0..iter {
-        #[cfg(debug_assertions)]
-        {
-            animate(&input, true);
-            std::thread::sleep(std::time::Duration::from_millis(100));
+        if let Some(w) = writable {
+            input.write_pgm(w).expect("Expected to write Netpbm image.");
         }
         let mut changed = Vec::with_capacity(input.0.len());
         for y in 0..ymax {
@@ -44,14 +28,10 @@ fn part1_sol(iter: u8, stuck_corners: bool, mut input: FlatVec2D<u8>) -> usize {
                     .iter()
                     .filter(|Neighbor(chr, _, _)| **chr == b'#')
                     .count();
-                if input[(x, y)] != b'#' {
-                    if neigh_on_cnt == 3 {
-                        changed.push((b'#', x, y));
-                    }
-                } else {
-                    if neigh_on_cnt < 2 || neigh_on_cnt > 3 {
-                        changed.push((b'.', x, y));
-                    }
+                if input[(x, y)] != b'#' && neigh_on_cnt == 3 {
+                    changed.push((b'#', x, y));
+                } else if !(2..4).contains(&neigh_on_cnt) {
+                    changed.push((b'.', x, y));
                 }
             }
         }
@@ -62,25 +42,33 @@ fn part1_sol(iter: u8, stuck_corners: bool, mut input: FlatVec2D<u8>) -> usize {
                     || (x, y) == (xmax - 1, 0)
                     || (x, y) == (0, ymax - 1))
             {
-                ()
             } else {
                 input[(x, y)] = chr;
             }
         }
     }
-    #[cfg(debug_assertions)]
-    {
-        animate(&input, true);
+    if let Some(w) = writable {
+        input.write_pgm(w).expect("Expected to write Netpbm image.");
     }
     input.0.iter().filter(|&&chr| chr == b'#').count()
 }
 
 fn main() -> io::Result<()> {
-    let input = read_input()?;
+    let (input, mut output, options) = advanced_cli();
     let parsed_input = parse_to_flat2d(&input);
     let p1_input = parsed_input.clone();
-    let part1 = part1_sol(100, false, p1_input);
-    let part2 = part1_sol(100, true, parsed_input);
+
+    let iter = options
+        .get("iter")
+        .cloned()
+        .unwrap_or_else(|| "100".to_owned());
+
+    let iter = iter
+        .parse::<u16>()
+        .expect("iter= option should be a valid u16.");
+
+    let part1 = part1_sol(iter, false, &mut output, p1_input);
+    let part2 = part1_sol(iter, true, &mut output, parsed_input);
 
     println!("Part1: {part1}, Part2: {part2}");
     Ok(())
