@@ -46,14 +46,9 @@ fn parse_input<'a>(input: &'a [u8]) -> (Vec<Replacer>, &'a [u8]) {
     )
 }
 
-// unique tokens in my input
-// I don't know how else I can compute these weird properties at runtime.
-const Y: u8 = 255; // this is interspered in the values that have production rules.
-const RN: u8 = Y - 1; // this seems to group with a terminating Ar
-const AR: u8 = RN - 1; // always in tail position, assumed related to Rh, X Rh ... Ar
-const C: u8 = AR - 1; // always at start of a replacement with an Rh as 2nd? no mapped production, C RH ... Ar
+const LHS_TERM: u8 = 255;
 
-fn parse_input2<'a>(replace: &[Replacer], molecule: &'a [u8]) -> Vec<u8> {
+fn parse_input2<'a>(replace: &[Replacer<'a>], molecule: &'a [u8]) -> (Vec<u8>, Vec<u8>) {
     let mut last = 0u8;
     let mut tok_list: HashMap<&[u8], u8> =
         HashMap::from_iter(replace.iter().cloned().map(|Replacer(find, _)| {
@@ -61,24 +56,50 @@ fn parse_input2<'a>(replace: &[Replacer], molecule: &'a [u8]) -> Vec<u8> {
             (find, last)
         }));
 
-    tok_list.insert(b"Y", Y);
-    tok_list.insert(b"Rn", RN);
-    tok_list.insert(b"Ar", AR);
-    tok_list.insert(b"C", C);
-
     // I don't feel like building my own.
     let re = Regex::new(r#"([A-Z][a-z]*)"#).unwrap();
+
+    // find all unique terminating tokens
+    let terminals = replace
+        .iter()
+        .flat_map(|Replacer(_, replacement)| {
+            // we have to collect matches first to properly filter tokens in tail position.
+            let matchers = re
+                .captures_iter(replacement)
+                .map(|m| m.get(0).unwrap().as_bytes())
+                .collect::<Vec<&'a [u8]>>();
+            matchers
+                .iter()
+                .enumerate()
+                .flat_map(|(i, m)| {
+                    if tok_list.contains_key(m) {
+                        None
+                    } else if i == matchers.len() - 1 {
+                        // this filters out tokens in tail or front, since their purpose appears to be surrounding.
+                        None
+                    } else if i == 0 {
+                        tok_list.insert(m, LHS_TERM);
+                        Some(LHS_TERM) // this is a special terminator... it's on LHS, it's not like the interspersed ones on right.
+                                       // it only deletes 1 instead of 2
+                    } else {
+                        last += 1;
+                        tok_list.insert(m, last);
+                        Some(last)
+                    }
+                })
+                .collect::<Vec<u8>>()
+        })
+        .collect::<Vec<u8>>();
 
     // create new molecule using token numbers
     let new_mol = re
         .captures_iter(molecule)
         .map(|m| {
             let c = m.get(0).unwrap().as_bytes();
-            println!("{}", std::str::from_utf8(c).unwrap());
             *tok_list.get(c).unwrap_or(&0)
         })
         .collect::<Vec<u8>>();
-    new_mol
+    (terminals, new_mol)
 }
 
 fn find_all<'a>(Replacer(find, _): &Replacer<'a>, molecule: &[u8]) -> Vec<usize> {
@@ -118,24 +139,18 @@ fn part1_sol(replace: &[Replacer], molecule: &[u8]) -> HashSet<Vec<u8>> {
     replacements
 }
 
-fn part2_sol<'a>(molecule: Vec<u8>) -> i32 {
-    let mlen = molecule.len() as i32;
-    let delete_term = molecule.iter().fold(0i32, |acc, &tok| {
-        // These are found in patterns and basically give us 2 kills for one replace
-        // e.g. {el} => ..Y{el}..
-        if tok == Y {
+fn part2_sol<'a>(term: Vec<u8>, molecule: Vec<u8>) -> i32 {
+    let m = molecule.len() as i32;
+    let del = molecule.iter().fold(0i32, |acc, tok| {
+        if term.contains(tok) && *tok != LHS_TERM {
             acc + 2
-        // these are always either in the RHS position as pairs
-        // or in the exotic case where the terminal C is in LHS
-        // This is basically hardcoded from studying my input, very disgusting.
-        // computing these otherwise isn't practical.
-        } else if tok == RN || tok == AR || tok == C {
+        } else if *tok == LHS_TERM {
             acc + 1
         } else {
             acc
         }
     });
-    mlen - delete_term
+    m - del
 }
 
 fn main() -> io::Result<()> {
@@ -143,8 +158,8 @@ fn main() -> io::Result<()> {
     let (replacements, mol) = parse_input(&input);
     let part1 = part1_sol(&replacements, &mol).len();
     print!("Part1: {part1}, ");
-    let mol = parse_input2(&replacements, mol);
-    let part2 = part2_sol(mol);
+    let (terminals, mol) = parse_input2(&replacements, mol);
+    let part2 = part2_sol(terminals, mol);
     println!("Part2: {part2}");
     Ok(())
 }
