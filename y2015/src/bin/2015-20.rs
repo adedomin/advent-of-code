@@ -1,13 +1,13 @@
 use aoc_shared::{atoi, read_input};
 use std::io;
 
-fn primes_to(n: i64) -> Vec<i64> {
-    let n = n as usize;
+fn primes_to(n_: i32) -> Vec<i32> {
+    let n = n_ as usize;
     if n < 2 {
         Vec::new()
     } else {
         let mut is_prime = vec![true; n - 1];
-        let limit = f64::from(n as i32).sqrt() as usize;
+        let limit = f64::from(n_).sqrt() as usize;
         for i in 2..limit + 1 {
             let mut it = is_prime[i - 2..].iter_mut().step_by(i);
             if let Some(true) = it.next() {
@@ -18,12 +18,12 @@ fn primes_to(n: i64) -> Vec<i64> {
     }
     .iter()
     .enumerate()
-    .filter_map(|(e, &b)| if b { Some((e + 2) as i64) } else { None })
-    .collect::<Vec<i64>>()
+    .filter_map(|(e, &b)| if b { Some((e + 2) as i32) } else { None })
+    .collect::<Vec<i32>>()
 }
 
-fn sigma_from(p: &[(i64, u32)]) -> Option<i64> {
-    p.iter().try_fold(1, |acc: i64, (prime, power)| {
+fn sigma_from(p: &[(i32, u32)]) -> Option<i32> {
+    p.iter().try_fold(1, |acc: i32, (prime, power)| {
         if *power == 0 {
             Some(acc)
         } else {
@@ -33,7 +33,7 @@ fn sigma_from(p: &[(i64, u32)]) -> Option<i64> {
     })
 }
 
-fn into_num(p: &[(i64, u32)]) -> Option<i64> {
+fn into_num(p: &[(i32, u32)]) -> Option<i32> {
     p.iter().try_fold(1, |acc, (prime, power)| {
         let to_pow = prime.checked_pow(*power)?;
         Some(acc * to_pow)
@@ -41,11 +41,11 @@ fn into_num(p: &[(i64, u32)]) -> Option<i64> {
 }
 
 // here, we're trying to find the lowest possible powers of the given primes from below.
-fn find_lowest(sigma_n: i64, pfact: &[i64]) -> Option<i64> {
+fn find_lowest(sigma_n: i32, pfact: &[i32]) -> Option<i32> {
     let mut parts = pfact
         .iter()
         .map(|&p| (p, 0u32))
-        .collect::<Vec<(i64, u32)>>();
+        .collect::<Vec<(i32, u32)>>();
     let mut min = None;
 
     // impl of stars and bars solver: K ingredients of N grams.
@@ -55,16 +55,21 @@ fn find_lowest(sigma_n: i64, pfact: &[i64]) -> Option<i64> {
     while let Some((pos, cur, lim)) = loop_ctrs.pop() {
         parts[pos].1 = cur;
         if pos == parts.len() - 1 {
+            let mut too_big = false;
             if let Some(nsig) = sigma_from(&parts) {
                 if nsig >= sigma_n {
                     if let Some(num) = into_num(&parts) {
                         if min.map_or(true, |m| num < m) {
                             min = Some(num);
                         }
+                    } else {
+                        too_big = true;
                     }
                 }
+            } else {
+                too_big = true;
             }
-            if cur < lim {
+            if cur < lim && !too_big {
                 loop_ctrs.push((pos, cur + 1, lim));
             }
         } else if cur < lim {
@@ -77,7 +82,7 @@ fn find_lowest(sigma_n: i64, pfact: &[i64]) -> Option<i64> {
 }
 
 // in this case, we're finding the minimum base case of p^a where sigma(p^a) >= target sigma.
-fn find_lowest_that_exceeds(sigma_n: i64, primes: &[i64]) -> i64 {
+fn find_lowest_that_exceeds(sigma_n: i32, primes: &[i32]) -> i32 {
     let mut piter = primes.iter();
     let mut prime_list = vec![];
     let mut sigma_v = 1;
@@ -92,8 +97,8 @@ fn find_lowest_that_exceeds(sigma_n: i64, primes: &[i64]) -> i64 {
 
 // unfortunately, part2 is no longer based on sigma, so brand new.
 // ... we're just going to build someing big and yolo it.
-fn find_lowest_given_new_cond(input: i64) -> usize {
-    let mut homes = vec![0i64; input as usize / 11];
+fn find_lowest_given_new_cond(input: i32) -> usize {
+    let mut homes = vec![0i32; input as usize / 11];
     for elf in 1..homes.len() {
         homes
             .iter_mut()
@@ -101,20 +106,20 @@ fn find_lowest_given_new_cond(input: i64) -> usize {
             .step_by(elf)
             .take(50)
             .for_each(|home| {
-                *home += elf as i64 * 11;
+                *home += elf as i32 * 11;
             })
     }
     // 1 based indexing... duh.
     homes
         .iter()
-        .position(|&h| h >= input as i64)
+        .position(|&h| h >= input as i32)
         .expect("at least one home to have {input} amount of presents")
         + 1
 }
 
 fn main() -> io::Result<()> {
     let input = read_input()?;
-    let input: i64 = atoi::<i64, 10>(&input);
+    let input: i32 = atoi::<i32, 10>(&input);
     let primes = primes_to(input);
 
     // let part1 = solve_p1(input);
