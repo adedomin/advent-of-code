@@ -68,11 +68,13 @@ fn parse_input_2(input: &[u8]) -> i32 {
         .tokenize()
         .flat_map(|t| destructure_or_none!(Token::Something|word| = t))
         .flat_map(|word| {
-            let w1 = array_windows(word).find(|w| extract_num(w) != 10);
+            let mut w1 = word.to_vec();
+            w1.extend([b'z'; 5]);
+            let w1 = array_windows(&w1).find(|w| extract_num(w) != 10);
             if let Some(w1) = w1 {
                 let w1 = extract_num(w1);
                 let mut w2 = word.iter().rev().copied().collect::<Vec<u8>>();
-                w2.extend([b'z'; 5].iter());
+                w2.extend([b'z'; 5]);
                 let w2 = extract_num_back(
                     array_windows(&w2)
                         .find(|w| extract_num_back(w) != 10)
