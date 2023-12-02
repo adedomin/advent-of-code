@@ -74,6 +74,18 @@ impl<'a> Iterator for AoCTokenizer<'a> {
     }
 }
 
+impl<'a> FusedIterator for AoCTokenizer<'a> {}
+
+pub trait Tokenize<'a> {
+    fn tokenize(self) -> AoCTokenizer<'a>;
+}
+
+impl<'a> Tokenize<'a> for &'a [u8] {
+    fn tokenize(self) -> AoCTokenizer<'a> {
+        AoCTokenizer::new(self)
+    }
+}
+
 pub struct RecordGrouper<'a> {
     token_tmp: Vec<Token<'a>>,
     tokenizer: AoCTokenizer<'a>,
@@ -114,14 +126,4 @@ impl<'a> Iterator for RecordGrouper<'a> {
     }
 }
 
-impl<'a> FusedIterator for AoCTokenizer<'a> {}
-
-pub trait Tokenize<'a> {
-    fn tokenize(self) -> AoCTokenizer<'a>;
-}
-
-impl<'a> Tokenize<'a> for &'a [u8] {
-    fn tokenize(self) -> AoCTokenizer<'a> {
-        AoCTokenizer::new(self)
-    }
-}
+impl<'a> FusedIterator for RecordGrouper<'a> {}
