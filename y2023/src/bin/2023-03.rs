@@ -2,6 +2,7 @@ use aoc_shared::{fold_decimal, parse_to_flat2d, read_input, FlatVec2D, Neighbor}
 use std::{
     collections::{HashMap, HashSet},
     io,
+    mem::take,
 };
 
 fn mut_ans(
@@ -9,13 +10,13 @@ fn mut_ans(
     gears: &mut HashMap<(usize, usize), GearProd>,
     num: i32,
     is_part_num: bool,
-    gear: &HashSet<(usize, usize)>,
+    gear: HashSet<(usize, usize)>,
 ) {
     if is_part_num {
         *sum += num;
     }
 
-    for &(gx, gy) in gear {
+    for (gx, gy) in gear {
         if let Some(g) = gears.get_mut(&(gx, gy)) {
             let _ = g.add_partnum(num);
         } else {
@@ -81,13 +82,12 @@ fn solve(input: &FlatVec2D<u8>) -> (i32, i32) {
                     gear.insert((*gx, *gy));
                 }
             } else {
-                mut_ans(&mut sum, &mut gears, num, is_part_num, &gear);
+                mut_ans(&mut sum, &mut gears, num, is_part_num, take(&mut gear));
                 num = 0;
                 is_part_num = false;
-                gear.clear();
             }
         }
-        mut_ans(&mut sum, &mut gears, num, is_part_num, &gear);
+        mut_ans(&mut sum, &mut gears, num, is_part_num, gear);
     }
 
     let prod = gears.into_values().flat_map(|gr| gr.product()).sum();
