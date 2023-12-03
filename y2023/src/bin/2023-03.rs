@@ -78,9 +78,12 @@ fn solve(input: &FlatVec2D<u8>) -> (i32, i32) {
                         .find(|Neighbor(v, ..)| !v.is_ascii_digit() && **v != b'.')
                         .is_some();
                 }
-                if let Some(Neighbor(_, gx, gy)) = neigh.iter().find(|n| *(n.0) == b'*') {
-                    gear.insert((*gx, *gy));
-                }
+                gear.extend(
+                    neigh
+                        .iter()
+                        .filter(|n| *(n.0) == b'*')
+                        .map(|Neighbor(_, gx, gy)| (*gx, *gy)),
+                );
             } else {
                 mut_ans(&mut sum, &mut gears, num, is_part_num, take(&mut gear));
                 num = 0;
