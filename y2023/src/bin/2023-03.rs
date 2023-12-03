@@ -1,37 +1,75 @@
-use aoc_shared::{atoi, parse_to_flat2d, read_input, FlatVec2D, Neighbor};
-use std::{collections::HashMap, io};
+use aoc_shared::{fold_decimal, parse_to_flat2d, read_input, FlatVec2D, Neighbor};
+use std::{
+    collections::{HashMap, HashSet},
+    io,
+};
 
 fn mut_ans(
     sum: &mut i32,
-    gears: &mut HashMap<(usize, usize), Vec<i32>>,
+    gears: &mut HashMap<(usize, usize), GearProd>,
     num: i32,
     is_part_num: bool,
-    gear: Option<(usize, usize)>,
+    gear: &HashSet<(usize, usize)>,
 ) {
     if is_part_num {
         *sum += num;
     }
-    if let Some((gx, gy)) = gear {
+
+    for &(gx, gy) in gear {
         if let Some(g) = gears.get_mut(&(gx, gy)) {
-            g.push(num)
+            let _ = g.add_partnum(num);
         } else {
-            let v = vec![num];
-            gears.insert((gx, gy), v);
+            let mut g = GearProd::new();
+            let _ = g.add_partnum(num);
+            gears.insert((gx, gy), g);
+        }
+    }
+}
+
+struct GearProd {
+    pos: u8,
+    partnum: [i32; 2],
+}
+
+impl GearProd {
+    fn new() -> Self {
+        GearProd {
+            pos: 0,
+            partnum: [0i32; 2],
+        }
+    }
+    /// A gear is any * symbol that is adjacent to exactly two part numbers.
+    fn add_partnum(&mut self, p: i32) -> Result<(), ()> {
+        let ret = if self.pos > 1 {
+            Err(())
+        } else {
+            self.partnum[self.pos as usize] = p;
+            Ok(())
+        };
+        self.pos += 1; // always increment, more than 2 should result in no product;
+        ret
+    }
+    /// Its gear ratio is the result of multiplying those two numbers together.
+    fn product(&self) -> Option<i32> {
+        if self.pos != 2 {
+            None
+        } else {
+            Some(self.partnum[0] * self.partnum[1])
         }
     }
 }
 
 fn solve(input: &FlatVec2D<u8>) -> (i32, i32) {
     let mut sum = 0;
-    let mut gears: HashMap<(usize, usize), Vec<i32>> = HashMap::new();
+    let mut gears: HashMap<(usize, usize), GearProd> = HashMap::new();
     for y in 0..input.2 {
-        let mut cnum = vec![];
+        let mut num = 0;
         let mut is_part_num = false;
-        let mut gear = None;
+        let mut gear = HashSet::new();
         for x in 0..input.1 {
             let digit = input[(x, y)];
             if digit.is_ascii_digit() {
-                cnum.push(digit);
+                num = fold_decimal(num, &digit);
                 let neigh = input.get_neigh(x, y);
                 if !is_part_num {
                     is_part_num = neigh
@@ -39,34 +77,20 @@ fn solve(input: &FlatVec2D<u8>) -> (i32, i32) {
                         .find(|Neighbor(v, ..)| !v.is_ascii_digit() && **v != b'.')
                         .is_some();
                 }
-                if gear.is_none() {
-                    if let Some(Neighbor(_, gx, gy)) = neigh.iter().find(|n| *(n.0) == b'*') {
-                        gear = Some((*gx, *gy));
-                    }
+                if let Some(Neighbor(_, gx, gy)) = neigh.iter().find(|n| *(n.0) == b'*') {
+                    gear.insert((*gx, *gy));
                 }
             } else {
-                let num = atoi::<i32, 10>(&cnum);
-                mut_ans(&mut sum, &mut gears, num, is_part_num, gear);
-                cnum.clear();
+                mut_ans(&mut sum, &mut gears, num, is_part_num, &gear);
+                num = 0;
                 is_part_num = false;
-                gear = None;
+                gear.clear();
             }
         }
-        let num = atoi::<i32, 10>(&cnum);
-        mut_ans(&mut sum, &mut gears, num, is_part_num, gear);
+        mut_ans(&mut sum, &mut gears, num, is_part_num, &gear);
     }
 
-    let prod = gears
-        .into_values()
-        .flat_map(|gr| {
-            // if it's not 2, it's ambiguous
-            if gr.len() != 2 {
-                None
-            } else {
-                Some(gr.iter().product::<i32>())
-            }
-        })
-        .sum();
+    let prod = gears.into_values().flat_map(|gr| gr.product()).sum();
 
     (sum, prod)
 }
