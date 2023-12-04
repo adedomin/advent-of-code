@@ -127,3 +127,13 @@ impl<'a> Iterator for RecordGrouper<'a> {
 }
 
 impl<'a> FusedIterator for RecordGrouper<'a> {}
+
+pub trait GroupTokenize<'a> {
+    fn group_tokens(self, separator: Token<'a>) -> RecordGrouper<'a>;
+}
+
+impl<'a> GroupTokenize<'a> for &'a [u8] {
+    fn group_tokens(self, separator: Token<'a>) -> RecordGrouper<'a> {
+        RecordGrouper::new_with_rs(self, separator)
+    }
+}
