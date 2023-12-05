@@ -319,4 +319,6 @@ name = "y2023"
 version = "0.1.0"
 dependencies = [
  "aoc-shared",
+ "itertools 0.12.0",
+ "rayon",
 ]
