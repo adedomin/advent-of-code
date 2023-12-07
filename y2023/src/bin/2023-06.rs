@@ -1,5 +1,5 @@
 use aoc_shared::{destructure_or_none, fold_decimal, read_input, try_atoi, GroupTokenize, Token};
-use std::{collections::HashSet, io};
+use std::io;
 
 type Output = Vec<(u64, u64)>;
 
@@ -26,21 +26,28 @@ fn parse_input(input: &[u8]) -> Output {
         .collect::<Vec<_>>()
 }
 
-/// problem: HELD * REM = MAX(DISTANCE)
+/// problem: HELD * REM = DISTANCE
 ///
 /// constraint1: HELD + REM = CONSTRAINT
-/// thus:         HELD = CONSTRAINT - REM
-/// thus optimal: REM * (CONSTRAINT - REM) -> dx/dy -> CONSTRAINT - 2REM -> CONSTRAINT/2 = REM
+/// constraint2: HELD * REM > RECORD
+/// substitute:  HELD = CONSTRAINT - REM
+/// replace to Quadratic -> REM * (CONSTRAINT - REM) = record -> (-REM^2 + CON*REM) - record = 0
+/// if fractional part is exact, (0.0), it's not > RECORD, so subtract - possible number combo
+/// if fractional part of min rounds up (<=0.5), add +1 for edge-case in floats.
 fn solve(constraint: u64, record: u64) -> u64 {
-    let mut rem = constraint / 2;
-    let mut held = constraint - rem;
-    let mut i = 0;
-    while rem * held > record {
-        i += 2;
-        rem -= 1;
-        held += 1;
+    // a is always -1
+    let a = -1f64;
+    let b = constraint as f64;
+    let c = -(record as f64);
+    let xmax = (-b - (b.powf(2f64) - 4f64 * a * c).sqrt()) / -2f64;
+    let xmin = (-b + (b.powf(2f64) - 4f64 * a * c).sqrt()) / -2f64;
+    let mut ans = (xmax - xmin).trunc() as u64;
+    if xmax.fract() == 0.0 || xmin.fract() == 0.0 as f64 {
+        ans -= 1;
+    } else if xmin.fract() > 0.5 {
+        ans += 1;
     }
-    i - (1 + -(constraint as i64 & 1)) as u64
+    ans as u64
 }
 
 fn main() -> io::Result<()> {
