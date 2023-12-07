@@ -31,7 +31,7 @@ fn parse_input(input: &[u8]) -> Output {
 /// constraint1: HELD + REM = CONSTRAINT
 /// constraint2: HELD * REM > RECORD
 /// substitute:  HELD = CONSTRAINT - REM
-/// replace to Quadratic -> REM * (CONSTRAINT - REM) = record -> (-REM^2 + CON*REM) - record = 0
+/// replace to Quadratic EQN -> REM * (CONSTRAINT - REM) = record -> -REM^2 + CON*REM - record = 0
 /// if fractional part is exact, (0.0), it's not > RECORD, so subtract - possible number combo
 /// if fractional part of min rounds up (<=0.5), add +1 for edge-case in floats.
 fn solve(constraint: u64, record: u64) -> u64 {
