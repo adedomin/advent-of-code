@@ -32,16 +32,15 @@ fn parse_input(input: &[u8]) -> Output {
 /// thus:         HELD = CONSTRAINT - REM
 /// thus optimal: REM * (CONSTRAINT - REM) -> dx/dy -> CONSTRAINT - 2REM -> CONSTRAINT/2 = REM
 fn solve(constraint: u64, record: u64) -> u64 {
-    let mut rem = constraint / 2 + (constraint & 1);
+    let mut rem = constraint / 2;
     let mut held = constraint - rem;
-    let mut set = HashSet::new();
+    let mut i = 0;
     while rem * held > record {
-        set.insert(rem);
-        set.insert(held);
+        i += 2;
         rem -= 1;
         held += 1;
     }
-    set.len() as u64
+    i - (1 + -(constraint as i64 & 1)) as u64
 }
 
 fn main() -> io::Result<()> {
@@ -66,6 +65,7 @@ fn main() -> io::Result<()> {
         )
     });
     let part2 = solve(constraint, record);
+    // let part2 = 0;
     println!("Part1: {part1}, Part2: {part2}");
     Ok(())
 }
