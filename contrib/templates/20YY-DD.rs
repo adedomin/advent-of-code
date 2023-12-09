@@ -17,6 +17,8 @@ fn main() -> io::Result<()> {
     let parsed_input = parse_input(&input);
     let part1 = part1_sol(&parsed_input);
     let part2 = part2_sol(&parsed_input);
-    println!("Part1: {part1}, Part2: {part2}");
+    print!("Part1: {part1}, ");
+    print!("Part2: {part2}");
+    println!();
     Ok(())
 }

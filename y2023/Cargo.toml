@@ -9,4 +9,5 @@ edition = "2021"
 aoc-shared = { path = "../aoc-shared" }
 itertools = "0.12"
 itoa = "1.0.9"
+num = "0.4.1"
 rayon = "1.8.0"
