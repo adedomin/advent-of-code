@@ -138,6 +138,9 @@ fn solve(grid: &FlatVec2D<Pipe>) -> (i64, i64) {
                 area.push((sx as i64, sy as i64));
                 area.extend_from_slice(&points[..]);
                 area.push((sx as i64, sy as i64));
+            } else {
+                area.extend_from_slice(&points[..]);
+                area.push(area[0]); // must circle back to start
             }
             break;
         }
