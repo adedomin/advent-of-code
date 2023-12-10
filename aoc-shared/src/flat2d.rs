@@ -152,3 +152,30 @@ where
 
     ret
 }
+
+/// This is a padded version of parse_to_flat2d
+/// this allows you to solve some puzzles where a junk type would end searching
+/// thus you'll never go out of bounds.
+pub fn pad_to_flat2d<T>(input: &[u8], pad: T) -> FlatVec2D<T>
+where
+    T: Clone + From<u8>,
+{
+    let row_width = input.iter().position(|&chr| chr == b'\n').unwrap() + 2;
+    let col_len = ((input.len() - 1) / (row_width + 1)) + 4;
+
+    let mut ret = FlatVec2D(vec![pad; row_width * col_len], row_width, col_len);
+
+    let mut i = 1;
+    let mut j = 1;
+    input.iter().for_each(|&el| {
+        if el == b'\n' {
+            i = 1;
+            j += 1;
+        } else if el != b'\n' {
+            ret[(i, j)] = el.into();
+            i += 1;
+        }
+    });
+
+    ret
+}
