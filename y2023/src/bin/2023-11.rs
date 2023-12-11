@@ -3,17 +3,15 @@ use itertools::Itertools;
 use std::io;
 
 fn expand_universe(
-    p1: (i64, i64),
+    (x, y): (i64, i64),
     horizon: &[i64],
     vertical: &[i64],
     expansion_factor: i64,
 ) -> (i64, i64) {
-    let x = p1.0 as usize;
-    let y = p1.1 as usize;
-    let tv = (expansion_factor - 1) * vertical[x];
-    let th = (expansion_factor - 1) * horizon[y];
+    let dv = (expansion_factor - 1) * vertical[x as usize];
+    let dh = (expansion_factor - 1) * horizon[y as usize];
 
-    (p1.0 + tv, p1.1 + th)
+    (x + dv, y + dh)
 }
 
 fn adjust_pairs(p1: (i64, i64), p2: (i64, i64)) -> ((i64, i64), (i64, i64)) {
