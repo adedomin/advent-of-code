@@ -66,8 +66,6 @@ fn solve_grp(springs: &[u8], counts: &[Vec<u8>]) -> u64 {
             return m - 1;
         }
 
-        let count = &counts[ci];
-        let subs = &springs[si..];
         let mut ret = 0;
 
         if matches!(springs[si], b'.' | b'?') {
@@ -75,6 +73,8 @@ fn solve_grp(springs: &[u8], counts: &[Vec<u8>]) -> u64 {
         }
 
         if matches!(springs[si], b'#' | b'?') {
+            let count = &counts[ci];
+            let subs = &springs[si..];
             if count.len() <= subs.len() {
                 if count
                     .iter()
