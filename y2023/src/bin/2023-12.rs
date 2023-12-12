@@ -17,51 +17,51 @@ fn parse_input(input: &str) -> Output {
             let mut springs = springs.as_bytes().to_owned();
             springs.push(b'.'); // pad with broken so patterns can match end after the pattern is padded.
 
-            let counts = counts
+            let patterns = counts
                 .split(',')
                 .map(|count| {
                     let l = count.parse::<usize>().unwrap();
-                    let mut count = vec![b'#'; l];
+                    let mut pat = vec![b'#'; l];
                     // pad pattern because patterns cannot be touching, e.g. 2,1 cannot be ###, but can be ##.#
-                    count.push(b'.');
-                    count
+                    pat.push(b'.');
+                    pat
                 })
                 .collect::<Vec<Vec<u8>>>();
-            Some((springs, counts))
+            Some((springs, patterns))
         })
         .collect::<Output>()
 }
 
-fn unfold_and_solve(springs: &[u8], counts: &[Vec<u8>]) -> u64 {
+fn unfold_and_solve(springs: &[u8], patterns: &[Vec<u8>]) -> u64 {
     // remove padding...
     let mut unfold_springs = [&springs[..springs.len() - 1]; 5].join(&b'?');
     unfold_springs.push(b'.'); // add it back at the end.
 
-    let unfold_counts = counts
+    let unfold_patterns = patterns
         .iter()
         .cloned()
         .cycle()
-        .take(counts.len() * 5)
+        .take(patterns.len() * 5)
         .collect::<Vec<Vec<u8>>>();
-    solve_grp(&unfold_springs, &unfold_counts)
+    solve_grp(&unfold_springs, &unfold_patterns)
 }
 
-fn solve_grp(springs: &[u8], counts: &[Vec<u8>]) -> u64 {
-    let mut memo = FlatVec2D::<u64>::new(springs.len(), counts.len());
-    fn tree_rec(
+fn solve_grp(springs: &[u8], patterns: &[Vec<u8>]) -> u64 {
+    let mut memo = FlatVec2D::<u64>::new(springs.len(), patterns.len());
+    fn brec(
         memo: &mut FlatVec2D<u64>,
         springs: &[u8],
-        counts: &[Vec<u8>],
+        patterns: &[Vec<u8>],
         si: usize,
-        ci: usize,
+        pi: usize,
     ) -> u64 {
-        if ci >= counts.len() {
+        if pi >= patterns.len() {
             return (!springs.get(si..).unwrap_or_default().contains(&b'#')) as u64;
         } else if si >= springs.len() {
             return 0;
         }
 
-        let m = memo[(si, ci)];
+        let m = memo[(si, pi)];
         if m > 0 {
             return m - 1;
         }
@@ -69,14 +69,14 @@ fn solve_grp(springs: &[u8], counts: &[Vec<u8>]) -> u64 {
         let mut ret = 0;
 
         if matches!(springs[si], b'.' | b'?') {
-            ret += tree_rec(memo, springs, counts, si + 1, ci);
+            ret += brec(memo, springs, patterns, si + 1, pi);
         }
 
         if matches!(springs[si], b'#' | b'?') {
-            let count = &counts[ci];
+            let pattern = &patterns[pi];
             let subs = &springs[si..];
-            if count.len() <= subs.len() {
-                if count
+            if pattern.len() <= subs.len() {
+                if pattern
                     .iter()
                     .zip(subs.iter())
                     .try_fold(
@@ -91,25 +91,25 @@ fn solve_grp(springs: &[u8], counts: &[Vec<u8>]) -> u64 {
                     )
                     .is_some()
                 {
-                    ret += tree_rec(memo, springs, counts, si + count.len(), ci + 1);
+                    ret += brec(memo, springs, patterns, si + pattern.len(), pi + 1);
                 }
             }
         }
 
-        memo[(si, ci)] = ret + 1;
+        memo[(si, pi)] = ret + 1;
         ret
     }
-    tree_rec(&mut memo, springs, counts, 0, 0)
+    brec(&mut memo, springs, patterns, 0, 0)
 }
 
 fn solve(input: &[(Vec<u8>, Vec<Vec<u8>>)]) -> (u64, u64) {
     let p1 = input
         .iter()
-        .map(|(springs, counts)| solve_grp(springs, counts))
+        .map(|(springs, patterns)| solve_grp(springs, patterns))
         .sum();
     let p2 = input
         .iter()
-        .map(|(springs, counts)| unfold_and_solve(springs, counts))
+        .map(|(springs, patterns)| unfold_and_solve(springs, patterns))
         .sum();
     (p1, p2)
 }
