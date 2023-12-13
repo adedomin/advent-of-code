@@ -52,7 +52,7 @@ fn asym<'a>(iter: impl Iterator<Item = (&'a BitVec, &'a BitVec)>) -> usize {
 }
 
 fn sym_check(v: &[BitVec], smudge_factor: usize) -> Result<(), usize> {
-    (1..v.len()).try_fold((), |_, pos| {
+    (1..v.len()).try_for_each(|pos| {
         let (top, bot) = v.split_at(pos);
         if asym(top.iter().rev().zip(bot.iter())) == smudge_factor {
             Err(pos)
