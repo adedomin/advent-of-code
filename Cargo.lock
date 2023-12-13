@@ -319,6 +319,7 @@ name = "y2023"
 version = "0.1.0"
 dependencies = [
  "aoc-shared",
+ "bitvec",
  "itertools 0.12.0",
  "itoa",
  "num",
