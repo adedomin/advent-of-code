@@ -57,7 +57,6 @@ fn solve_interval(mut seeds: Vec<(bool, Range<i64>)>, almanac: &[Vec<(Range<i64>
             .into_iter()
             .filter(|(a, _)| *a)
             .chain(new_ranges)
-            .sorted_by_key(|(_, i)| i.start)
             .collect_vec();
     }
 
