@@ -49,40 +49,11 @@ fn calc_load(grid: &Output) -> usize {
     ret
 }
 
-fn solve(grid: &Output) -> usize {
-    use Rocks::*;
-    let mut g2 = grid.clone();
-    // from left to right
-    for x in 0..grid.1 {
-        let mut last = 0;
-        // go north to south
-        for y in 0..grid.2 {
-            let t = g2[(x, y)];
-            match t {
-                Square => last = y + 1,
-                Rounded => {
-                    if last != y {
-                        g2[(x, last)] = Rounded;
-                        g2[(x, y)] = Empty;
-                    }
-                    last = last + 1;
-                }
-                _ => (),
-            }
-        }
-    }
-    #[cfg(debug_assertions)]
-    {
-        println!("{g2:?}");
-    }
-    calc_load(&g2)
-}
-
-fn solve2(grid: &Output, cycle_cnt: usize) -> usize {
+fn solve2(grid: &Output, cycle_cnt: usize, is_p1: bool) -> usize {
     let mut cycle_detector = HashMap::new();
     let mut g2 = grid.clone();
     let mut i = 0;
-    while i < cycle_cnt {
+    'out: while i < cycle_cnt {
         for (cardinal, xend, yend) in [
             (Rot2D::None, grid.1, grid.2),
             (Rot2D::Clock270, grid.2, grid.1),
@@ -109,6 +80,9 @@ fn solve2(grid: &Output, cycle_cnt: usize) -> usize {
                     }
                 }
             }
+            if is_p1 {
+                break 'out;
+            }
         }
         i += 1;
         // we skip over common periods...
@@ -130,13 +104,13 @@ const P2_CYCLE: usize = 1_000_000_000;
 fn main() -> io::Result<()> {
     let (input, _, opts) = advanced_cli();
     let parsed_input = parse_to_flat2d(&input);
-    let part1 = solve(&parsed_input);
+    let part1 = solve2(&parsed_input, 1, true);
     let cycles = if let Some(c) = opts.get("cycle") {
         c.parse::<usize>().unwrap()
     } else {
         P2_CYCLE
     };
-    let part2 = solve2(&parsed_input, cycles);
+    let part2 = solve2(&parsed_input, cycles, false);
     print!("Part1: {part1}, ");
     print!("Part2: {part2}");
     println!();
