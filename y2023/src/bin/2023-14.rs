@@ -83,18 +83,12 @@ fn solve2(grid: &Output, cycle_cnt: usize) -> usize {
     let mut g2 = grid.clone();
     let mut i = 0;
     while i < cycle_cnt {
-        for cardinal in [
-            Rot2D::None,
-            Rot2D::Clock270,
-            Rot2D::Clock180,
-            Rot2D::Clock90,
+        for (cardinal, xend, yend) in [
+            (Rot2D::None, grid.1, grid.2),
+            (Rot2D::Clock270, grid.2, grid.1),
+            (Rot2D::Clock180, grid.1, grid.2),
+            (Rot2D::Clock90, grid.2, grid.1),
         ] {
-            // technically the problems are square, but just in case, flip x/y max when looking sideways.
-            let (xend, yend) = if matches!(cardinal, Rot2D::None | Rot2D::Clock180) {
-                (grid.1, grid.2)
-            } else {
-                (grid.2, grid.1)
-            };
             // from left to right
             for x in 0..xend {
                 let mut last = 0;
@@ -118,6 +112,7 @@ fn solve2(grid: &Output, cycle_cnt: usize) -> usize {
         }
         i += 1;
         // we skip over common periods...
+        // insert returns the old result if it existed.
         if let Some(cycle_amt) = cycle_detector.insert(g2.0.clone(), i) {
             let period = i - cycle_amt;
             i += (cycle_cnt - i) / period * period;
