@@ -27,7 +27,7 @@ fn parse_input(input: &[u8]) -> Vec<(Vec<i32>, Vec<i32>)> {
         .collect::<Vec<(Vec<i32>, Vec<i32>)>>()
 }
 
-fn count_winning<'a>(i: &'a [(Vec<i32>, Vec<i32>)]) -> impl Iterator<Item = i32> + 'a {
+fn count_winning(i: &[(Vec<i32>, Vec<i32>)]) -> impl Iterator<Item = i32> + '_ {
     i.iter().map(|(win, nums)| {
         win.iter()
             .fold(0, |acc, w| if nums.contains(w) { acc + 1 } else { acc })

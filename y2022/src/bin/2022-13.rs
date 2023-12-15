@@ -1,5 +1,5 @@
-use std::io;
 use aoc_shared::{fold_decimal, read_input, AoCTokenizer, Token};
+use std::io;
 
 #[derive(PartialEq, Eq, Debug)]
 enum Packet {
@@ -77,10 +77,10 @@ fn parse(input: Vec<u8>) -> Output {
                     num.iter().fold(0u64, fold_decimal),
                 )));
             }
-            Token::Delimiter(sep) if sep == b'[' => {
+            Token::Delimiter(b'[') => {
                 stack.push(PartialPacket::Start);
             }
-            Token::Delimiter(sep) if sep == b']' => {
+            Token::Delimiter(b']') => {
                 let mut new_partial_packet = Vec::new();
                 loop {
                     let part = stack

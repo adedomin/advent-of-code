@@ -163,7 +163,7 @@ fn parse(input: Vec<u8>) -> (u64, u64) {
                 };
                 parsed.push(digits.iter().fold(0u8, |acc, &d| acc | 1 << (d - b'a')));
             }
-            Token::Delimiter(delim) if delim == b'|' => {
+            Token::Delimiter(b'|') => {
                 parsed.push(PIPE);
                 past_delim = true;
             }

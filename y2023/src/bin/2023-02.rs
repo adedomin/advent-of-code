@@ -74,7 +74,7 @@ fn solve2(i: &[Vec<Game>]) -> i32 {
                 .iter()
                 .fold(Game::default(), |acc, game| gmax(&acc, game))
         })
-        .map(|game| gpower(game))
+        .map(gpower)
         .sum()
 }
 

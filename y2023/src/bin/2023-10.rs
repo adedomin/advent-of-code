@@ -44,10 +44,7 @@ impl Pipe {
     }
 
     fn is_bent(&self) -> bool {
-        match self {
-            Pipe::NE90 | Pipe::NW90 | Pipe::SW90 | Pipe::SE90 => true,
-            _ => false,
-        }
+        matches!(self, Pipe::NE90 | Pipe::NW90 | Pipe::SW90 | Pipe::SE90)
     }
 }
 
@@ -112,16 +109,15 @@ fn solve(grid: &FlatVec2D<Pipe>) -> (i64, i64) {
                       (South, sx, sy + 1, 1, vec![]),
     ];
 
-    let start_is_bent = match [
-        grid[(sx, sy - 1)],
-        grid[(sx - 1, sy)],
-        grid[(sx + 1, sy)],
-        grid[(sx, sy + 1)],
-    ] {
-        [Pipe::Vert, _, _, Pipe::Vert] => false,
-        [_, Pipe::Hori, Pipe::Hori, _] => false,
-        _ => true,
-    };
+    let start_is_bent = !matches!(
+        [
+            grid[(sx, sy - 1)],
+            grid[(sx - 1, sy)],
+            grid[(sx + 1, sy)],
+            grid[(sx, sy + 1)],
+        ],
+        [Pipe::Vert, _, _, Pipe::Vert] | [_, Pipe::Hori, Pipe::Hori, _]
+    );
 
     let mut acost = i64::MAX;
     let mut area = vec![];

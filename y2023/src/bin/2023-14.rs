@@ -40,9 +40,8 @@ fn calc_load(grid: &Output) -> usize {
     let mut ret = 0;
     for y in 0..grid.2 {
         for x in 0..grid.1 {
-            match grid[(x, y)] {
-                Rocks::Rounded => ret += grid.2 - y,
-                _ => (),
+            if grid[(x, y)] == Rocks::Rounded {
+                ret += grid.2 - y
             }
         }
     }
@@ -74,7 +73,7 @@ fn solve2(grid: &Output, cycle_cnt: usize, is_p1: bool) -> usize {
                                 g2[(x, last, cardinal)] = Rounded;
                                 g2[(x, y, cardinal)] = Empty;
                             }
-                            last = last + 1;
+                            last += 1;
                         }
                         _ => (),
                     }

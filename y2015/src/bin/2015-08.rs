@@ -92,8 +92,8 @@ fn parse_input(input: &[u8]) -> Output {
     let (tokens, _, _) = AoCTokenizer::new(input)
         .map(|token| match token {
             Token::Something(word) => Chars(word),
-            Token::Delimiter(delim) if delim == b'\\' => UknkEsc,
-            Token::Delimiter(delim) if delim == b'"' => Quote,
+            Token::Delimiter(b'\\') => UknkEsc,
+            Token::Delimiter(b'"') => Quote,
             Token::Delimiter(delim) => Char(delim),
             Token::Newline | Token::DoubleNewline | Token::Space | Token::End => Delim,
         })

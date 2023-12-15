@@ -6,7 +6,9 @@ use std::{
 use aoc_shared::{fold_decimal, read_input, AoCTokenizer, Token};
 use itertools::Itertools;
 
-fn parse(input: Vec<u8>) -> Vec<Vec<(i32, i32, i32)>> {
+type Scanner = (i32, i32, i32);
+
+fn parse(input: Vec<u8>) -> Vec<Vec<Scanner>> {
     let mut ret = vec![];
     let mut curr_scanner = vec![];
     let mut neg = false;
@@ -56,7 +58,7 @@ fn parse(input: Vec<u8>) -> Vec<Vec<(i32, i32, i32)>> {
 // There is only 24 possible. For the sake of writing simplicity
 // one should iterate the whole point list, then select
 // 1 through 24 possible permutations of each point.
-fn gen_rot_vector((a, b, c): (i32, i32, i32)) -> [(i32, i32, i32); 24] {
+fn gen_rot_vector((a, b, c): Scanner) -> [Scanner; 24] {
     [
         (a, b, c),
         (a, -b, -c),
@@ -109,20 +111,17 @@ impl PartialOrd for MatchKind {
     }
 }
 
-fn manhattan_slope(lhs: (i32, i32, i32), rhs: (i32, i32, i32)) -> (i32, i32, i32) {
+fn manhattan_slope(lhs: Scanner, rhs: Scanner) -> Scanner {
     (lhs.0 - rhs.0, lhs.1 - rhs.1, lhs.2 - rhs.2)
 }
 
-fn manhattan_slope_off_fix(lhs: (i32, i32, i32), rhs: (i32, i32, i32)) -> (i32, i32, i32) {
+fn manhattan_slope_off_fix(lhs: Scanner, rhs: Scanner) -> Scanner {
     (lhs.0 + rhs.0, lhs.1 + rhs.1, lhs.2 + rhs.2)
 }
 
 // We assume a matching overlapping point(s) will all share the most common offsets between the map and the rotations.
-fn find_match(
-    lhs: &[(i32, i32, i32)],
-    rhs: &[(i32, i32, i32)],
-) -> Option<((i32, i32, i32), Vec<(i32, i32, i32)>)> {
-    let mut slope_maps = HashMap::<(i32, i32, i32), MatchKind>::new();
+fn find_match(lhs: &[Scanner], rhs: &[Scanner]) -> Option<(Scanner, Vec<Scanner>)> {
+    let mut slope_maps = HashMap::<Scanner, MatchKind>::new();
     for &lbeacon in lhs {
         for &rbeacon in rhs {
             for (rot_idx, &rot) in gen_rot_vector(rbeacon).iter().enumerate() {
@@ -145,14 +144,14 @@ fn find_match(
         if max.count < 12 {
             None
         } else {
-            let mut return_set = HashSet::<(i32, i32, i32)>::from_iter(lhs.iter().cloned());
+            let mut return_set = HashSet::<Scanner>::from_iter(lhs.iter().cloned());
             for &point in rhs {
                 let sel_rot = gen_rot_vector(point)[max.rot_idx];
                 return_set.insert(manhattan_slope_off_fix(sel_rot, slope_off));
             }
             Some((
                 slope_off,
-                return_set.iter().cloned().collect::<Vec<(i32, i32, i32)>>(),
+                return_set.iter().cloned().collect::<Vec<Scanner>>(),
             ))
         }
     } else {
@@ -160,7 +159,7 @@ fn find_match(
     }
 }
 
-fn solve(sensor_readings: Vec<Vec<(i32, i32, i32)>>) -> (i32, u32) {
+fn solve(sensor_readings: Vec<Vec<Scanner>>) -> (i32, u32) {
     let mut next_round = VecDeque::from_iter(sensor_readings);
     let mut scanners = vec![(0, 0, 0)];
     let mut start = next_round.pop_front().unwrap();

@@ -22,7 +22,7 @@ fn parse(input: Vec<u8>) -> Vec<u64> {
             _ => (),
         }
     }
-    if (b'0'..=b'9').contains(&last) {
+    if last.is_ascii_digit() {
         crabs.push(num);
     }
     crabs

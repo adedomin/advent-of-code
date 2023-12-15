@@ -299,12 +299,12 @@ fn parse(input: Vec<u8>) -> Vec<Snailnum> {
             Token::Something(num) => {
                 stack.push(Either::Right((num[0] - b'0') as u64));
             }
-            Token::Delimiter(sep) if sep == b'[' => {
+            Token::Delimiter(b'[') => {
                 let nidx = nodes[i].len();
                 nodes[i].push(Node::default());
                 stack.push(Either::Left(nidx));
             }
-            Token::Delimiter(sep) if sep == b']' => {
+            Token::Delimiter(b']') => {
                 let right = stack.pop().expect("Malformed Snailnum.");
                 let left = stack.pop().expect("Malformed Snailnum.");
                 let root = stack.pop().expect("Malformed Snailnum.");

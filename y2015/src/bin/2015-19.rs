@@ -8,7 +8,7 @@ use std::{
 #[derive(Debug, Clone)]
 struct Replacer<'a>(&'a [u8], &'a [u8]);
 
-fn parse_input<'a>(input: &'a [u8]) -> (Vec<Replacer>, &'a [u8]) {
+fn parse_input(input: &[u8]) -> (Vec<Replacer>, &[u8]) {
     let (replacements, _, mol, _) = input.tokenize().fold(
         (Vec::new(), None, None, false),
         |(mut acc, mol1, mol2, is_final), tok| match tok {
@@ -71,9 +71,7 @@ fn parse_input2<'a>(replace: &[Replacer<'a>], molecule: &'a [u8]) -> (Vec<u8>, V
                 .iter()
                 .enumerate()
                 .flat_map(|(i, m)| {
-                    if tok_list.contains_key(m) {
-                        None
-                    } else if i == matchers.len() - 1 {
+                    if tok_list.contains_key(m) || i == matchers.len() - 1 {
                         // this filters out tokens in tail or front, since their purpose appears to be surrounding.
                         None
                     } else if i == 0 {
@@ -101,7 +99,7 @@ fn parse_input2<'a>(replace: &[Replacer<'a>], molecule: &'a [u8]) -> (Vec<u8>, V
     (terminals, new_mol)
 }
 
-fn find_all<'a>(Replacer(find, _): &Replacer<'a>, molecule: &[u8]) -> Vec<usize> {
+fn find_all(Replacer(find, _): &Replacer<'_>, molecule: &[u8]) -> Vec<usize> {
     molecule.windows(find.len()).enumerate().fold(
         Vec::with_capacity(molecule.len()),
         |mut acc, (i, el)| {
@@ -138,7 +136,7 @@ fn part1_sol(replace: &[Replacer], molecule: &[u8]) -> HashSet<Vec<u8>> {
     replacements
 }
 
-fn part2_sol<'a>(term: Vec<u8>, molecule: Vec<u8>) -> i32 {
+fn part2_sol(term: Vec<u8>, molecule: Vec<u8>) -> i32 {
     let m = molecule.len() as i32;
     let del = molecule.iter().fold(0i32, |acc, tok| {
         if term.contains(tok) && *tok != LHS_TERM {
@@ -155,7 +153,7 @@ fn part2_sol<'a>(term: Vec<u8>, molecule: Vec<u8>) -> i32 {
 fn main() -> io::Result<()> {
     let input = read_input()?;
     let (replacements, mol) = parse_input(&input);
-    let part1 = part1_sol(&replacements, &mol).len();
+    let part1 = part1_sol(&replacements, mol).len();
     print!("Part1: {part1}, ");
     let (terminals, mol) = parse_input2(&replacements, mol);
     let part2 = part2_sol(terminals, mol);

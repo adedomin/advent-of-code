@@ -20,7 +20,7 @@ impl Piecewise {
     }
 }
 
-fn parse_input<'a>(input: &'a [u8]) -> Output {
+fn parse_input(input: &[u8]) -> Output {
     let regex = Regex::new(r##"(?m)^(?<rein>[A-Za-z]+) can fly (?<linear>[[:digit:]]+) km/s for (?<upto>[[:digit:]]+) seconds, but then must rest for (?<rest>[[:digit:]]+) seconds.$"##)
             .unwrap();
 
@@ -73,13 +73,13 @@ fn solve_p2(r: &[(&[u8], Piecewise)], time: i64) -> i64 {
             .enumerate()
             .fold((i64::MIN, vec![]), |(topscore, mut acc), (pos, (pf, _))| {
                 let eval = pf.eval(i);
-                if topscore < eval {
-                    (eval, vec![pos])
-                } else if topscore == eval {
-                    acc.push(pos);
-                    (topscore, acc)
-                } else {
-                    (topscore, acc)
+                match topscore.cmp(&eval) {
+                    std::cmp::Ordering::Less => (eval, vec![pos]),
+                    std::cmp::Ordering::Equal => {
+                        acc.push(pos);
+                        (topscore, acc)
+                    }
+                    std::cmp::Ordering::Greater => (topscore, acc),
                 }
             })
             .1;

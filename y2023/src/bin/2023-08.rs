@@ -40,8 +40,8 @@ fn least_common_mult(factors: Vec<(usize, u32)>) -> u64 {
     let mut resi = [0u32; PRIMES_TO_1009.len()];
 
     for (prime, cnt) in factors {
-        let curr = resi[prime as usize];
-        resi[prime as usize] = std::cmp::max(cnt, curr);
+        let curr = resi[prime];
+        resi[prime] = std::cmp::max(cnt, curr);
     }
 
     resi.iter()

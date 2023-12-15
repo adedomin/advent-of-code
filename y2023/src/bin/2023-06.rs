@@ -42,12 +42,12 @@ fn solve(constraint: u64, record: u64) -> u64 {
     let xmax = (-b - (b.powf(2f64) - 4f64 * a * c).sqrt()) / -2f64;
     let xmin = (-b + (b.powf(2f64) - 4f64 * a * c).sqrt()) / -2f64;
     let mut ans = (xmax - xmin).trunc() as u64;
-    if xmax.fract() == 0.0 || xmin.fract() == 0.0 as f64 {
+    if xmax.fract() == 0.0 || xmin.fract() == 0.0_f64 {
         ans -= 1;
     } else if xmin.fract() > 0.5 {
         ans += 1;
     }
-    ans as u64
+    ans
 }
 
 fn main() -> io::Result<()> {
@@ -65,10 +65,10 @@ fn main() -> io::Result<()> {
         (
             ci.as_bytes()
                 .iter()
-                .fold(cons, |acc, v| fold_decimal(acc, v)),
+                .fold(cons, fold_decimal),
             ri.as_bytes()
                 .iter()
-                .fold(rec, |acc, v| fold_decimal(acc, v)),
+                .fold(rec, fold_decimal),
         )
     });
     let part2 = solve(constraint, record);

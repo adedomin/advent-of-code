@@ -22,7 +22,7 @@ fn ts_contains_req(n: u64) -> bool {
     // e.g. ABCDEFGH -> AB, BC, CD, DE, EF, FG, GH.
     for i in (0..7).rev() {
         let t1 = n / 26u64.pow(i + 1) % 26;
-        let t2 = n / 26u64.pow(i + 0) % 26;
+        let t2 = n / 26u64.pow(i) % 26;
 
         if (t1 == I || t1 == O || t1 == L) && (t2 == I || t2 == O || t2 == L) {
             return false;

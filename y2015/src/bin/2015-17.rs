@@ -6,7 +6,7 @@ fn parse_input(input: &[u8]) -> Vec<i64> {
     input
         .tokenize()
         .flat_map(|word| destructure_or_none!(Token::Something|word| = word))
-        .map(|word| atoi::<i64, 10>(word))
+        .map(atoi::<i64, 10>)
         .collect::<Vec<i64>>()
 }
 
@@ -14,7 +14,7 @@ fn solve_p1(max_amt: i64, containers: &[i64]) -> usize {
     containers
         .iter()
         .powerset()
-        .filter(|vals| vals.iter().fold(0, |acc, &&val| acc + val) == max_amt)
+        .filter(|vals| vals.iter().copied().sum::<i64>() == max_amt)
         .count()
 }
 
@@ -22,7 +22,7 @@ fn solve_p2(max_amt: i64, containers: &[i64]) -> usize {
     containers
         .iter()
         .powerset()
-        .filter(|vals| vals.iter().fold(0, |acc, &&val| acc + val) == max_amt)
+        .filter(|vals| vals.iter().copied().sum::<i64>() == max_amt)
         .map(|vals| vals.len())
         .min_set()
         .len()

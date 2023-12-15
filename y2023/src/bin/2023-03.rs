@@ -75,8 +75,7 @@ fn solve(input: &FlatVec2D<u8>) -> (i32, i32) {
                 if !is_part_num {
                     is_part_num = neigh
                         .iter()
-                        .find(|Neighbor(v, ..)| !v.is_ascii_digit() && **v != b'.')
-                        .is_some();
+                        .any(|Neighbor(v, ..)| !v.is_ascii_digit() && **v != b'.');
                 }
                 gear.extend(
                     neigh

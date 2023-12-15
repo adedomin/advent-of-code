@@ -59,6 +59,8 @@ fn transform_paper(instruction: Instruction, paper: &mut [(i32, i32)]) {
     for (x, y) in paper.iter_mut() {
         match instruction {
             Instruction::FoldUp(ypos) => {
+                // y.cmp(ypos) IS NOT THE SAME THING
+                #[allow(clippy::comparison_chain)]
                 if *y > ypos {
                     *y -= (y.abs_diff(ypos) * 2) as i32;
                 } else if *y == ypos {
@@ -66,6 +68,8 @@ fn transform_paper(instruction: Instruction, paper: &mut [(i32, i32)]) {
                 }
             }
             Instruction::FoldLeft(xpos) => {
+                // x.cmp(xpos) IS NOT THE SAME THING
+                #[allow(clippy::comparison_chain)]
                 if *x > xpos {
                     *x -= (x.abs_diff(xpos) * 2) as i32;
                 } else if *x == xpos {

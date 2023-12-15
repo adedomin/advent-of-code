@@ -9,7 +9,7 @@ struct Ingredient {
     cal: i64,
 }
 
-impl<'a> Ingredient {
+impl Ingredient {
     fn scores(&self, grams: i64) -> (i64, i64, i64, i64, i64) {
         (
             self.cap * grams,

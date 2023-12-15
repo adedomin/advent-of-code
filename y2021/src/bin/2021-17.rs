@@ -1,4 +1,4 @@
-use std::{collections::HashSet, io};
+use std::{cmp::Ordering, collections::HashSet, io};
 
 use aoc_shared::{fold_decimal, read_input, AoCTokenizer, Token};
 
@@ -29,9 +29,9 @@ fn parse(input: Vec<u8>) -> Points {
             1,
         ),
         |(mut acc, state, neg), tok| match tok {
-            Token::Something(str) if str == b"x" => (acc, Parse::X, 1),
-            Token::Something(str) if str == b"y" => (acc, Parse::Y, 1),
-            Token::Delimiter(del) if del == b'-' => (acc, state, -1),
+            Token::Something(b"x") => (acc, Parse::X, 1),
+            Token::Something(b"y") => (acc, Parse::Y, 1),
+            Token::Delimiter(b'-') => (acc, state, -1),
             Token::Something(num) if num != b"target" && num != b"area" => {
                 let n = if neg == -1 {
                     neg * num.iter().fold(0i32, fold_decimal)
@@ -87,12 +87,10 @@ fn solve_possible(
 
     let mut set = HashSet::<(i32, i32)>::new();
     (ymin..=ybound).for_each(|vy| {
-        let (off, fvy) = if vy > 0 {
-            (2 * vy + 1, -vy as f32 - 1.0)
-        } else if vy == 0 {
-            (1, -1.0)
-        } else {
-            (0, vy as f32)
+        let (off, fvy) = match vy.cmp(&0) {
+            Ordering::Greater => (2 * vy + 1, -vy as f32 - 1.0),
+            Ordering::Equal => (1, -1.0),
+            Ordering::Less => (0, vy as f32),
         };
         let yt_min = quadratic(-1.0, 2.0 * fvy + 1.0, -2.0 * ymax as f32).ceil() as i32 + off;
         let yt_max = quadratic(-1.0, 2.0 * fvy + 1.0, -2.0 * ymin as f32).floor() as i32 + off;

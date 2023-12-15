@@ -1,6 +1,6 @@
+use aoc_shared::{fold_decimal, read_input, RecordGrouper, Token};
 use num::traits::AsPrimitive;
 use std::io;
-use aoc_shared::{fold_decimal, read_input, RecordGrouper, Token};
 
 type Output = Vec<MonkeyScript>;
 
@@ -49,8 +49,7 @@ struct MonkeyScript {
     div_and_branch: Op,
 }
 
-#[derive(PartialEq, Eq)]
-#[derive(Default)]
+#[derive(PartialEq, Eq, Default)]
 enum Step {
     #[default]
     Uknk,
@@ -61,8 +60,6 @@ enum Step {
     TestCondT,
     TestCondF,
 }
-
-
 
 #[derive(Default, Debug)]
 struct MonkeyPartial {
@@ -192,13 +189,10 @@ fn chinese_rem(num: i64, moduli: &[i64]) -> Option<i64> {
     let prod = moduli.iter().product::<i64>();
     moduli
         .iter()
-        .fold(Some(0i64), |acc, &m| match acc {
-            None => None,
-            Some(acc) => {
-                let prod = prod / m;
-                let rem = num % m;
-                Some(acc + (rem * inverse_mod(prod, m)? * prod))
-            }
+        .try_fold(0i64, |acc, &m| {
+            let prod = prod / m;
+            let rem = num % m;
+            Some(acc + (rem * inverse_mod(prod, m)? * prod))
         })
         .map(|sum| sum % prod)
 }

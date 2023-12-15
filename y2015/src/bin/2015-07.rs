@@ -4,6 +4,7 @@ use std::{collections::HashMap, io};
 type Output = HashMap<u16, Op>;
 type Solved = u16;
 
+#[allow(clippy::upper_case_acronyms)]
 #[derive(Copy, Clone, Debug)]
 enum OpTreeTok {
     OpOr,
@@ -90,7 +91,7 @@ fn parse_input(input: Vec<u8>) -> Output {
                         panic!("Invalid number or ident {num_or_ident:?}");
                     }
                 }
-                Token::Delimiter(delim) if delim == b'>' => Some(OpAssign),
+                Token::Delimiter(b'>') => Some(OpAssign),
                 _ => None,
             }
         })

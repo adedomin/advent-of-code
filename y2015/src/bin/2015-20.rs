@@ -112,7 +112,7 @@ fn find_lowest_given_new_cond(input: i32) -> usize {
     // 1 based indexing... duh.
     homes
         .iter()
-        .position(|&h| h >= input as i32)
+        .position(|&h| h >= input)
         .expect("at least one home to have {input} amount of presents")
         + 1
 }

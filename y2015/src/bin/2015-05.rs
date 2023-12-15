@@ -4,13 +4,10 @@ use std::{collections::HashSet, io};
 const VOWELS: &[u8] = b"aeiou";
 
 fn bad_combo(a: u8, b: u8) -> bool {
-    match (a, b) {
-        (b'a', b'b') => true,
-        (b'c', b'd') => true,
-        (b'p', b'q') => true,
-        (b'x', b'y') => true,
-        _ => false,
-    }
+    matches!(
+        (a, b),
+        (b'a', b'b') | (b'c', b'd') | (b'p', b'q') | (b'x', b'y')
+    )
 }
 
 #[derive(Debug)]

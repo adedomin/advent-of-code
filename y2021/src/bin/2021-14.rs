@@ -19,7 +19,7 @@ fn parse(input: Vec<u8>) -> ([u64; ALPHADIM], [(usize, usize); ALPHADIM], u8) {
     let (start_cond, rules) = input.split_at(input.iter().position(|&chr| chr == b'\n').unwrap());
 
     let mut vector_hist = [0u64; ALPHADIM];
-    array_windows(&start_cond).for_each(|&[st, ed]| {
+    array_windows(start_cond).for_each(|&[st, ed]| {
         vector_hist[pair_to_num((st, ed))] += 1;
     });
 

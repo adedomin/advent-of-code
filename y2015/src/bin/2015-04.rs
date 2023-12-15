@@ -11,7 +11,7 @@ fn solve<const LEADING: usize>(key: &str) -> Option<u64> {
         message.push_str(postfix);
         let res = format!("{:?}", md5::compute(&message));
 
-        &res.as_bytes()[..LEADING] == &leading
+        res.as_bytes()[..LEADING] == leading
     })
 }
 

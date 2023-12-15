@@ -61,7 +61,7 @@ impl<'a> Iterator for InstrIter<'a> {
         // start and end are inclusive intervals [start.x, end.x], [start.y, end.y]
         if curry <= lasty {
             let ret = Some(self.curr_iter);
-            if currx + 1 <= lastx {
+            if currx < lastx {
                 self.curr_iter.0 += 1;
             } else {
                 self.curr_iter.0 = startx;

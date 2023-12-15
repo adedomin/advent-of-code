@@ -56,7 +56,9 @@ fn add_points(
     }
 }
 
-fn parse(input: Vec<u8>) -> (i32, Vec<(i32, i32)>, Vec<(i32, i32)>) {
+type Output = (i32, Vec<(i32, i32)>, Vec<(i32, i32)>);
+
+fn parse(input: Vec<u8>) -> Output {
     // input length is a good "guesstimate"
     let mut flat_points = Vec::<(i32, i32)>::with_capacity(input.len() / 4);
     let mut points = Vec::<(i32, i32)>::with_capacity(input.len() / 4);

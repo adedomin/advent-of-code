@@ -75,8 +75,8 @@ fn solve_grp(springs: &[u8], patterns: &[Vec<u8>]) -> u64 {
         if matches!(springs[si], b'#' | b'?') {
             let pattern = &patterns[pi];
             let subs = &springs[si..];
-            if pattern.len() <= subs.len() {
-                if pattern
+            if pattern.len() <= subs.len()
+                && pattern
                     .iter()
                     .zip(subs.iter())
                     .try_fold(
@@ -90,9 +90,8 @@ fn solve_grp(springs: &[u8], patterns: &[Vec<u8>]) -> u64 {
                         },
                     )
                     .is_some()
-                {
-                    ret += brec(memo, springs, patterns, si + pattern.len(), pi + 1);
-                }
+            {
+                ret += brec(memo, springs, patterns, si + pattern.len(), pi + 1);
             }
         }
 
