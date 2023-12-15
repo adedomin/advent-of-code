@@ -311,6 +311,7 @@ name = "y2022"
 version = "2022.12.1"
 dependencies = [
  "aoc-shared",
+ "itertools 0.12.0",
  "num",
 ]
 

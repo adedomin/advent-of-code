@@ -1,10 +1,9 @@
-#![feature(iter_array_chunks)]
-
+use aoc_shared::{destructure_or_none, fold_decimal_from, read_input, AoCTokenizer, Token};
+use itertools::Itertools;
 use std::{
     fmt::{Display, Write},
     io,
 };
-use aoc_shared::{destructure_or_none, fold_decimal_from, read_input, AoCTokenizer, Token};
 
 #[derive(Clone, Copy)]
 struct Instructions(usize, usize, usize);
@@ -71,8 +70,8 @@ fn parse_input(input: Vec<u8>) -> Parsed {
     let instructions = tokenizer
         .flat_map(|token| destructure_or_none!(Token::Something|word| = token))
         .filter(|token| !matches!(token, &b"move" | &b"from" | &b"to"))
-        .array_chunks()
-        .map(|[count, from, to]| {
+        .tuples()
+        .map(|(count, from, to)| {
             Instructions(
                 fold_decimal_from(count),
                 fold_decimal_from::<usize>(from) - 1usize,

@@ -1,6 +1,5 @@
-#![feature(iter_array_chunks)]
-
 use aoc_shared::{destructure_or_none, read_input, AoCTokenizer, Token};
+use itertools::Itertools;
 use std::io;
 
 const PRI_LOW: u8 = b'a' - 1;
@@ -37,8 +36,9 @@ fn main() -> io::Result<()> {
     let tokenizer = AoCTokenizer::new(&input);
     let (part1, part2) = tokenizer
         .flat_map(|token| destructure_or_none!(Token::Something|word| = token))
-        .array_chunks()
-        .fold((0u64, 0u64), |(p1_acc, p2_acc), elf_group: [&[u8]; 3]| {
+        .tuples()
+        .fold((0u64, 0u64), |(p1_acc, p2_acc), (ef1, ef2, ef3)| {
+            let elf_group = [ef1, ef2, ef3];
             (
                 p1_acc + elf_group.iter().map(|ruck| part1_algo(ruck)).sum::<u64>(),
                 p2_acc + part2_algo(&elf_group),

@@ -1,8 +1,8 @@
-#![feature(array_chunks)]
 use std::io;
 
 use aoc_shared::read_input;
 use bitvec::{field::BitField, order::Msb0, view::BitView};
+use itertools::Itertools;
 
 fn hexdigit(hex: u8) -> u8 {
     match hex {
@@ -72,9 +72,9 @@ enum Counter {
 }
 
 fn parse(input: Vec<u8>) -> Vec<Packet> {
-    let bindata = input.array_chunks::<2>().into_iter().fold(
+    let bindata = input.iter().tuples().fold(
         Vec::<u8>::with_capacity(input.len() / 2),
-        |mut acc, &[msb, lsb]| {
+        |mut acc, (&msb, &lsb)| {
             acc.push(hexdigit(msb) << 4 | hexdigit(lsb));
             acc
         },

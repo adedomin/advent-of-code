@@ -1,7 +1,6 @@
-#![feature(iter_array_chunks)]
-
-use std::io;
 use aoc_shared::{destructure_or_none, fold_decimal_from, read_input, AoCTokenizer, Token};
+use itertools::Itertools;
+use std::io;
 
 type ElfPairs = ((i64, i64), (i64, i64));
 
@@ -10,8 +9,8 @@ fn parse_input(input: Vec<u8>) -> Vec<ElfPairs> {
     tokenizer
         .flat_map(|token| destructure_or_none!(Token::Something|word| = token))
         .map(fold_decimal_from)
-        .array_chunks()
-        .map(|[a1, a2, b1, b2]| ((a1, a2), (b1, b2)))
+        .tuples()
+        .map(|(a1, a2, b1, b2)| ((a1, a2), (b1, b2)))
         .collect()
 }
 
