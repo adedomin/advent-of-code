@@ -1,13 +1,17 @@
 use aoc_shared::{atoi, read_input_to_string, Tokenize};
 use std::io;
 
-fn HASH_hasher(v: &[u8]) -> usize {
+/// Holiday ASCII String Helper algorithm (HASH)
+fn HASH_hasher(v: &[u8]) -> u8 {
     v.iter()
-        .fold(0, |acc, &chr| (acc + chr as usize) * 17 % 256)
+        .fold(0, |acc, &chr| acc.wrapping_add(chr).wrapping_mul(17))
 }
 
-fn parse_solve(input: &str) -> usize {
-    input.split(',').map(|s| HASH_hasher(s.as_bytes())).sum()
+fn parse_solve(input: &str) -> u32 {
+    input
+        .split(',')
+        .map(|s| HASH_hasher(s.as_bytes()) as u32)
+        .sum()
 }
 
 fn solve2(input: &[u8]) -> usize {
@@ -18,7 +22,7 @@ fn solve2(input: &[u8]) -> usize {
             |(mut acc, clabel), tok| match tok {
                 aoc_shared::Token::Something(label) if clabel.is_empty() => (acc, label),
                 aoc_shared::Token::Something(focal) => {
-                    let idx = HASH_hasher(clabel);
+                    let idx = HASH_hasher(clabel) as usize;
                     let focal = atoi::<u8, 10>(focal);
                     if let Some(found) = acc[idx].iter_mut().find(|(l, _)| *l == clabel) {
                         *found = (found.0, focal);
@@ -28,7 +32,7 @@ fn solve2(input: &[u8]) -> usize {
                     (acc, b"")
                 }
                 aoc_shared::Token::Delimiter(b'-') => {
-                    let idx = HASH_hasher(clabel);
+                    let idx = HASH_hasher(clabel) as usize;
                     acc[idx] = acc[idx]
                         .drain(..)
                         .filter(|(label, _)| *label != clabel)
