@@ -8,7 +8,6 @@ use std::{
 };
 
 type Output<'a> = (Vec<&'a [u8]>, HashMap<(&'a [u8], &'a [u8]), i64>);
-type Solved = i64;
 
 fn parse_input<'a>(input: &'a [u8]) -> Output {
     let re =

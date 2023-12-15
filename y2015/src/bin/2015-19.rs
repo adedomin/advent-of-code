@@ -1,5 +1,4 @@
 use aoc_shared::{read_input, Token, Tokenize};
-use itertools::Itertools;
 use regex::bytes::Regex;
 use std::{
     collections::{HashMap, HashSet},
