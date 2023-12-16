@@ -53,6 +53,26 @@ impl<T> FlatVec2D<T> {
             .map(|(x, y)| Neighbor(&self[(x as usize, y as usize)], x as usize, y as usize))
             .collect::<Vec<Neighbor<&T>>>()
     }
+
+    pub fn pad_in_bounds(&self, x: usize, y: usize) -> bool {
+        (1..self.1 - 1).contains(&x) && (1..self.2 - 1).contains(&y)
+    }
+
+    pub fn xrange(&self) -> std::ops::Range<usize> {
+        0..self.1
+    }
+
+    pub fn pad_xrange(&self) -> std::ops::Range<usize> {
+        1..self.1 - 1
+    }
+
+    pub fn yrange(&self) -> std::ops::Range<usize> {
+        0..self.2
+    }
+
+    pub fn pad_yrange(&self) -> std::ops::Range<usize> {
+        1..self.2 - 1
+    }
 }
 
 impl FlatVec2D<u8> {
