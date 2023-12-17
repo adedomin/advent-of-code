@@ -29,9 +29,7 @@ fn get_neigh(x: isize, y: isize, lx: isize, ly: isize, ix: i8, iy: i8) -> [(Pixy
 /// We need a custom Ord & PartialOrd to make BinaryHeap a minheap.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 struct HeapState {
-    node_idx: Pxy,
-    lstart_idx: Pxy,
-    vector: Vxy,
+    state: Key,
     cost: u64,
 }
 
@@ -92,22 +90,16 @@ fn solve(
     dist.insert((start, start, (0i8, 1i8)), 0u64);
 
     heap.push(HeapState {
-        node_idx: start,
-        lstart_idx: start,
-        vector: (1, 0),
+        state: (start, start, (1, 0)),
         cost: 0, // we ignore cost of starting in this node
     });
     heap.push(HeapState {
-        node_idx: start,
-        lstart_idx: start,
-        vector: (0, 1),
+        state: (start, start, (0, 1)),
         cost: 0, // we ignore cost of starting in this node
     });
 
     while let Some(HeapState {
-        node_idx: (x, y),
-        lstart_idx: (lx, ly),
-        vector: (ix, iy),
+        state: ((x, y), (lx, ly), (ix, iy)),
         cost,
     }) = heap.pop()
     {
@@ -138,11 +130,9 @@ fn solve(
                 };
 
                 let key = ((x1, y1), (lx1, ly1), (ix1, iy1));
-                if cmp_and_swap_dist(&mut dist, key, new_cost) {
+                if cmp_and_swap_dist(&mut dist, key.clone(), new_cost) {
                     heap.push(HeapState {
-                        node_idx: (x1, y1),
-                        lstart_idx: (lx1, ly1),
-                        vector: (ix1, iy1),
+                        state: key,
                         cost: new_cost,
                     });
                 }
