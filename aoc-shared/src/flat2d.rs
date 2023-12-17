@@ -58,6 +58,10 @@ impl<T> FlatVec2D<T> {
         (1..self.1 - 1).contains(&x) && (1..self.2 - 1).contains(&y)
     }
 
+    pub fn in_bounds(&self, x: isize, y: isize) -> bool {
+        (x > -1 && x < (self.1 as isize)) && (y > -1 && y < (self.2 as isize))
+    }
+
     pub fn xrange(&self) -> std::ops::Range<usize> {
         0..self.1
     }
