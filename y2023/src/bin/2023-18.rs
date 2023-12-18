@@ -52,6 +52,7 @@ fn solve(instructions: Instructions) -> i64 {
             (acc, amt + perim)
         },
     );
+    assert_eq!(points[0], *points.last().unwrap());
     (points
         .into_iter()
         .tuple_windows()
