@@ -86,13 +86,13 @@ impl<'a> Tokenize<'a> for &'a [u8] {
     }
 }
 
-pub struct RecordGrouper<'a> {
+pub struct RecordGrouper<'a, T: Iterator<Item = Token<'a>>> {
     token_tmp: Vec<Token<'a>>,
-    tokenizer: AoCTokenizer<'a>,
+    tokenizer: T,
     record_sep: Token<'a>,
 }
 
-impl<'a> RecordGrouper<'a> {
+impl<'a> RecordGrouper<'a, AoCTokenizer<'a>> {
     pub fn new(input: &'a [u8]) -> Self {
         RecordGrouper {
             token_tmp: vec![],
@@ -110,7 +110,17 @@ impl<'a> RecordGrouper<'a> {
     }
 }
 
-impl<'a> Iterator for RecordGrouper<'a> {
+impl<'a, T: Iterator<Item = Token<'a>>> RecordGrouper<'a, T> {
+    pub fn new_from_tokens_with_rs(tokens: T, record_sep: Token<'a>) -> Self {
+        RecordGrouper {
+            token_tmp: vec![],
+            tokenizer: tokens,
+            record_sep,
+        }
+    }
+}
+
+impl<'a, T: Iterator<Item = Token<'a>>> Iterator for RecordGrouper<'a, T> {
     type Item = Vec<Token<'a>>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -122,18 +132,32 @@ impl<'a> Iterator for RecordGrouper<'a> {
             self.token_tmp.push(token);
         }
 
-        None
+        if !self.token_tmp.is_empty() {
+            Some(std::mem::take(&mut self.token_tmp))
+        } else {
+            None
+        }
     }
 }
 
-impl<'a> FusedIterator for RecordGrouper<'a> {}
+impl<'a, T: Iterator<Item = Token<'a>>> FusedIterator for RecordGrouper<'a, T> {}
 
 pub trait GroupTokenize<'a> {
-    fn group_tokens(self, separator: Token<'a>) -> RecordGrouper<'a>;
+    fn group_tokens(self, separator: Token<'a>) -> RecordGrouper<'a, AoCTokenizer<'a>>;
 }
 
 impl<'a> GroupTokenize<'a> for &'a [u8] {
-    fn group_tokens(self, separator: Token<'a>) -> RecordGrouper<'a> {
+    fn group_tokens(self, separator: Token<'a>) -> RecordGrouper<'a, AoCTokenizer<'a>> {
         RecordGrouper::new_with_rs(self, separator)
+    }
+}
+
+pub trait GroupTokens<'a, T: Iterator<Item = Token<'a>>> {
+    fn group_tokens(self, separator: Token<'a>) -> RecordGrouper<'a, T>;
+}
+
+impl<'a, T: Iterator<Item = Token<'a>>> GroupTokens<'a, T> for T {
+    fn group_tokens(self, separator: Token<'a>) -> RecordGrouper<'a, T> {
+        RecordGrouper::new_from_tokens_with_rs(self, separator)
     }
 }
