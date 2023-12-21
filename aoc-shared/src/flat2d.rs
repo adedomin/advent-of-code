@@ -104,6 +104,27 @@ impl<T> IndexMut<(usize, usize)> for FlatVec2D<T> {
     }
 }
 
+fn wrap(idx: isize, bounds: isize) -> usize {
+    let idx = idx % bounds;
+    if idx < 0 {
+        (bounds + idx) as usize
+    } else {
+        idx as usize
+    }
+}
+
+/// This implements wrapping Indices
+impl<T> Index<(isize, isize)> for FlatVec2D<T> {
+    type Output = T;
+
+    fn index(&self, index: (isize, isize)) -> &Self::Output {
+        let (x, y) = index;
+        let x = wrap(x, self.1 as isize);
+        let y = wrap(y, self.2 as isize);
+        &self.0[flat_coord(x, y, self.1)]
+    }
+}
+
 impl<T: std::fmt::Debug> std::fmt::Debug for FlatVec2D<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for y in 0..self.2 {
