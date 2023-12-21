@@ -84,8 +84,11 @@ fn main() -> io::Result<()> {
         .collect::<Vec<_>>()
         .try_into()
         .unwrap();
-    let k = (P2_STEP / xy_b) as usize;
-    let part2 = r1 + (r2 - r1) * k + (r1 + r3 - r2 * 2) * (k * (k - 1) / 2);
+    let x = (P2_STEP / xy_b) as usize;
+    let ax2 = (r1 + r3 - r2 * 2) * (x * (x - 1) / 2);
+    let bx = x * (r2 - r1);
+    let c = r1;
+    let part2 = ax2 + bx + c;
     print!("Part2: {part2}");
     println!();
     Ok(())
