@@ -85,6 +85,7 @@ fn main() -> io::Result<()> {
         .try_into()
         .unwrap();
     let x = (P2_STEP / xy_b) as usize;
+    // note the quad part looks suspiciously like triangle number stuff...
     let ax2 = (r1 + r3 - r2 * 2) * (x * (x - 1) / 2);
     let bx = x * (r2 - r1);
     let c = r1;

@@ -1,6 +1,6 @@
 use std::ops::{Add, Mul};
 
-use num::traits::AsPrimitive;
+use num::{traits::AsPrimitive, CheckedAdd, CheckedMul};
 
 /// Intended to be used with: .iter().fold(num, fold_decimal)
 pub fn fold_decimal<T>(acc: T, chr: &u8) -> T
@@ -54,8 +54,8 @@ where
 pub fn try_atoi<T, const RADIX: u8>(number: &[u8]) -> Option<T>
 where
     T: Copy + 'static,
-    T: Add<Output = T>,
-    T: Mul<Output = T>,
+    T: CheckedAdd<Output = T>,
+    T: CheckedMul<Output = T>,
     u8: num::traits::AsPrimitive<T>,
 {
     assert!(RADIX > 1 && RADIX < 37);
@@ -70,7 +70,7 @@ where
         if RADIX <= val {
             return None;
         }
-        Some(acc * RADIX.as_() + val.as_())
+        Some(RADIX.as_().checked_mul(&acc)?.checked_add(&val.as_())?)
     })
 }
 
