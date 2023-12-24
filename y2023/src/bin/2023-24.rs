@@ -1,6 +1,7 @@
 use aoc_shared::{read_input, try_atoi, Token, Tokenize};
 use itertools::Itertools;
 use std::io;
+use z3::{ast::Ast, Solver};
 
 #[derive(Debug)]
 struct Line {
@@ -113,12 +114,70 @@ fn solve2d(i: &[Line]) -> usize {
         .count()
 }
 
+fn solve3d(i: Vec<Line>) -> Option<u64> {
+    let ctx = z3::Context::new(&z3::Config::new());
+    let solver = Solver::new(&ctx);
+    let x = z3::ast::Int::new_const(&ctx, "x");
+    let y = z3::ast::Int::new_const(&ctx, "y");
+    let z = z3::ast::Int::new_const(&ctx, "z");
+    let dx = z3::ast::Int::new_const(&ctx, "dx");
+    let dy = z3::ast::Int::new_const(&ctx, "dy");
+    let dz = z3::ast::Int::new_const(&ctx, "dz");
+    // time should be greater than zero and constrains the finder appropriately, otherwise
+    // it will loop for some time.
+    let zero = z3::ast::Int::new_const(&ctx, 0);
+    i.into_iter().enumerate().for_each(
+        |(
+            pos,
+            Line {
+                px,
+                py,
+                pz,
+                vx,
+                vy,
+                vz,
+            },
+        )| {
+            let ti = z3::ast::Int::new_const(&ctx, format!("t{pos}"));
+            let vx_dx = vx + &dx;
+            let vy_dy = vy + &dy;
+            let vz_dz = vz + &dz;
+            solver.assert(&ti.ge(&zero));
+            solver.assert(&(px + &ti * vx_dx)._eq(&x));
+            solver.assert(&(py + &ti * vy_dy)._eq(&y));
+            solver.assert(&(pz + &ti * vz_dz)._eq(&z));
+        },
+    );
+    match solver.check() {
+        z3::SatResult::Unsat => None,
+        z3::SatResult::Unknown => None,
+        z3::SatResult::Sat => {
+            let m = solver.get_model()?;
+            Some(
+                m.get_const_interp(&x)
+                    .expect("x should be solved for.")
+                    .as_u64()
+                    .unwrap()
+                    + m.get_const_interp(&y)
+                        .expect("y should be solved for.")
+                        .as_u64()
+                        .unwrap()
+                    + m.get_const_interp(&z)
+                        .expect("z should be solved for.")
+                        .as_u64()
+                        .unwrap(),
+            )
+        }
+    }
+}
+
 fn main() -> io::Result<()> {
     let input = read_input()?;
     let parsed_input = parse_input(&input);
     let part1 = solve2d(&parsed_input);
     print!("Part1: {part1}, ");
-    // print!("Part2: {part2}");
+    let part2 = solve3d(parsed_input).expect("expected an intercept point.");
+    print!("Part2: {part2}");
     println!();
     Ok(())
 }
