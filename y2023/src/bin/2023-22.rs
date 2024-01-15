@@ -116,10 +116,9 @@ fn preprocess(i: Output) -> Vec<Vec<u16>> {
         let nh = (new_z, ident);
 
         // fixup heighmap
-        footprint.into_iter().for_each(|coord| {
-            let h = heightmap.entry(coord).or_default();
-            *h = nh;
-        });
+        footprint
+            .into_iter()
+            .for_each(|coord| _ = heightmap.entry(coord).and_modify(|h| *h = nh).or_insert(nh));
 
         // add to connected directed graph
         reachable.into_iter().for_each(|id| {
