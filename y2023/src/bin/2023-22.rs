@@ -96,13 +96,7 @@ fn preprocess(i: Output) -> Vec<Vec<u16>> {
         // find z for block
         let (reachable, new_z) = footprint
             .iter()
-            .map(|coord| {
-                if let Some(h) = heightmap.get(coord) {
-                    *h
-                } else {
-                    (0, 0)
-                }
-            })
+            .map(|coord| *heightmap.get(coord).unwrap_or(&(0, 0)))
             .fold((Vec::new(), 0), |(mut acc, mz), (z, ident)| {
                 if z > mz {
                     return (vec![ident], z);
@@ -123,11 +117,8 @@ fn preprocess(i: Output) -> Vec<Vec<u16>> {
 
         // fixup heighmap
         footprint.into_iter().for_each(|coord| {
-            if let Some(h) = heightmap.get_mut(&coord) {
-                *h = nh;
-            } else {
-                heightmap.insert(coord, nh);
-            }
+            let h = heightmap.entry(coord).or_default();
+            *h = nh;
         });
 
         // add to connected directed graph
