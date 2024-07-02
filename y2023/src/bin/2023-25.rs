@@ -1,5 +1,4 @@
 use aoc_shared::{destructure_or_none, read_input, GroupTokenize, Token};
-use itertools::Itertools;
 use std::{
     collections::{HashMap, HashSet},
     io,

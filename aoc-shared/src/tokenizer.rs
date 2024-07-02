@@ -127,6 +127,9 @@ impl<'a, T: Iterator<Item = Token<'a>>> Iterator for RecordGrouper<'a, T> {
         for token in self.tokenizer.by_ref() {
             if (token == self.record_sep || token == Token::End) && !self.token_tmp.is_empty() {
                 return Some(std::mem::take(&mut self.token_tmp));
+            } else if token == Token::End && self.token_tmp.is_empty() {
+                continue; // probably don't want an END token list after the last delimiter.
+                          // we continue for the sake of assuming tokenizer might have more tokens (it shouldn't).
             }
 
             self.token_tmp.push(token);

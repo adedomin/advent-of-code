@@ -46,14 +46,17 @@ fn solve2(i: &[(Vec<i32>, Vec<i32>)]) -> i32 {
     let mut residue = vec![1i32; winning_tables.len()];
     let res_len = residue.len();
 
-    winning_tables.iter().enumerate().for_each(|(pos, &win)| {
-        let next = pos + 1;
-        if win != 0 && next < residue.len() {
-            let cur_res = residue[pos];
-            let copy = next..std::cmp::min(res_len, next + (win as usize));
-            residue[copy].iter_mut().for_each(|cell| *cell += cur_res);
-        };
-    });
+    winning_tables
+        .into_iter()
+        .enumerate()
+        .for_each(|(pos, win)| {
+            let next = pos + 1;
+            if win != 0 && next < residue.len() {
+                let cur_res = residue[pos];
+                let copy = next..std::cmp::min(res_len, next + (win as usize));
+                residue[copy].iter_mut().for_each(|cell| *cell += cur_res);
+            };
+        });
 
     residue.iter().sum()
 }
