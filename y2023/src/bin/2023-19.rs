@@ -189,11 +189,11 @@ fn parse_input(input: &[u8]) -> Output {
                         .tuples()
                         .map(|(t, v)| {
                             let v = atoi::<u32, 10>(v);
-                            match t {
-                                &b"x" => (X, v),
-                                &b"m" => (M, v),
-                                &b"a" => (A, v),
-                                &b"s" => (S, v),
+                            match *t {
+                                b"x" => (X, v),
+                                b"m" => (M, v),
+                                b"a" => (A, v),
+                                b"s" => (S, v),
                                 _ => panic!("Invalid Type: {t:?}"),
                             }
                         })
@@ -233,7 +233,7 @@ fn solve2(workflows: &HashMap<u32, Workflow>) -> u64 {
             let mut ret = 0u64;
             for (op, label) in wf.0.iter() {
                 let npart = op.mselects(&mut part);
-                ret += rec(&workflows, *label, npart);
+                ret += rec(workflows, *label, npart);
             }
             debug_assert_eq!(
                 part.0
@@ -244,18 +244,15 @@ fn solve2(workflows: &HashMap<u32, Workflow>) -> u64 {
             );
             ret
         } else if label != R_LABEL {
-            let ret = part
-                .0
+            part.0
                 .into_iter()
                 .map(|(s, e)| (e - s) as u64 + 1)
-                .product();
-            ret
+                .product()
         } else {
-            let ret = 0;
-            ret
+            0
         }
     }
-    rec(&workflows, IN_LABEL, PartPerm::default())
+    rec(workflows, IN_LABEL, PartPerm::default())
 }
 
 fn main() -> io::Result<()> {

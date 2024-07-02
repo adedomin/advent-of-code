@@ -67,7 +67,7 @@ enum Deflect {
 }
 
 #[derive(Default, Clone)]
-struct Energized(pub usize, pub usize, u8);
+struct Energized((), (), u8);
 
 impl Energized {
     pub fn energized(&self) -> bool {
@@ -79,7 +79,7 @@ impl Energized {
         if self.2 & card != 0 {
             false
         } else {
-            self.2 |= u8::from(card);
+            self.2 |= card;
             true
         }
     }

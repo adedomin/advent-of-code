@@ -57,7 +57,7 @@ impl Line {
             return None;
         }
 
-        if (sn > denom) == !(denom > 0f64) || (tn > denom) == !(denom > 0f64) {
+        if (sn > denom) != (denom > 0f64) || (tn > denom) != (denom > 0f64) {
             return None;
         }
         let t = tn / denom;
@@ -77,7 +77,7 @@ fn parse_input(input: &[u8]) -> Output {
         .tokenize()
         .flat_map(|t| {
             if let Token::Something(x) = t {
-                try_atoi::<i64, 10>(x).map(|x| Neg::Num(x))
+                try_atoi::<i64, 10>(x).map(Neg::Num)
             } else if let Token::Delimiter(b'-') = t {
                 Some(Neg::IsNeg)
             } else {

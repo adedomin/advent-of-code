@@ -16,7 +16,7 @@ enum NToken<'a> {
 enum Escaped {
     Quot,
     Esc,
-    Hex(u8, u8),
+    Hex((), ()),
 }
 
 trait CodeCharSz {
@@ -127,8 +127,8 @@ fn parse_input(input: &[u8]) -> Output {
                     } else if chars[0] != b'x' {
                         panic!("Invalid ascii escape; must start with x.");
                     }
-                    let (p1, p2) = chars.split_at(3);
-                    acc.push(Escape(Hex(p1[1], p1[2])));
+                    let (_p1, p2) = chars.split_at(3);
+                    acc.push(Escape(Hex((), ())));
                     if !p2.is_empty() {
                         acc.push(Chars(p2));
                     }

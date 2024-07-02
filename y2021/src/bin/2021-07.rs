@@ -33,7 +33,7 @@ fn p2_cost(n: u64) -> u64 {
     (n * (n + 1)) / 2
 }
 
-fn solve(crabs: &mut Vec<u64>) -> (u64, u64) {
+fn solve(crabs: &mut [u64]) -> (u64, u64) {
     let is_odd = crabs.len() % 2 == 1;
     let med_pos = crabs.len() / 2;
     let median = if is_odd {

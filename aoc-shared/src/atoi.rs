@@ -70,7 +70,7 @@ where
         if RADIX <= val {
             return None;
         }
-        Some(RADIX.as_().checked_mul(&acc)?.checked_add(&val.as_())?)
+        RADIX.as_().checked_mul(&acc)?.checked_add(&val.as_())
     })
 }
 

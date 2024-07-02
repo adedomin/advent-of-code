@@ -37,7 +37,7 @@ fn parse_input(input: &[u8]) -> Output {
         let (root, conns) = vert.split_at(1);
         let root = root[0];
         graph[root].extend(conns.iter());
-        conns.into_iter().for_each(|&conn| {
+        conns.iter().for_each(|&conn| {
             graph[conn].insert(root);
         });
     });

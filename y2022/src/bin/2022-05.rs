@@ -19,7 +19,7 @@ impl Display for Crates {
             while i > -1 {
                 for stack in &self.0 {
                     if let Some(val) = stack.get(i as usize) {
-                        f.write_fmt(format_args!("[{}] ", char::try_from(*val).unwrap_or('?')))?
+                        f.write_fmt(format_args!("[{}] ", char::from(*val)))?
                     } else {
                         f.write_str("    ")?
                     }

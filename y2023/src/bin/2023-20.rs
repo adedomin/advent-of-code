@@ -142,9 +142,8 @@ fn parse_input(input: &[u8]) -> (DesertMachine, InverseMap) {
     edges.iter().for_each(|(k, vs)| {
         vs.iter().for_each(|v| {
             if let Some(s) = state.get_mut(v) {
-                match &mut s.0 {
-                    CType::Conjunction(v) => v.push((*k, Energy::Low)),
-                    _ => (),
+                if let CType::Conjunction(v) = &mut s.0 {
+                    v.push((*k, Energy::Low))
                 }
             }
         })

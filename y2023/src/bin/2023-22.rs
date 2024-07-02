@@ -38,7 +38,7 @@ fn parse_input(input: &[u8]) -> Output {
     }
 
     // add idents to line.
-    let mut lines = (1u16..).zip(lines.into_iter()).collect::<Output>();
+    let mut lines = (1u16..).zip(lines).collect::<Output>();
 
     lines.sort_unstable_by_key(|(_, Line((_, _, z1), (_, _, z2)))| std::cmp::min(*z1, *z2));
     // lines
@@ -98,10 +98,10 @@ fn preprocess(i: Output) -> Vec<Vec<u16>> {
             .iter()
             .map(|coord| *heightmap.get(coord).unwrap_or(&(0, 0)))
             .fold((Vec::new(), 0), |(mut acc, mz), (z, ident)| {
-                if z > mz {
-                    return (vec![ident], z);
-                } else if z == mz {
-                    acc.push(ident);
+                match z.cmp(&mz) {
+                    std::cmp::Ordering::Greater => return (vec![ident], z),
+                    std::cmp::Ordering::Equal => acc.push(ident),
+                    _ => (),
                 };
                 (acc, mz)
             });
@@ -139,7 +139,7 @@ fn solve(connected: Vec<Vec<u16>>) -> (u16, u32) {
             if reachable[id as usize] {
                 continue;
             }
-            if id == i as u16 {
+            if id == i {
                 continue;
             }
             reachable[id as usize] = true;

@@ -51,7 +51,7 @@ fn parse_input<'a>(input: &'a [u8]) -> Output {
 }
 
 fn part1_2_sol<'a>(
-    cities: &Vec<&'a [u8]>,
+    cities: &[&'a [u8]],
     costs: &HashMap<(&'a [u8], &'a [u8]), u64>,
 ) -> (Solved, Solved) {
     cities

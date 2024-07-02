@@ -130,7 +130,7 @@ fn solve(
                 };
 
                 let key = ((x1, y1), (lx1, ly1), (ix1, iy1));
-                if cmp_and_swap_dist(&mut dist, key.clone(), new_cost) {
+                if cmp_and_swap_dist(&mut dist, key, new_cost) {
                     heap.push(HeapState {
                         state: key,
                         cost: new_cost,
