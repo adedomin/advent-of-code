@@ -125,14 +125,14 @@ impl<'a, T: Iterator<Item = Token<'a>>> Iterator for RecordGrouper<'a, T> {
 
     fn next(&mut self) -> Option<Self::Item> {
         for token in self.tokenizer.by_ref() {
-            if (token == self.record_sep || token == Token::End) && !self.token_tmp.is_empty() {
-                return Some(std::mem::take(&mut self.token_tmp));
-            } else if token == Token::End && self.token_tmp.is_empty() {
-                continue; // probably don't want an END token list after the last delimiter.
-                          // we continue for the sake of assuming tokenizer might have more tokens (it shouldn't).
-            }
-
-            self.token_tmp.push(token);
+            match (
+                token == self.record_sep || token == Token::End,
+                self.token_tmp.is_empty(),
+            ) {
+                (true, false) => return Some(std::mem::take(&mut self.token_tmp)),
+                (false, _) => self.token_tmp.push(token),
+                (true, true) => (), // skip empty records
+            };
         }
 
         if !self.token_tmp.is_empty() {
