@@ -3,14 +3,14 @@ use std::io;
 
 // find geometric median, input is sorted by order of traversal.
 fn geomed(points: &[i64]) -> i64 {
+    let max = points.len() as i64;
     array_windows(points)
         .enumerate()
         .map(|(p, [xy1, xy2])| {
             let pos = p as i64;
-            let max = points.len() as i64;
             xy1.abs_diff(*xy2) as i64 * (pos + 1) * (max - pos - 1)
         })
-        .sum()
+        .sum::<i64>()
 }
 
 // fulfills ask of sum of all minimum distances between points via geo median.
