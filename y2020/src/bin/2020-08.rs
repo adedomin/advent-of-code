@@ -51,24 +51,27 @@ impl Console {
         instr.get(self.pc as usize).is_none()
     }
 
-    fn step(self, instr: &[Instruction]) -> Option<Console> {
+    fn step(self, instr: &[Instruction]) -> Result<Console, i32> {
         if self.pc < 0 {
-            return None;
+            return Err(self.accumulate);
         }
-        instr.get(self.pc as usize).map(|inst| match inst {
-            Instruction::Acc(num) => Console {
-                pc: self.pc + 1,
-                accumulate: self.accumulate + num,
-            },
-            Instruction::Jmp(num) => Console {
-                pc: self.pc + num,
-                accumulate: self.accumulate,
-            },
-            Instruction::Nop(_) => Console {
-                pc: self.pc + 1,
-                accumulate: self.accumulate,
-            },
-        })
+        instr
+            .get(self.pc as usize)
+            .map(|inst| match inst {
+                Instruction::Acc(num) => Console {
+                    pc: self.pc + 1,
+                    accumulate: self.accumulate + num,
+                },
+                Instruction::Jmp(num) => Console {
+                    pc: self.pc + num,
+                    accumulate: self.accumulate,
+                },
+                Instruction::Nop(_) => Console {
+                    pc: self.pc + 1,
+                    accumulate: self.accumulate,
+                },
+            })
+            .ok_or(self.accumulate)
     }
 }
 
@@ -84,7 +87,7 @@ fn parse_input(input: &str) -> Output {
 }
 
 /// basic Floyd cycle detector. the program counter is used to determine cycle.
-fn floyd_cycle(input: &Output) -> Option<(i32, i32)> {
+fn floyd_cycle(input: &Output) -> Result<(i32, i32), i32> {
     let mut tortoise = Console::new();
     let mut hare = Console::new();
 
@@ -117,7 +120,7 @@ fn floyd_cycle(input: &Output) -> Option<(i32, i32)> {
         }
     }
 
-    Some((mu, lambda))
+    Ok((mu, lambda))
 }
 
 fn part1_sol(input: &Output) -> Solved {
@@ -134,12 +137,9 @@ fn part2_sol(input: Output) -> Solved {
     for i in 0..input.len() {
         let mut input = input.clone();
         input[i] = input[i].toggle();
-        if floyd_cycle(&input).is_none() {
-            let mut con = Console::new();
-            while !con.is_done(&input) {
-                con = con.step(&input).expect("machine should not terminate.");
-            }
-            return con.accumulate;
+        match floyd_cycle(&input) {
+            Ok(_) => (), // still contains a loop
+            Err(acc) => return acc,
         }
     }
     panic!("Could not clear the cycle!");
