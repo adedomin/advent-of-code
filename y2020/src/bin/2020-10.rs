@@ -15,7 +15,7 @@ fn parse_input(input: &str) -> Output {
     let integrated_adp = i.last().expect("at least one adapter needs to be given...") + 3;
     // both p1 and 2 need the 0 and last adapter in the list.
     once(0)
-        .chain(i.into_iter())
+        .chain(i)
         .chain(once(integrated_adp))
         .collect::<Output>()
 }
@@ -26,6 +26,7 @@ fn part1_sol(input: &Output) -> Solved {
         .tuple_windows()
         .fold((0, 0), |(d1, d3), (x, y)| match y - x {
             1 => (d1 + 1, d3),
+            2 => (d1, d3), // technically can't happen in given example / inputs, but I omitted it by mistake.
             3 => (d1, d3 + 1),
             _ => panic!("Invalid adapter list"),
         });
@@ -37,10 +38,10 @@ fn part2_sol(input: &Output) -> Solved {
     // 0 can only be attached to one, much like the last can only be attached to one
     let mut paths_from = HashMap::from([(0, 1)]);
     input.iter().skip(1).for_each(|&adp| {
-        let cellm1 = *paths_from.entry(adp - 1).or_insert(0);
-        let cellm2 = *paths_from.entry(adp - 2).or_insert(0);
-        let cellm3 = *paths_from.entry(adp - 3).or_insert(0);
-        *paths_from.entry(adp).or_insert(0) = cellm1 + cellm2 + cellm3;
+        let cellm1 = *paths_from.get(&(adp - 1)).unwrap_or(&0);
+        let cellm2 = *paths_from.get(&(adp - 2)).unwrap_or(&0);
+        let cellm3 = *paths_from.get(&(adp - 3)).unwrap_or(&0);
+        paths_from.insert(adp, cellm1 + cellm2 + cellm3);
     });
     *paths_from
         .get(integrated)
