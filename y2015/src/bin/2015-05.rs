@@ -3,51 +3,33 @@ use std::{collections::HashSet, io};
 
 const VOWELS: &[u8] = b"aeiou";
 
-fn bad_combo(a: u8, b: u8) -> bool {
-    matches!(
-        (a, b),
-        (b'a', b'b') | (b'c', b'd') | (b'p', b'q') | (b'x', b'y')
-    )
-}
-
-#[derive(Debug)]
-enum Why {
-    VowelLw,
-    VowelOk,
-    DoublesOk,
-    NoDoubles,
-    BadPattrn,
-}
-
 fn good_word(word: &[u8]) -> bool {
-    use Why::*;
     if word.len() < 3 {
         return false;
     }
 
-    let vowel = if word.iter().filter(|&chr| VOWELS.contains(chr)).count() > 2 {
-        VowelOk
-    } else {
-        VowelLw
-    };
+    let vowels_cnt = word.iter().filter(|&chr| VOWELS.contains(chr)).count() > 2;
     let double_letters = array_windows(word)
-        .try_fold(NoDoubles, |acc, &[a, b]| {
-            if bad_combo(a, b) {
-                None // same as BadPattrn
+        .try_fold(false, |acc, &[a, b]| {
+            if matches!(
+                (a, b),
+                (b'a', b'b') | (b'c', b'd') | (b'p', b'q') | (b'x', b'y')
+            ) {
+                None // early exit, bad word.
             } else if a == b {
-                Some(DoublesOk)
+                Some(true)
             } else {
                 Some(acc)
             }
         })
-        .unwrap_or(BadPattrn);
+        .unwrap_or(false);
 
     debug!(
-        "Vowel State: {vowel:?}, Other Prop: {double_letters:?} -> Word {}",
+        "Vowel count: {vowels_cnt}, Doubles & No Bad Pattern: {double_letters} -> Word {}",
         std::str::from_utf8(word).unwrap(),
     );
 
-    matches!((vowel, double_letters), (VowelOk, DoublesOk))
+    vowels_cnt && double_letters
 }
 
 fn good_word_p2(word: &[u8]) -> bool {
