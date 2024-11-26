@@ -195,11 +195,11 @@ fn part1_sol(enemy: Output, hard_mode: bool) -> Solved {
 
         // player turn
         let player_hp = player_hp + hp_regen;
+        let enemy_hp = enemy_hp - spell.attack_pow() - turn.poison_dmg;
         let mana = mana - spell.cost() as i16 + turn.mana_regen;
         if mana < 1 {
             continue;
         }
-        let enemy_hp = enemy_hp - spell.attack_pow() - turn.poison_dmg;
 
         // enemy turn
         let (turn, shield, poison, recharge) = run_effects(shield, poison, recharge);
