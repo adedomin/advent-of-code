@@ -5,15 +5,15 @@ use std::{
 };
 
 type Output = Character;
-type Solved = u32;
+type Solved = u16;
 
-const PLAYER_HP: i32 = 50;
-const MANA_START: i32 = 500;
+const PLAYER_HP: i16 = 50;
+const MANA_START: i16 = 500;
 
 #[derive(Clone, Copy)]
 struct Character {
-    health: i32,
-    attack: i32,
+    health: i16,
+    attack: i16,
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
@@ -26,7 +26,7 @@ enum Spell {
 }
 
 impl Spell {
-    fn cost(&self) -> u32 {
+    fn cost(&self) -> u16 {
         match self {
             Spell::MagicMissile => 53,
             Spell::Drain => 73,
@@ -36,27 +36,7 @@ impl Spell {
         }
     }
 
-    fn duration(&self) -> u8 {
-        match self {
-            Spell::MagicMissile => 0,
-            Spell::Drain => 0,
-            Spell::Shield => 6,
-            Spell::Poison => 6,
-            Spell::Recharge => 5,
-        }
-    }
-
-    fn effect_idx(&self) -> Option<usize> {
-        match self {
-            Spell::MagicMissile => None,
-            Spell::Drain => None,
-            Spell::Shield => Some(0),
-            Spell::Poison => Some(1),
-            Spell::Recharge => Some(2),
-        }
-    }
-
-    fn attack_pow(&self) -> i32 {
+    fn attack_pow(&self) -> i16 {
         match self {
             Spell::MagicMissile => 4,
             Spell::Drain => 2,
@@ -90,17 +70,19 @@ fn parse_input(input: &str) -> Output {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Key {
     spell: Spell,
-    effects: [u8; 3],
-    mana: i32,
-    player_hp: i32,
-    enemy_hp: i32,
+    shield: u8,
+    poison: u8,
+    recharge: u8,
+    player_hp: i16,
+    mana: i16,
+    enemy_hp: i16,
     // path: Vec<Spell>,
 }
 
 #[derive(Clone, PartialEq, Eq)]
 struct HeapState {
     key: Key,
-    cost: u32,
+    cost: u16,
 }
 
 impl Ord for HeapState {
@@ -116,27 +98,60 @@ impl PartialOrd for HeapState {
     }
 }
 
-fn attack_minus_armor(attack: i32, has_armor: bool) -> i32 {
-    if has_armor {
-        if attack - 7 > 0 {
-            attack - 7
-        } else {
-            1
-        }
+fn attack_minus_armor(attack: i16, armor: i16) -> i16 {
+    if attack - armor > 0 {
+        attack - armor
     } else {
-        attack
+        1
     }
 }
 
-fn part1_sol(enemy: Output) -> Solved {
+struct TurnEffects {
+    shield_stat: i16,
+    poison_dmg: i16,
+    mana_regen: i16,
+}
+
+fn run_effects(shield: u8, poison: u8, recharge: u8) -> (TurnEffects, u8, u8, u8) {
+    let mut shield_stat = 0;
+    let shield = shield
+        .checked_sub(1)
+        .inspect(|_| shield_stat = 7)
+        .unwrap_or(0);
+    let mut poison_dmg = 0;
+    let poison = poison
+        .checked_sub(1)
+        .inspect(|_| poison_dmg = 3)
+        .unwrap_or(0);
+    let mut mana_regen = 0;
+    let recharge = recharge
+        .checked_sub(1)
+        .inspect(|_| mana_regen = 101)
+        .unwrap_or(0);
+
+    (
+        TurnEffects {
+            shield_stat,
+            poison_dmg,
+            mana_regen,
+        },
+        shield,
+        poison,
+        recharge,
+    )
+}
+
+fn part1_sol(enemy: Output, hard_mode: bool) -> Solved {
     let mut dist = HashMap::new();
     let mut heap = BinaryHeap::new();
     for spell in SPELLS {
         let key = Key {
             spell,
-            effects: [0, 0, 0],
+            shield: 0,
+            poison: 0,
+            recharge: 0,
+            player_hp: PLAYER_HP - if hard_mode { 1 } else { 0 },
             mana: MANA_START,
-            player_hp: PLAYER_HP,
             enemy_hp: enemy.health,
             // path: vec![spell],
         };
@@ -147,75 +162,70 @@ fn part1_sol(enemy: Output) -> Solved {
         });
     }
 
-    while let Some(HeapState { mut key, cost }) = heap.pop() {
-        if key.enemy_hp < 1 {
-            // println!("{:?}", key.path);
-            return cost - key.spell.cost();
-        } else if key.player_hp < 1 || key.mana < 1 {
+    while let Some(HeapState {
+        key:
+            Key {
+                spell,
+                shield,
+                poison,
+                recharge,
+                player_hp,
+                mana,
+                enemy_hp,
+            },
+        cost,
+    }) = heap.pop()
+    {
+        if player_hp < 1 {
             continue;
         }
 
-        // have to deincrement at start of turn, noop if the effect isn't set.
-        key.effects
-            .iter_mut()
-            .for_each(|e| *e = e.saturating_sub(1));
-
-        if let Some(idx) = key.spell.effect_idx() {
-            if key.effects[idx] > 0 {
-                continue;
-            }
+        let (turn, mut shield, mut poison, mut recharge) = run_effects(shield, poison, recharge);
+        let mut hp_regen = 0;
+        match spell {
+            Spell::MagicMissile => (),
+            Spell::Drain => hp_regen = 2,
+            Spell::Shield if shield < 1 => shield = 6,
+            Spell::Shield => continue,
+            Spell::Poison if poison < 1 => poison = 6,
+            Spell::Poison => continue,
+            Spell::Recharge if recharge < 1 => recharge = 5,
+            Spell::Recharge => continue,
         }
 
-        match key.spell {
-            Spell::Shield | Spell::Poison | Spell::Recharge => {
-                key.effects[key.spell.effect_idx().unwrap()] = key.spell.duration()
-            }
-            _ => (),
+        // player turn
+        let player_hp = player_hp + hp_regen;
+        let mana = mana - spell.cost() as i16 + turn.mana_regen;
+        if mana < 1 {
+            continue;
+        }
+        let enemy_hp = enemy_hp - spell.attack_pow() - turn.poison_dmg;
+
+        // enemy turn
+        let (turn, shield, poison, recharge) = run_effects(shield, poison, recharge);
+        let enemy_hp = enemy_hp - turn.poison_dmg;
+        if enemy_hp < 1 {
+            return cost;
         }
 
-        let enemy_hp = key.enemy_hp
-            - (key.spell.attack_pow()
-                + if key.effects[Spell::Poison.effect_idx().unwrap()] == Spell::Poison.duration() {
-                    3
-                } else if key.effects[Spell::Poison.effect_idx().unwrap()] > 0 {
-                    3 * 2 // does damage on player/enemy turn but only if not just cast.
-                } else {
-                    0
-                });
-
-        let player_hp = key.player_hp
-            - attack_minus_armor(
-                enemy.attack,
-                key.effects[Spell::Shield.effect_idx().unwrap()] > 0,
-            )
-            + if key.spell == Spell::Drain { 2 } else { 0 };
-
-        let mana = key.mana - key.spell.cost() as i32
-            + if key.effects[Spell::Recharge.effect_idx().unwrap()] == Spell::Recharge.duration() {
-                101
-            } else if key.effects[Spell::Recharge.effect_idx().unwrap()] > 0 {
-                101 * 2
-            } else {
-                0
-            };
-
-        key.effects
-            .iter_mut()
-            .for_each(|e| *e = e.saturating_sub(1));
+        let player_hp = player_hp - attack_minus_armor(enemy.attack, turn.shield_stat);
+        let mana = mana + turn.mana_regen;
 
         for spell in SPELLS {
             // let mut npath = key.path.clone();
             // npath.push(spell);
             let nkey = Key {
                 spell,
-                effects: key.effects,
+                shield,
+                poison,
+                recharge,
                 mana,
-                player_hp,
+                player_hp: player_hp - if hard_mode { 1 } else { 0 },
                 enemy_hp,
                 // path: npath,
             };
             let ncost = cost + spell.cost();
-            let dent = dist.entry(nkey.clone()).or_insert(u32::MAX);
+            let dent = dist.entry(nkey.clone()).or_insert(u16::MAX);
             if ncost < *dent {
                 *dent = ncost;
                 heap.push(HeapState {
@@ -234,10 +244,10 @@ fn part1_sol(enemy: Output) -> Solved {
 fn main() -> io::Result<()> {
     let input = read_input_to_string()?;
     let parsed_input = parse_input(&input);
-    let part1 = part1_sol(parsed_input);
-    // let part2 = part2_sol(parsed_input);
+    let part1 = part1_sol(parsed_input, false);
+    let part2 = part1_sol(parsed_input, true);
     print!("Part1: {part1}, ");
-    // print!("Part2: {part2}");
+    print!("Part2: {part2}");
     println!();
     Ok(())
 }
