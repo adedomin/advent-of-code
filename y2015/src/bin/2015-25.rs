@@ -1,5 +1,5 @@
 use aoc_shared::{read_input_to_string, try_atoi};
-use std::{collections::HashMap, io};
+use std::io;
 
 type Output = (usize, usize);
 type Solved = i64;
@@ -19,23 +19,18 @@ fn parse_input(input: &str) -> Output {
     (i[0], i[1])
 }
 
-const START: i64 = 20151125;
+const START: i64 = 20_151_125;
+const MULT: i64 = 252_533;
+const MODULO: i64 = 33_554_393;
 
 fn part1_sol((x, y): (usize, usize)) -> Solved {
-    let mut manual_code_page = HashMap::new();
-    manual_code_page.insert((0, 0), START);
     let mut r = 1usize;
     let mut c = 0usize;
+    let mut last = START;
     loop {
-        let last = if c == 0 { (0, r - 1) } else { (r + 1, c - 1) };
-        let last_num = manual_code_page
-            .get(&last)
-            .expect("Expected to be visited.");
-        manual_code_page.insert((r, c), last_num * 252533 % 33554393);
+        last = last * MULT % MODULO;
         if (r, c) == (x - 1, y - 1) {
-            break *manual_code_page
-                .get(&(x - 1, y - 1))
-                .expect("Should be set.");
+            break last;
         }
         match r.checked_sub(1) {
             Some(rn) => {
