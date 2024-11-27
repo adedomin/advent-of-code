@@ -24,25 +24,12 @@ const MULT: i64 = 252_533;
 const MODULO: i64 = 33_554_393;
 
 fn part1_sol((x, y): (usize, usize)) -> Solved {
-    let mut r = 1usize;
-    let mut c = 0usize;
+    let position = (x + y - 2) * (x + y - 1) / 2 + y - 1;
     let mut last = START;
-    loop {
+    for _ in 0..position {
         last = last * MULT % MODULO;
-        if (r, c) == (x - 1, y - 1) {
-            break last;
-        }
-        match r.checked_sub(1) {
-            Some(rn) => {
-                r = rn;
-                c += 1;
-            }
-            None => {
-                r = c + 1;
-                c = 0;
-            }
-        }
     }
+    last
 }
 
 // fn part2_sol(input: &Output) -> Solved {}
