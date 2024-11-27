@@ -1,5 +1,5 @@
-use aoc_shared::{read_input_to_string, try_atoi, FlatVec2D};
-use std::{borrow::BorrowMut, collections::HashMap, io};
+use aoc_shared::{read_input_to_string, try_atoi};
+use std::{collections::HashMap, io};
 
 type Output = (usize, usize);
 type Solved = i64;
