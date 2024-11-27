@@ -110,7 +110,7 @@ fn part2_sol((p1, p2): Output) -> Solved {
         pos2: u8,
         score2: u8,
     ) -> (u64, u64) {
-        // Base case.
+        // See recursive call note.
         if score2 >= DIRAC_WIN_SCORE_P2 {
             return (0, 1);
         }
