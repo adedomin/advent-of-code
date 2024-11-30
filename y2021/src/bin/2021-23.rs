@@ -1,11 +1,8 @@
-use aoc_shared::read_input_to_string;
-use std::{
-    collections::{BinaryHeap, HashMap},
-    io,
-};
+use aoc_shared::{read_input_to_string, Dijkstra, HeapState};
+use std::io;
 
-type Output = [Room; 4];
-type Solved = u64;
+type Output = Key;
+type Solved = u32;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 enum Amphipod {
@@ -13,32 +10,25 @@ enum Amphipod {
     Bronze,
     Copper,
     Desert,
-    Vacant,
 }
 
 impl Amphipod {
-    fn cost(&self) -> u64 {
+    fn cost(&self) -> u32 {
         match self {
             Amphipod::Amber => 1,
             Amphipod::Bronze => 10,
             Amphipod::Copper => 100,
             Amphipod::Desert => 1000,
-            Amphipod::Vacant => 0,
         }
     }
 
-    fn room(&self) -> usize {
+    fn room(&self) -> u8 {
         match self {
-            Amphipod::Amber => 0,
-            Amphipod::Bronze => 1,
-            Amphipod::Copper => 2,
-            Amphipod::Desert => 3,
-            Amphipod::Vacant => 4,
+            Amphipod::Amber => 2,
+            Amphipod::Bronze => 4,
+            Amphipod::Copper => 6,
+            Amphipod::Desert => 8,
         }
-    }
-
-    fn is_valid(&self) -> bool {
-        !matches!(self, Amphipod::Vacant)
     }
 }
 
@@ -56,116 +46,62 @@ impl TryFrom<char> for Amphipod {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-struct Room {
-    top: Amphipod,
-    bot: Amphipod,
+#[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
+enum Room {
+    Hallway(Option<Amphipod>),
+    Room(u8, Option<Amphipod>, Option<Amphipod>),
 }
 
 impl Room {
-    fn new() -> Self {
-        Room {
-            top: Amphipod::Vacant,
-            bot: Amphipod::Vacant,
-        }
-    }
-
-    fn is_solved(&self, idx: usize) -> bool {
+    fn is_solved(&self) -> bool {
         match self {
-            Room {
-                top: Amphipod::Amber,
-                bot: Amphipod::Amber,
-            } if idx == 0 => true,
-            Room {
-                top: Amphipod::Bronze,
-                bot: Amphipod::Bronze,
-            } if idx == 1 => true,
-            Room {
-                top: Amphipod::Copper,
-                bot: Amphipod::Copper,
-            } if idx == 2 => true,
-            Room {
-                top: Amphipod::Desert,
-                bot: Amphipod::Desert,
-            } if idx == 3 => true,
+            Room::Room(room_num, Some(am1), Some(am2)) => am1 == am2 && am1.room() == *room_num,
             _ => false,
         }
     }
 
-    fn is_empty(&self) -> bool {
-        matches!(
-            self,
-            Room {
-                top: Amphipod::Vacant,
-                bot: Amphipod::Vacant
-            }
-        )
-    }
-
-    fn insert(&self, amph: &Amphipod) -> Option<(Room, u64)> {
+    fn try_pop(&self) -> Option<(Self, Amphipod, u32)> {
+        if self.is_solved() {
+            return None;
+        }
         match self {
-            Self {
-                top: Amphipod::Vacant,
-                bot: Amphipod::Vacant,
-            } => Some((
-                Room {
-                    top: Amphipod::Vacant,
-                    bot: *amph,
-                },
-                3,
-            )),
-            Self {
-                top: Amphipod::Vacant,
-                bot,
-            } => {
-                if *bot == *amph {
-                    Some((
-                        Self {
-                            top: *amph,
-                            bot: *bot,
-                        },
-                        2,
-                    ))
-                } else {
-                    None
-                }
+            Room::Room(_, None, None) => None,
+            Room::Room(room_num, Some(am1), Some(am2)) => {
+                Some((Room::Room(*room_num, None, Some(*am2)), *am1, 1u32))
+            }
+            // we only pop am1.room() == room_num, when the bottom most amphipod is in the wrong room.
+            Room::Room(room_num, None, Some(am2)) if am2.room() != *room_num => {
+                Some((Room::Room(*room_num, None, None), *am2, 2u32))
             }
             _ => None,
         }
     }
 
-    fn pop(self) -> (Room, Amphipod, u64) {
+    fn try_insert(&self, am1: Amphipod) -> Option<(Self, u32)> {
+        if self.is_solved() {
+            return None;
+        }
         match self {
-            Room {
-                top: Amphipod::Vacant,
-                bot: Amphipod::Vacant,
-            } => (Self::new(), Amphipod::Vacant, 0),
-            Room {
-                top: Amphipod::Vacant,
-                bot: amph,
-            } => (Self::new(), amph, 2),
-            Room {
-                top: amph1,
-                bot: amph2,
-            } => (
-                Room {
-                    top: Amphipod::Vacant,
-                    bot: amph2,
-                },
-                amph1,
-                1,
-            ),
+            Room::Room(room_num, None, Some(am2)) if am1 == *am2 => {
+                Some((Room::Room(*room_num, Some(am1), Some(*am2)), 2))
+            }
+            Room::Room(room_num, None, None) => Some((Room::Room(*room_num, None, Some(am1)), 3)),
+            _ => None,
         }
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Hash)]
-struct Key {
-    hallway: [Amphipod; 7],
-    rooms: [Room; 4],
-}
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+struct Key([Room; 11]);
 
-type HS = aoc_shared::HeapState<Key, u64>;
+impl Key {
+    fn is_solved(&self) -> bool {
+        self.0[2].is_solved()
+            && self.0[4].is_solved()
+            && self.0[6].is_solved()
+            && self.0[8].is_solved()
+    }
+}
 
 fn parse_input(input: &str) -> Output {
     let mut amphipods: Vec<Vec<Amphipod>> = input
@@ -190,191 +126,148 @@ fn parse_input(input: &str) -> Output {
     );
     let bot = amphipods.pop().unwrap();
     let top = amphipods.pop().unwrap();
-    top.into_iter()
+    let rooms = top
+        .into_iter()
         .zip(bot)
-        .map(|(top, bot)| Room { top, bot })
-        .collect::<Vec<Room>>()
-        .try_into()
-        .expect("There should only be 8 Amphipods and 4 rooms with 2 spaces.")
+        .enumerate()
+        .map(|(room_num, (top, bot))| Room::Room(room_num as u8 * 2 + 2, Some(top), Some(bot)))
+        .collect::<Vec<Room>>();
+    assert_eq!(
+        rooms.len(),
+        4,
+        "There should only be 8 Amphipods and 4 rooms with 2 spaces.",
+    );
+    let mut ret = [Room::Hallway(None); 11];
+    ret[2] = rooms[0];
+    ret[4] = rooms[1];
+    ret[6] = rooms[2];
+    ret[8] = rooms[3];
+    Key(ret)
 }
 
-const HALLWAY_POS: [u64; 7] = [0, 1, 3, 5, 7, 9, 10];
-const ROOM_POS: [u64; 4] = [2, 4, 6, 8];
-const COUNT_FROM: [(usize, usize); 4] = [(1, 2), (2, 3), (3, 4), (4, 5)];
+type Dij = Dijkstra<Key, u32>;
+
+// can't move directly into room, we were forced out because bottom is not in the right room.
+fn move_into_hallway(
+    key: &Key,
+    ki: usize,
+    heap: &mut Dij,
+    cost: u32,
+    replace_with: Room,
+    am: Amphipod,
+    imoves: u32,
+) {
+    let lrange = 0..ki;
+    let rrange = ki + 1..11;
+    lrange
+        .rev()
+        .take_while(|&li| !matches!(key.0[li], Room::Hallway(Some(_))))
+        .filter(|&li| matches!(key.0[li], Room::Hallway(None)))
+        .for_each(|li| {
+            let mut nkey = key.0;
+            nkey[li] = Room::Hallway(Some(am));
+            nkey[ki] = replace_with;
+            let moves = li.abs_diff(ki) as u32;
+            heap.push(Key(nkey), cost + ((moves + imoves) * am.cost()))
+        });
+    rrange
+        .take_while(|&ri| !matches!(key.0[ri], Room::Hallway(Some(_))))
+        .filter(|&ri| matches!(key.0[ri], Room::Hallway(None)))
+        .for_each(|ri| {
+            let mut nkey = key.0;
+            nkey[ri] = Room::Hallway(Some(am));
+            nkey[ki] = replace_with;
+            let moves = ki.abs_diff(ri) as u32;
+            heap.push(Key(nkey), cost + ((moves + imoves) * am.cost()))
+        });
+}
+
+fn move_from_hallway_or_room(
+    key: &Key,
+    ki: usize,
+    heap: &mut Dij,
+    cost: u32,
+    extra_moves: u32,
+    am: Amphipod,
+    replace_with: Room,
+) -> bool {
+    let target = am.room() as usize;
+    // hallway can never be on a target.
+    let range = if ki < target {
+        ki + 1..target
+    } else {
+        target + 1..ki
+    };
+    let moves = range.len() as u32;
+    // we're right on edge of the room.
+    if moves == 0 {
+        if let Some((room, imoves)) = key.0[target].try_insert(am) {
+            let mut nkey = key.0;
+            nkey[target] = room;
+            nkey[ki] = replace_with;
+            heap.push(
+                Key(nkey),
+                cost + ((moves + imoves + extra_moves) * am.cost()),
+            );
+            true
+        } else {
+            false
+        }
+    } else {
+        // try to move to edge of room.
+        for probe in range {
+            if let Room::Hallway(Some(_)) = key.0[probe] {
+                return false;
+            }
+        }
+        if let Some((room, imoves)) = key.0[target].try_insert(am) {
+            let mut nkey = key.0;
+            nkey[target] = room;
+            nkey[ki] = replace_with;
+            heap.push(
+                Key(nkey),
+                cost + ((moves + imoves + extra_moves) * am.cost()),
+            );
+            true
+        } else {
+            false
+        }
+    }
+}
 
 fn part1_sol(input: Output) -> Solved {
-    let mut distmap: HashMap<Key, u64> = HashMap::new();
-    let mut heap: BinaryHeap<HS> = BinaryHeap::new();
+    let mut heap = Dij::new();
+    heap.push(input, 0);
 
-    input
-        .into_iter()
-        .enumerate()
-        .filter(|(idx, room)| !room.is_solved(*idx))
-        .for_each(|(idx, room)| {
-            let (room, popped, moves) = room.pop();
-            HALLWAY_POS.iter().enumerate().for_each(|(hidx, &pos)| {
-                let mut hallway = [Amphipod::Vacant; 7];
-                hallway[hidx] = popped;
-                let mut rooms = input;
-                rooms[idx] = room;
-                let key = Key { hallway, rooms };
-                let cost = (pos.abs_diff(ROOM_POS[idx]) + moves) * popped.cost();
-                distmap.insert(key.clone(), cost);
-                heap.push(HS { key, cost });
-            });
-        });
-
-    while let Some(HS {
-        key: Key {
-            mut hallway,
-            mut rooms,
-        },
-        cost,
-    }) = heap.pop()
-    {
-        // try and shove amphipods into their rooms.
-        let mut moved = true;
-        let mut totcost = cost;
-        while moved {
-            moved = false;
-            (0..hallway.len()).for_each(|hi| {
-                if !hallway[hi].is_valid() {
-                    return;
-                }
-                let amph = hallway[hi];
-                let room = amph.room();
-                let curr_pos = HALLWAY_POS[hi];
-                let (target, dir) = if curr_pos < ROOM_POS[room] {
-                    (ROOM_POS[room] - 1, 1)
-                } else {
-                    (ROOM_POS[room] + 1, -1)
-                };
-
-                let mut i = hi as isize;
-                if let Some((nroom, icost)) = loop {
-                    if HALLWAY_POS[i as usize] == target {
-                        println!(
-                            "trying to move {amph:?} into room[{room}] {:?}",
-                            rooms[room]
-                        );
-                        break rooms[room].insert(&amph);
-                    } else if hallway[i as usize] != Amphipod::Vacant {
-                        break None;
-                    }
-                    i += dir;
-                } {
-                    println!("moved into room[{room}] {nroom:?}");
-                    println!("rooms: {rooms:?}");
-                    totcost += (curr_pos.abs_diff(ROOM_POS[room]) + icost) * amph.cost();
-                    rooms[room] = nroom;
-                    hallway[hi] = Amphipod::Vacant;
-                    moved = true;
-                }
-            });
+    while let Some(HeapState { key, cost }) = heap.pop() {
+        if key.is_solved() {
+            return cost;
         }
-        // did we solve it?
-        if rooms
-            .iter()
-            .enumerate()
-            .all(|(ridx, rooms)| rooms.is_solved(ridx))
-        {
-            println!("{rooms:?}, {hallway:?}");
-            return totcost;
-        }
-        // now try and move out new amphs that need to move (one at a time)
-        rooms
-            .iter()
-            .enumerate()
-            .filter(|(_, room)| !room.is_empty()) // room is empty
-            .filter(|(ridx, room)| !room.is_solved(*ridx)) // room is solved for
-            .filter(|(ridx, room)| {
-                let (_, amph, _) = room.pop();
-                amph.room() != *ridx // this amph belongs here, and is at the bottom of the room.
-            })
-            .flat_map(|(ridx, room)| {
-                let mut keys = Vec::with_capacity(hallway.len());
-                let (room, popped, moves) = room.pop();
-                let (left, right) = COUNT_FROM[ridx];
 
-                // straight to room
-                let dir_room = popped.room();
-                if dir_room != ridx {
-                    let curr_pos = ROOM_POS[ridx];
-                    let (nidx, target, dir) = if curr_pos < ROOM_POS[dir_room] {
-                        (right, ROOM_POS[dir_room] - 1, 1isize)
-                    } else {
-                        (left, ROOM_POS[dir_room] + 1, -1isize)
-                    };
-                    let mut i: isize = nidx as isize;
-                    if let Some((nroom, icost)) = loop {
-                        println!("{popped:?}, {ridx}: {i} {left}, {right} {curr_pos}");
-                        if HALLWAY_POS[i as usize] == target {
-                            break rooms[dir_room].insert(&popped);
-                        } else if hallway[i as usize] != Amphipod::Vacant {
-                            break None;
+        key.clone().0.into_iter().enumerate().for_each(|(i, r)| {
+            match r {
+                Room::Hallway(None) => (),
+                Room::Hallway(Some(am)) => {
+                    move_from_hallway_or_room(&key, i, &mut heap, cost, 0, am, Room::Hallway(None));
+                }
+                Room::Room(_, _, _) => {
+                    if let Some((room, am, imoves)) = r.try_pop() {
+                        let target = am.room() as usize;
+                        // can't move directly into room, we were forced out because bottom is not in the right room.
+                        if target == i {
+                            move_into_hallway(&key, i, &mut heap, cost, room, am, imoves);
+                        } else {
+                            // try to move directly to room
+                            if !move_from_hallway_or_room(
+                                &key, i, &mut heap, cost, imoves, am, room,
+                            ) {
+                                move_into_hallway(&key, i, &mut heap, cost, room, am, imoves);
+                            }
                         }
-                        i += dir;
-                    } {
-                        let mut rooms = rooms;
-                        rooms[ridx] = room;
-                        rooms[dir_room] = nroom;
-                        let key = Key { hallway, rooms };
-                        let cost = (curr_pos.abs_diff(ROOM_POS[dir_room]) + icost) * popped.cost();
-                        keys.push((key, cost + totcost));
-                        return keys; // direct to room will always be faster, no?
                     }
                 }
-
-                // left
-                let mut li = left;
-                loop {
-                    if hallway[li] != Amphipod::Vacant {
-                        break;
-                    } else {
-                        let mut hallway = hallway;
-                        hallway[li] = popped;
-                        let mut rooms = rooms;
-                        rooms[ridx] = room;
-                        let key = Key { hallway, rooms };
-                        let cost =
-                            (HALLWAY_POS[li].abs_diff(ROOM_POS[ridx] + moves)) * popped.cost();
-                        keys.push((key, cost + totcost));
-                    }
-                    if li == 0 {
-                        break;
-                    }
-                    li -= 1;
-                }
-                // right
-                let mut ri = right;
-                loop {
-                    if hallway[ri] != Amphipod::Vacant {
-                        break;
-                    } else {
-                        let mut hallway = hallway;
-                        hallway[ri] = popped;
-                        let mut rooms = rooms;
-                        rooms[ridx] = room;
-                        let key = Key { hallway, rooms };
-                        let cost =
-                            (HALLWAY_POS[li].abs_diff(ROOM_POS[ridx] + moves)) * popped.cost();
-                        keys.push((key, cost + totcost));
-                    }
-                    ri += 1;
-                    if ri == hallway.len() {
-                        break;
-                    }
-                }
-                keys
-            })
-            .for_each(|(key, ncost)| {
-                let dent = distmap.entry(key.clone()).or_insert(u64::MAX);
-                if ncost < *dent {
-                    *dent = ncost;
-                    heap.push(HS { key, cost: ncost });
-                }
-            });
-        // if no moves can be made, prune this result.
+            }
+        });
     }
     panic!("NO SOLUTION?!");
 }
