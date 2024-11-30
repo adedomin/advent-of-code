@@ -1,4 +1,5 @@
 use aoc_shared::{read_input_to_string, Dijkstra, HeapState};
+use itertools::Itertools;
 use std::io;
 
 type Output = Key;
@@ -49,13 +50,56 @@ impl TryFrom<char> for Amphipod {
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
 enum Room {
     Hallway(Option<Amphipod>),
-    Room(u8, Option<Amphipod>, Option<Amphipod>),
+    Part1(u8, Option<Amphipod>, Option<Amphipod>),
+    Part2(
+        u8,
+        Option<Amphipod>,
+        Option<Amphipod>,
+        Option<Amphipod>,
+        Option<Amphipod>,
+    ),
 }
 
+const PART2_ROOM_EXTENSIONS: [Amphipod; 8] = [
+    // room1
+    Amphipod::Desert,
+    Amphipod::Desert,
+    // room2
+    Amphipod::Copper,
+    Amphipod::Bronze,
+    // room3
+    Amphipod::Bronze,
+    Amphipod::Amber,
+    // room4
+    Amphipod::Amber,
+    Amphipod::Copper,
+];
+
 impl Room {
+    fn convert_to_part2(self) -> Self {
+        match self {
+            Room::Hallway(x) => Room::Hallway(x),
+            Room::Part1(x, y, z) => {
+                let one = (x - 2) as usize;
+                let two = (x - 1) as usize;
+                Room::Part2(
+                    x,
+                    y,
+                    Some(PART2_ROOM_EXTENSIONS[one]),
+                    Some(PART2_ROOM_EXTENSIONS[two]),
+                    z,
+                )
+            }
+            Room::Part2(_, _, _, _, _) => self,
+        }
+    }
+
     fn is_solved(&self) -> bool {
         match self {
-            Room::Room(room_num, Some(am1), Some(am2)) => am1 == am2 && am1.room() == *room_num,
+            Room::Part1(room_num, Some(am1), Some(am2)) => am1 == am2 && am1.room() == *room_num,
+            Room::Part2(room_num, Some(am1), Some(am2), Some(am3), Some(am4)) => {
+                [am1, am2, am3, am4].into_iter().all_equal() && am1.room() == *room_num
+            }
             _ => false,
         }
     }
@@ -65,13 +109,39 @@ impl Room {
             return None;
         }
         match self {
-            Room::Room(_, None, None) => None,
-            Room::Room(room_num, Some(am1), Some(am2)) => {
-                Some((Room::Room(*room_num, None, Some(*am2)), *am1, 1u32))
+            Room::Part1(_, None, None) => None,
+            Room::Part1(room_num, Some(am1), Some(am2)) => {
+                Some((Room::Part1(*room_num, None, Some(*am2)), *am1, 1u32))
             }
             // we only pop am1.room() == room_num, when the bottom most amphipod is in the wrong room.
-            Room::Room(room_num, None, Some(am2)) if am2.room() != *room_num => {
-                Some((Room::Room(*room_num, None, None), *am2, 2u32))
+            Room::Part1(room_num, None, Some(am2)) if am2.room() != *room_num => {
+                Some((Room::Part1(*room_num, None, None), *am2, 2u32))
+            }
+            Room::Part2(room_num, Some(am1), Some(am2), Some(am3), Some(am4)) => Some((
+                Room::Part2(*room_num, None, Some(*am2), Some(*am3), Some(*am4)),
+                *am1,
+                1u32,
+            )),
+            Room::Part2(room_num, None, Some(am2), Some(am3), Some(am4))
+                if [am2, am3, am4].into_iter().any(|am| am.room() != *room_num) =>
+            {
+                Some((
+                    Room::Part2(*room_num, None, None, Some(*am3), Some(*am4)),
+                    *am2,
+                    2u32,
+                ))
+            }
+            Room::Part2(room_num, None, None, Some(am3), Some(am4))
+                if am3.room() != *room_num || am4.room() != *room_num =>
+            {
+                Some((
+                    Room::Part2(*room_num, None, None, None, Some(*am4)),
+                    *am3,
+                    3u32,
+                ))
+            }
+            Room::Part2(room_num, None, None, None, Some(am4)) if am4.room() != *room_num => {
+                Some((Room::Part2(*room_num, None, None, None, None), *am4, 4u32))
             }
             _ => None,
         }
@@ -82,10 +152,32 @@ impl Room {
             return None;
         }
         match self {
-            Room::Room(room_num, None, Some(am2)) if am1 == *am2 => {
-                Some((Room::Room(*room_num, Some(am1), Some(*am2)), 2))
+            Room::Part1(room_num, None, Some(am2)) if am1 == *am2 => {
+                Some((Room::Part1(*room_num, Some(am1), Some(*am2)), 2))
             }
-            Room::Room(room_num, None, None) => Some((Room::Room(*room_num, None, Some(am1)), 3)),
+            Room::Part1(room_num, None, None) => Some((Room::Part1(*room_num, None, Some(am1)), 3)),
+            Room::Part2(room_num, None, Some(am2), Some(am3), Some(am4))
+                if [am2, am3, am4].into_iter().all(|&am| am == am1) =>
+            {
+                Some((
+                    Room::Part2(*room_num, Some(am1), Some(*am2), Some(*am3), Some(*am4)),
+                    2,
+                ))
+            }
+            Room::Part2(room_num, None, None, Some(am3), Some(am4))
+                if [am3, am4].into_iter().all(|&am| am == am1) =>
+            {
+                Some((
+                    Room::Part2(*room_num, None, Some(am1), Some(*am3), Some(*am4)),
+                    3,
+                ))
+            }
+            Room::Part2(room_num, None, None, None, Some(am4)) if *am4 == am1 => {
+                Some((Room::Part2(*room_num, None, None, Some(am1), Some(*am4)), 4))
+            }
+            Room::Part2(room_num, None, None, None, None) => {
+                Some((Room::Part2(*room_num, None, None, None, Some(am1)), 5))
+            }
             _ => None,
         }
     }
@@ -130,7 +222,7 @@ fn parse_input(input: &str) -> Output {
         .into_iter()
         .zip(bot)
         .enumerate()
-        .map(|(room_num, (top, bot))| Room::Room(room_num as u8 * 2 + 2, Some(top), Some(bot)))
+        .map(|(room_num, (top, bot))| Room::Part1(room_num as u8 * 2 + 2, Some(top), Some(bot)))
         .collect::<Vec<Room>>();
     assert_eq!(
         rooms.len(),
@@ -244,13 +336,21 @@ fn part1_sol(input: Output) -> Solved {
             return cost;
         }
 
-        key.clone().0.into_iter().enumerate().for_each(|(i, r)| {
+        key.0.as_ref().iter().enumerate().for_each(|(i, r)| {
             match r {
                 Room::Hallway(None) => (),
                 Room::Hallway(Some(am)) => {
-                    move_from_hallway_or_room(&key, i, &mut heap, cost, 0, am, Room::Hallway(None));
+                    move_from_hallway_or_room(
+                        &key,
+                        i,
+                        &mut heap,
+                        cost,
+                        0,
+                        *am,
+                        Room::Hallway(None),
+                    );
                 }
-                Room::Room(_, _, _) => {
+                _ => {
                     if let Some((room, am, imoves)) = r.try_pop() {
                         let target = am.room() as usize;
                         // can't move directly into room, we were forced out because bottom is not in the right room.
@@ -272,16 +372,23 @@ fn part1_sol(input: Output) -> Solved {
     panic!("NO SOLUTION?!");
 }
 
-// fn part2_sol(input: &Output) -> Solved {}
+fn part2_sol(input: Output) -> Solved {
+    let Key(inner) = input;
+    part1_sol(Key(inner
+        .into_iter()
+        .map(|x| x.convert_to_part2())
+        .collect::<Vec<Room>>()
+        .try_into()
+        .unwrap()))
+}
 
 fn main() -> io::Result<()> {
     let input = read_input_to_string()?;
     let parsed_input = parse_input(&input);
-    println!("{parsed_input:?}");
-    let part1 = part1_sol(parsed_input);
-    // let part2 = part2_sol(&parsed_input);
+    let part1 = part1_sol(parsed_input.clone());
     print!("Part1: {part1}, ");
-    // print!("Part2: {part2}");
+    let part2 = part2_sol(parsed_input);
+    print!("Part2: {part2}");
     println!();
     Ok(())
 }
