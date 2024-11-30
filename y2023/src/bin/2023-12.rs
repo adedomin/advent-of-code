@@ -47,9 +47,9 @@ fn unfold_and_solve(springs: &[u8], patterns: &[Vec<u8>]) -> u64 {
 }
 
 fn solve_grp(springs: &[u8], patterns: &[Vec<u8>]) -> u64 {
-    let mut memo = FlatVec2D::<u64>::new(springs.len(), patterns.len());
+    let mut memo = FlatVec2D::<Option<u64>>::new(springs.len(), patterns.len());
     fn brec(
-        memo: &mut FlatVec2D<u64>,
+        memo: &mut FlatVec2D<Option<u64>>,
         springs: &[u8],
         patterns: &[Vec<u8>],
         si: usize,
@@ -61,9 +61,8 @@ fn solve_grp(springs: &[u8], patterns: &[Vec<u8>]) -> u64 {
             return 0;
         }
 
-        let m = memo[(si, pi)];
-        if m > 0 {
-            return m - 1;
+        if let Some(m) = memo[(si, pi)] {
+            return m;
         }
 
         let mut ret = 0;
@@ -95,7 +94,7 @@ fn solve_grp(springs: &[u8], patterns: &[Vec<u8>]) -> u64 {
             }
         }
 
-        memo[(si, pi)] = ret + 1;
+        memo[(si, pi)] = Some(ret);
         ret
     }
     brec(&mut memo, springs, patterns, 0, 0)
