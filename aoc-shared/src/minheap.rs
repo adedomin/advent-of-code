@@ -1,7 +1,7 @@
 use std::collections::{BinaryHeap, HashMap};
 
 /// Minimum heap key state for BinaryHeap
-/// Inverts Ord/PartialOrd for the cost field for Djikstra problems.
+/// Inverts Ord/PartialOrd for the cost field for Dijkstra problems.
 #[derive(Clone, PartialEq, Eq)]
 pub struct HeapState<K, C>
 where
@@ -39,7 +39,7 @@ where
     C: Copy + PartialOrd + Ord,
 {
     heap: BinaryHeap<HeapState<K, C>>,
-    distmap: HashMap<K, Option<C>>,
+    distmap: HashMap<K, C>,
 }
 
 impl<K, C> Dijkstra<K, C>
@@ -60,17 +60,20 @@ where
     }
 
     pub fn push(&mut self, key: K, cost: C) {
-        let dent = self.distmap.entry(key.clone()).or_insert(None);
-        match *dent {
-            Some(val) if cost < val => {
-                *dent = Some(cost);
-                self.heap.push(HeapState { key, cost });
-            }
-            None => {
-                *dent = Some(cost);
-                self.heap.push(HeapState { key, cost });
-            }
-            _ => (),
+        let mut changed = true;
+        let dent = self
+            .distmap
+            .entry(key.clone())
+            .and_modify(|old| {
+                if cost < *old {
+                    *old = cost
+                } else {
+                    changed = false;
+                }
+            })
+            .or_insert(cost);
+        if *dent == cost && changed {
+            self.heap.push(HeapState { key, cost });
         }
     }
 }
