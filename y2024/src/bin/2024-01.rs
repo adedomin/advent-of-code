@@ -1,8 +1,8 @@
-use aoc_shared::read_input_to_string;
-use std::{collections::HashMap, io};
+use aoc_shared::{fold_decimal_from, read_input_to_string};
+use std::io;
 
-type Output = [Vec<u32>; 2];
-type Solved = u32;
+type Solved = u64;
+type Output = [Vec<Solved>; 2];
 
 fn parse_input(input: &str) -> Output {
     let mut ret = [vec![], vec![]];
@@ -11,36 +11,61 @@ fn parse_input(input: &str) -> Output {
         .enumerate()
         .for_each(|(i, num)| {
             let idx = i & 1;
-            ret[idx].push(num.parse::<_>().expect("expected a number"));
+            ret[idx].push(fold_decimal_from(num.as_bytes()));
         });
+    // both sides benefit from this
+    // naive p2, not so much.
+    ret[0].sort_unstable();
+    ret[1].sort_unstable();
     ret
 }
 
 fn part1_sol([left, right]: &Output) -> Solved {
-    let mut nleft = left.clone();
-    nleft.sort_unstable();
-    let mut nright = right.clone();
-    nright.sort_unstable();
-    nleft
-        .into_iter()
-        .zip(nright)
-        .map(|(l, r)| l.abs_diff(r))
+    left.iter()
+        .zip(right.iter())
+        .map(|(&l, &r)| l.abs_diff(r))
         .sum::<Solved>()
 }
 
 fn part2_sol([left, right]: Output) -> Solved {
-    let mut memo = HashMap::new();
-    left.into_iter()
-        .map(|num| {
-            if let Some(v) = memo.get(&num) {
-                num * v
+    let mut num_counts: Vec<(Solved, Solved)> = vec![];
+    right.into_iter().for_each(|num| {
+        if let Some(v) = num_counts.last_mut() {
+            if v.0 == num {
+                v.1 += 1;
             } else {
-                let cnt = right.iter().filter(|&&n| n == num).count() as u32;
-                memo.insert(num, cnt);
-                num * cnt
+                num_counts.push((num, 1));
+            }
+        } else {
+            num_counts.push((num, 1));
+        }
+    });
+    left.into_iter()
+        .fold((0, 0), |(idx, sum), num| {
+            if let Some(&(lastn, lastc)) = num_counts.get(idx) {
+                match num.cmp(&lastn) {
+                    // won't find the current number in right list.
+                    std::cmp::Ordering::Less => (idx, sum),
+                    std::cmp::Ordering::Equal => (idx, sum + (num * lastc)),
+                    // try and find the next right number
+                    std::cmp::Ordering::Greater => {
+                        let mut ni = idx + 1;
+                        while let Some((lastn, lastc)) = num_counts.get(ni) {
+                            match num.cmp(lastn) {
+                                std::cmp::Ordering::Less => return (ni, sum),
+                                std::cmp::Ordering::Equal => return (ni, sum + (num * lastc)),
+                                std::cmp::Ordering::Greater => ni += 1,
+                            }
+                        }
+                        (ni, sum) // no more numbers on right match.
+                    }
+                }
+            } else {
+                // no more numbers in right match
+                (idx, sum)
             }
         })
-        .sum::<Solved>()
+        .1
 }
 
 fn main() -> io::Result<()> {
