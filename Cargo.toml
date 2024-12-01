@@ -1,10 +1,11 @@
 [workspace]
 resolver = "2"
 members = [
+  "aoc-shared",
   "y2015",
   "y2020",
   "y2021",
   "y2022",
   "y2023",
-  "aoc-shared",
+  "y2024",
 ]
