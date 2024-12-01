@@ -6,19 +6,16 @@ type Solved = u64;
 type Output = [Vec<Solved>; 2];
 
 fn parse_input(input: &str) -> Output {
-    let mut ret = [vec![], vec![]];
-    input
+    let (mut left, mut right) = input
         .split_ascii_whitespace()
-        .enumerate()
-        .for_each(|(i, num)| {
-            let idx = i & 1;
-            ret[idx].push(fold_decimal_from(num.as_bytes()));
-        });
+        .map(|num| fold_decimal_from::<Solved>(num.as_bytes()))
+        .tuples()
+        .collect::<(Vec<_>, Vec<_>)>();
     // both sides benefit from this
     // naive p2, not so much.
-    ret[0].sort_unstable();
-    ret[1].sort_unstable();
-    ret
+    left.sort_unstable();
+    right.sort_unstable();
+    [left, right]
 }
 
 fn part1_sol([left, right]: &Output) -> Solved {
