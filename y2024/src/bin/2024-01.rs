@@ -1,4 +1,5 @@
 use aoc_shared::{fold_decimal_from, read_input_to_string};
+use itertools::Itertools;
 use std::io;
 
 type Solved = u64;
@@ -28,24 +29,25 @@ fn part1_sol([left, right]: &Output) -> Solved {
 }
 
 fn part2_sol([left, right]: Output) -> Solved {
-    let mut num_counts: Vec<(Solved, Solved)> = vec![];
-    right.into_iter().for_each(|num| {
-        if let Some(v) = num_counts.last_mut() {
-            if v.0 == num {
-                v.1 += 1;
+    let num_counts = right
+        .into_iter()
+        .map(|x| (x, 1))
+        .coalesce(|x, y| {
+            if x.0 == y.0 {
+                Ok((x.0, x.1 + 1))
             } else {
-                num_counts.push((num, 1));
+                Err((x, y))
             }
-        } else {
-            num_counts.push((num, 1));
-        }
-    });
+        })
+        .collect::<Vec<(Solved, Solved)>>();
     left.into_iter()
         .fold((0, 0), |(mut idx, sum), num| {
             while let Some((lastn, lastc)) = num_counts.get(idx) {
                 match num.cmp(lastn) {
+                    // next right number cannot match current left.
                     std::cmp::Ordering::Less => return (idx, sum),
                     std::cmp::Ordering::Equal => return (idx, sum + (num * lastc)),
+                    // find next matching right number.
                     std::cmp::Ordering::Greater => idx += 1,
                 }
             }
