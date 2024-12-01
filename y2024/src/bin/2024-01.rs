@@ -41,8 +41,7 @@ fn part2_sol([left, right]: Output) -> Solved {
         }
     });
     left.into_iter()
-        .fold((0, 0), |(idx, sum), num| {
-            let mut idx = idx;
+        .fold((0, 0), |(mut idx, sum), num| {
             while let Some((lastn, lastc)) = num_counts.get(idx) {
                 match num.cmp(lastn) {
                     std::cmp::Ordering::Less => return (idx, sum),
