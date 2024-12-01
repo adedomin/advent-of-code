@@ -1,8 +1,5 @@
-use aoc_shared::{read_input_to_string, try_atoi};
-use std::{
-    collections::{BinaryHeap, HashMap},
-    io,
-};
+use aoc_shared::{read_input_to_string, try_atoi, Dijkstra, HeapState};
+use std::io;
 
 type Output = Character;
 type Solved = u16;
@@ -79,25 +76,6 @@ struct Key {
     // path: Vec<Spell>,
 }
 
-#[derive(Clone, PartialEq, Eq)]
-struct HeapState {
-    key: Key,
-    cost: u16,
-}
-
-impl Ord for HeapState {
-    /// Reverse of the Ord impl for min heap
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        other.cost.cmp(&self.cost)
-    }
-}
-
-impl PartialOrd for HeapState {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
 fn attack_minus_armor(attack: i16, armor: i16) -> i16 {
     if attack - armor > 0 {
         attack - armor
@@ -142,8 +120,7 @@ fn run_effects(shield: u8, poison: u8, recharge: u8) -> (TurnEffects, u8, u8, u8
 }
 
 fn part1_sol(enemy: Output, hard_mode: bool) -> Solved {
-    let mut dist = HashMap::new();
-    let mut heap = BinaryHeap::new();
+    let mut heap = Dijkstra::<Key, u16>::new();
     for spell in SPELLS {
         let key = Key {
             spell,
@@ -155,11 +132,7 @@ fn part1_sol(enemy: Output, hard_mode: bool) -> Solved {
             enemy_hp: enemy.health,
             // path: vec![spell],
         };
-        dist.insert(key.clone(), spell.cost());
-        heap.push(HeapState {
-            key,
-            cost: spell.cost(),
-        });
+        heap.push(key, spell.cost());
     }
 
     while let Some(HeapState {
@@ -223,15 +196,7 @@ fn part1_sol(enemy: Output, hard_mode: bool) -> Solved {
                 enemy_hp,
                 // path: npath,
             };
-            let ncost = cost + spell.cost();
-            let dent = dist.entry(nkey.clone()).or_insert(u16::MAX);
-            if ncost < *dent {
-                *dent = ncost;
-                heap.push(HeapState {
-                    key: nkey,
-                    cost: ncost,
-                });
-            }
+            heap.push(nkey, cost + spell.cost());
         }
     }
     panic!("No solution");
