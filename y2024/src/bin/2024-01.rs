@@ -42,28 +42,15 @@ fn part2_sol([left, right]: Output) -> Solved {
     });
     left.into_iter()
         .fold((0, 0), |(idx, sum), num| {
-            if let Some(&(lastn, lastc)) = num_counts.get(idx) {
-                match num.cmp(&lastn) {
-                    // won't find the current number in right list.
-                    std::cmp::Ordering::Less => (idx, sum),
-                    std::cmp::Ordering::Equal => (idx, sum + (num * lastc)),
-                    // try and find the next right number
-                    std::cmp::Ordering::Greater => {
-                        let mut ni = idx + 1;
-                        while let Some((lastn, lastc)) = num_counts.get(ni) {
-                            match num.cmp(lastn) {
-                                std::cmp::Ordering::Less => return (ni, sum),
-                                std::cmp::Ordering::Equal => return (ni, sum + (num * lastc)),
-                                std::cmp::Ordering::Greater => ni += 1,
-                            }
-                        }
-                        (ni, sum) // no more numbers on right match.
-                    }
+            let mut idx = idx;
+            while let Some((lastn, lastc)) = num_counts.get(idx) {
+                match num.cmp(lastn) {
+                    std::cmp::Ordering::Less => return (idx, sum),
+                    std::cmp::Ordering::Equal => return (idx, sum + (num * lastc)),
+                    std::cmp::Ordering::Greater => idx += 1,
                 }
-            } else {
-                // no more numbers in right match
-                (idx, sum)
             }
+            (idx, sum) // no more numbers on right match.
         })
         .1
 }
