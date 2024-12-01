@@ -25,7 +25,7 @@ trait CodeCharSz {
     fn as_escaped_size(&self) -> i64;
 }
 
-impl<'a> CodeCharSz for NToken<'a> {
+impl CodeCharSz for NToken<'_> {
     fn code_size(&self) -> i64 {
         match self {
             NToken::Quote => 1,

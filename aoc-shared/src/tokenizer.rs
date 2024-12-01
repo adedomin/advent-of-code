@@ -74,7 +74,7 @@ impl<'a> Iterator for AoCTokenizer<'a> {
     }
 }
 
-impl<'a> FusedIterator for AoCTokenizer<'a> {}
+impl FusedIterator for AoCTokenizer<'_> {}
 
 pub trait Tokenize<'a> {
     fn tokenize(self) -> AoCTokenizer<'a>;

@@ -50,7 +50,7 @@ impl Display for Instruction {
     }
 }
 
-impl<'a> Iterator for InstrIter<'a> {
+impl Iterator for InstrIter<'_> {
     type Item = (usize, usize);
 
     fn next(&mut self) -> Option<Self::Item> {
