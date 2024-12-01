@@ -9,7 +9,7 @@ use std::{
 
 type Output<'a> = (Vec<&'a [u8]>, HashMap<(&'a [u8], &'a [u8]), i64>);
 
-fn parse_input<'a>(input: &'a [u8]) -> Output {
+fn parse_input(input: &[u8]) -> Output {
     let re =
         Regex::new(r##"(?m)^(?<p1>[A-Za-z]+) would (?<verb>gain|lose) (?<value>[[:digit:]]+) happiness units by sitting next to (?<p2>[A-Za-z]+).$"##)
             .unwrap();
@@ -45,7 +45,7 @@ fn parse_input<'a>(input: &'a [u8]) -> Output {
             (people, people_map)
         },
     );
-    let plist = plist.iter().copied().collect::<Vec<&'a [u8]>>();
+    let plist = plist.iter().copied().collect::<Vec<&[u8]>>();
     (plist, pcost)
 }
 

@@ -47,10 +47,6 @@ impl Console {
         }
     }
 
-    fn is_done(&self, instr: &[Instruction]) -> bool {
-        instr.get(self.pc as usize).is_none()
-    }
-
     fn step(self, instr: &[Instruction]) -> Result<Console, i32> {
         if self.pc < 0 {
             return Err(self.accumulate);

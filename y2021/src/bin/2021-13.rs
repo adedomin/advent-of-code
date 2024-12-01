@@ -108,7 +108,7 @@ fn solve(instructions: Vec<Instruction>, mut paper: Vec<(i32, i32)>) -> io::Resu
     println!("Part2 Below:");
     for line in display {
         io::stdout().lock().write_all(&line)?;
-        io::stdout().lock().write_all(&[b'\n'])?;
+        io::stdout().lock().write_all(b"\n")?;
     }
     Ok(())
 }
