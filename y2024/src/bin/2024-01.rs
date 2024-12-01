@@ -28,25 +28,25 @@ fn part1_sol([left, right]: &Output) -> Solved {
         .sum::<Solved>()
 }
 
+fn get_counts(v: Vec<Solved>) -> impl Iterator<Item = (Solved, Solved)> {
+    v.into_iter().map(|x| (x, 1)).coalesce(|x, y| {
+        if x.0 == y.0 {
+            Ok((x.0, x.1 + 1))
+        } else {
+            Err((x, y))
+        }
+    })
+}
+
 fn part2_sol([left, right]: Output) -> Solved {
-    let num_counts = right
-        .into_iter()
-        .map(|x| (x, 1))
-        .coalesce(|x, y| {
-            if x.0 == y.0 {
-                Ok((x.0, x.1 + 1))
-            } else {
-                Err((x, y))
-            }
-        })
-        .collect::<Vec<(Solved, Solved)>>();
-    left.into_iter()
-        .fold((0, 0), |(mut idx, sum), num| {
-            while let Some((lastn, lastc)) = num_counts.get(idx) {
-                match num.cmp(lastn) {
+    let right_counts = get_counts(right).collect::<Vec<(Solved, Solved)>>();
+    get_counts(left)
+        .fold((0, 0), |(mut idx, sum), (lnum, lcount)| {
+            while let Some((rnum, rcount)) = right_counts.get(idx) {
+                match lnum.cmp(rnum) {
                     // next right number cannot match current left.
                     std::cmp::Ordering::Less => return (idx, sum),
-                    std::cmp::Ordering::Equal => return (idx, sum + (num * lastc)),
+                    std::cmp::Ordering::Equal => return (idx, sum + (rnum * rcount * lcount)),
                     // find next matching right number.
                     std::cmp::Ordering::Greater => idx += 1,
                 }
