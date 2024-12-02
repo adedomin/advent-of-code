@@ -1,5 +1,4 @@
 use aoc_shared::{array_windows, fold_decimal_from, read_input_to_string};
-use itertools::Itertools;
 use std::io;
 
 type Output = Vec<Vec<Solved>>;
@@ -44,9 +43,10 @@ fn is_safe(report: &[i32], part2: bool) -> bool {
                 let sign = l
                     .iter()
                     .chain(r.iter())
-                    .tuples()
-                    .take(1)
-                    .fold(0, |_, (l, r)| r - l)
+                    .take(2)
+                    .copied()
+                    .reduce(|l, r| r - l)
+                    .unwrap_or(0)
                     .signum();
                 let check_break = l.last().is_none_or(|&ll| safe_distance(ll, r[0], sign));
                 let rem = array_windows(r).all(|&[l, r]| safe_distance(l, r, sign));
