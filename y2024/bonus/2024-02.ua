@@ -1,7 +1,7 @@
 #!/usr/bin/env uiua
 # Experimental!
-SignSame ← (=1/+◰±)
-Inbetween ← (¬±/+∨⊃(>3)(<1)⌵)
+SignSame ← =1/+◰±
+Inbetween ← ¬±/+∨⊃(>3)(<1)⌵
 Safe ← ×⊃ SignSame Inbetween ≡/-◫2
 
 &fras "input/02"
