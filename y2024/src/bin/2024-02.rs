@@ -1,4 +1,5 @@
 use aoc_shared::{array_windows, fold_decimal_from, read_input_to_string};
+use itertools::Itertools;
 use std::io;
 
 type Output = Vec<Vec<Solved>>;
@@ -21,20 +22,38 @@ fn parse_input(input: &str) -> Output {
         .collect::<Output>()
 }
 
+fn safe_distance(v: i32) -> bool {
+    (1..4).contains(&v)
+}
+
 fn is_safe(report: &[i32], part2: bool) -> bool {
     let sign = if report.len() > 1 {
         (report[1] - report[0]).signum()
     } else {
         panic!("Invalid report, must have at least 2 numbers");
     };
-    let itr = array_windows(report).position(|[l, r]| !((1..4).contains(&((r - l) * sign))));
+    let itr = array_windows(report).position(|[l, r]| !safe_distance((r - l) * sign));
     match itr {
         // note, array_windows effectively shrinks max len by 1 so i+1 is always safe, unlike 0 - 1
         Some(i) if part2 => if i == 0 { i..i + 2 } else { i - 1..i + 2 }.any(|i| {
             let (l, r) = report.split_at(i);
             let r = &r[1..];
-            let nr = l.iter().chain(r.iter()).copied().collect::<Vec<_>>();
-            is_safe(&nr, false)
+            if r.is_empty() {
+                true
+            } else {
+                let nsign = l
+                    .iter()
+                    .chain(r.iter())
+                    .tuples()
+                    .take(1)
+                    .fold(0, |_, (l, r)| r - l)
+                    .signum();
+                let check_break = l
+                    .last()
+                    .is_none_or(|&ll| safe_distance((r[0] - ll) * nsign));
+                let rem = array_windows(r).all(|[l, r]| safe_distance((r - l) * nsign));
+                check_break && rem
+            }
         }),
         Some(_) => false,
         None => true,
