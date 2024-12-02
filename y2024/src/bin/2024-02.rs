@@ -22,8 +22,8 @@ fn parse_input(input: &str) -> Output {
         .collect::<Output>()
 }
 
-fn safe_distance(v: i32) -> bool {
-    (1..4).contains(&v)
+fn safe_distance(l: Solved, r: Solved, sign: Solved) -> bool {
+    (1..4).contains(&((r - l) * sign))
 }
 
 fn is_safe(report: &[i32], part2: bool) -> bool {
@@ -32,7 +32,7 @@ fn is_safe(report: &[i32], part2: bool) -> bool {
     } else {
         panic!("Invalid report, must have at least 2 numbers");
     };
-    let itr = array_windows(report).position(|[l, r]| !safe_distance((r - l) * sign));
+    let itr = array_windows(report).position(|&[l, r]| !safe_distance(l, r, sign));
     match itr {
         // note, array_windows effectively shrinks max len by 1 so i+1 is always safe, unlike 0 - 1
         Some(i) if part2 => if i == 0 { i..i + 2 } else { i - 1..i + 2 }.any(|i| {
@@ -48,8 +48,8 @@ fn is_safe(report: &[i32], part2: bool) -> bool {
                     .take(1)
                     .fold(0, |_, (l, r)| r - l)
                     .signum();
-                let check_break = l.last().is_none_or(|&ll| safe_distance((r[0] - ll) * sign));
-                let rem = array_windows(r).all(|[l, r]| safe_distance((r - l) * sign));
+                let check_break = l.last().is_none_or(|&ll| safe_distance(ll, r[0], sign));
+                let rem = array_windows(r).all(|&[l, r]| safe_distance(l, r, sign));
                 check_break && rem
             }
         }),
