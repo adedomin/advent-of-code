@@ -33,8 +33,7 @@ fn is_safe(report: &[i32], part2: bool) -> bool {
     };
     let itr = array_windows(report).position(|&[l, r]| !safe_distance(l, r, sign));
     match itr {
-        // note, array_windows effectively shrinks max len by 1 so i+1 is always safe, unlike 0 - 1
-        Some(i) if part2 => if i == 0 { i..i + 2 } else { i - 1..i + 2 }.any(|i| {
+        Some(i) if part2 => (i.saturating_sub(1)..i + 2).any(|i| {
             let (l, r) = report.split_at(i);
             let r = &r[1..];
             if r.is_empty() {
