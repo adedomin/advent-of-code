@@ -46,7 +46,7 @@ fn is_safe(report: &[i32], part2: bool) -> bool {
                     .take(2)
                     .copied()
                     .reduce(|l, r| r - l)
-                    .unwrap_or(0)
+                    .expect("Two numbers should be in this report???")
                     .signum();
                 let check_break = l.last().is_none_or(|&ll| safe_distance(ll, r[0], sign));
                 let rem = array_windows(r).all(|&[l, r]| safe_distance(l, r, sign));
