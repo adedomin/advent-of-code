@@ -41,17 +41,15 @@ fn is_safe(report: &[i32], part2: bool) -> bool {
             if r.is_empty() {
                 true
             } else {
-                let nsign = l
+                let sign = l
                     .iter()
                     .chain(r.iter())
                     .tuples()
                     .take(1)
                     .fold(0, |_, (l, r)| r - l)
                     .signum();
-                let check_break = l
-                    .last()
-                    .is_none_or(|&ll| safe_distance((r[0] - ll) * nsign));
-                let rem = array_windows(r).all(|[l, r]| safe_distance((r - l) * nsign));
+                let check_break = l.last().is_none_or(|&ll| safe_distance((r[0] - ll) * sign));
+                let rem = array_windows(r).all(|[l, r]| safe_distance((r - l) * sign));
                 check_break && rem
             }
         }),
