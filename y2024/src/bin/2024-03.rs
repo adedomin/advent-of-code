@@ -18,18 +18,18 @@ fn parse_solve1(input: &str) -> (Output, Output) {
     "##,
     )
     .unwrap();
-    let (p1, p2, _) =
-        re.captures_iter(input)
-            .fold((0, 0, true), |(acc, acc2, enabled), matcher| {
-                if matcher.name("do").is_some() {
-                    (acc, acc2, true)
-                } else if matcher.name("dont").is_some() {
-                    (acc, acc2, false)
-                } else {
-                    let n = extract_num(&matcher, "n1") * extract_num(&matcher, "n2");
-                    (acc + n, acc2 + n * enabled as Output, enabled)
-                }
-            });
+    let (p1, p2, _) = re
+        .captures_iter(input)
+        .fold((0, 0, true), |(p1, p2, enabled), m| {
+            if m.name("do").is_some() {
+                (p1, p2, true)
+            } else if m.name("dont").is_some() {
+                (p1, p2, false)
+            } else {
+                let n = extract_num(&m, "n1") * extract_num(&m, "n2");
+                (p1 + n, p2 + n * enabled as Output, enabled)
+            }
+        });
     (p1, p2)
 }
 
