@@ -1,20 +1,20 @@
 use std::io;
 
-use aoc_shared::read_input_to_string;
-use regex::{Captures, Regex};
+use aoc_shared::{fold_decimal_from, read_input};
+use regex::bytes::{Captures, Regex};
 
-type Output = i32;
+type Output = i64;
 
 fn extract_num(m: &Captures, name: &str) -> Output {
-    m.name(name).unwrap().as_str().parse().unwrap()
+    fold_decimal_from(m.name(name).unwrap().as_bytes())
 }
 
-fn parse_solve1(input: &str) -> (Output, Output) {
+fn parse_solve1(input: &[u8]) -> (Output, Output) {
     let re = Regex::new(
         r##"(?x)
          (?<do>do\(\))
         |(?<dont>don't\(\))
-        |(?:mul\((?<n1>-?[0-9]+),(?<n2>-?[0-9]+)\))
+        |(?:mul\((?<n1>[[:digit:]]{1,3}),(?<n2>[[:digit:]]{1,3})\))
     "##,
     )
     .unwrap();
@@ -34,7 +34,7 @@ fn parse_solve1(input: &str) -> (Output, Output) {
 }
 
 fn main() -> io::Result<()> {
-    let input = read_input_to_string()?;
+    let input = read_input()?;
     let (part1, part2) = parse_solve1(&input);
     print!("Part1: {part1}, ");
     print!("Part2: {part2}");
