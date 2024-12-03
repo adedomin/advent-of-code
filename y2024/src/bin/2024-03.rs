@@ -3,13 +3,11 @@ use std::io;
 use aoc_shared::{fold_decimal_from, read_input};
 use regex::bytes::{Captures, Regex};
 
-type Output = i64;
+type Int = u64;
 
-fn extract_num(m: &Captures, name: &str) -> Output {
-    fold_decimal_from(m.name(name).unwrap().as_bytes())
-}
-
-fn parse_solve1(input: &[u8]) -> (Output, Output) {
+fn solve(input: &[u8]) -> (Int, Int) {
+    let extract_num =
+        |m: &Captures, name| fold_decimal_from::<Int>(m.name(name).unwrap().as_bytes());
     let re = Regex::new(
         r##"(?x)
          (?<do>do\(\))
@@ -27,7 +25,7 @@ fn parse_solve1(input: &[u8]) -> (Output, Output) {
                 (p1, p2, false)
             } else {
                 let n = extract_num(&m, "n1") * extract_num(&m, "n2");
-                (p1 + n, p2 + n * enabled as Output, enabled)
+                (p1 + n, p2 + n * enabled as Int, enabled)
             }
         });
     (p1, p2)
@@ -35,7 +33,7 @@ fn parse_solve1(input: &[u8]) -> (Output, Output) {
 
 fn main() -> io::Result<()> {
     let input = read_input()?;
-    let (part1, part2) = parse_solve1(&input);
+    let (part1, part2) = solve(&input);
     println!("Part1: {part1}, Part2: {part2}");
     Ok(())
 }
