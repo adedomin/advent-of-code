@@ -3,7 +3,7 @@ use std::io;
 use aoc_shared::{fold_decimal_from, read_input};
 use regex::bytes::Regex;
 
-type Output = i64;
+type Output = i32;
 
 fn parse_solve1(input: &[u8]) -> (Output, Output) {
     let re = Regex::new(
@@ -25,11 +25,7 @@ fn parse_solve1(input: &[u8]) -> (Output, Output) {
                     let n1 = fold_decimal_from::<Output>(matcher.name("n1").unwrap().as_bytes());
                     let n2 = fold_decimal_from::<Output>(matcher.name("n2").unwrap().as_bytes());
                     let prod = n1 * n2;
-                    (
-                        acc + prod,
-                        if enabled { acc2 + prod } else { acc2 },
-                        enabled,
-                    )
+                    (acc + prod, acc2 + prod * enabled as Output, enabled)
                 }
             });
     (p1, p2)
