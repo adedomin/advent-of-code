@@ -1,9 +1,13 @@
 use std::io;
 
 use aoc_shared::read_input_to_string;
-use regex::Regex;
+use regex::{Captures, Regex};
 
 type Output = i32;
+
+fn extract_num(m: &Captures, name: &str) -> Output {
+    m.name(name).unwrap().as_str().parse().unwrap()
+}
 
 fn parse_solve1(input: &str) -> (Output, Output) {
     let re = Regex::new(
@@ -22,20 +26,8 @@ fn parse_solve1(input: &str) -> (Output, Output) {
                 } else if matcher.name("dont").is_some() {
                     (acc, acc2, false)
                 } else {
-                    let n1 = matcher
-                        .name("n1")
-                        .unwrap()
-                        .as_str()
-                        .parse::<Output>()
-                        .unwrap();
-                    let n2 = matcher
-                        .name("n2")
-                        .unwrap()
-                        .as_str()
-                        .parse::<Output>()
-                        .unwrap();
-                    let prod = n1 * n2;
-                    (acc + prod, acc2 + prod * enabled as Output, enabled)
+                    let n = extract_num(&matcher, "n1") * extract_num(&matcher, "n2");
+                    (acc + n, acc2 + n * enabled as Output, enabled)
                 }
             });
     (p1, p2)
