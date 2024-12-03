@@ -1,11 +1,11 @@
 use std::io;
 
-use aoc_shared::{fold_decimal_from, read_input};
-use regex::bytes::Regex;
+use aoc_shared::read_input_to_string;
+use regex::Regex;
 
 type Output = i32;
 
-fn parse_solve1(input: &[u8]) -> (Output, Output) {
+fn parse_solve1(input: &str) -> (Output, Output) {
     let re = Regex::new(
         r##"(?x)
          (?<do>do\(\))
@@ -22,8 +22,18 @@ fn parse_solve1(input: &[u8]) -> (Output, Output) {
                 } else if matcher.name("dont").is_some() {
                     (acc, acc2, false)
                 } else {
-                    let n1 = fold_decimal_from::<Output>(matcher.name("n1").unwrap().as_bytes());
-                    let n2 = fold_decimal_from::<Output>(matcher.name("n2").unwrap().as_bytes());
+                    let n1 = matcher
+                        .name("n1")
+                        .unwrap()
+                        .as_str()
+                        .parse::<Output>()
+                        .unwrap();
+                    let n2 = matcher
+                        .name("n2")
+                        .unwrap()
+                        .as_str()
+                        .parse::<Output>()
+                        .unwrap();
                     let prod = n1 * n2;
                     (acc + prod, acc2 + prod * enabled as Output, enabled)
                 }
@@ -32,7 +42,7 @@ fn parse_solve1(input: &[u8]) -> (Output, Output) {
 }
 
 fn main() -> io::Result<()> {
-    let input = read_input()?;
+    let input = read_input_to_string()?;
     let (part1, part2) = parse_solve1(&input);
     print!("Part1: {part1}, ");
     print!("Part2: {part2}");
