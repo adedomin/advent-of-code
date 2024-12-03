@@ -6,3 +6,8 @@ edition = "2021"
 [dependencies]
 aoc-shared = { path = "../aoc-shared" }
 itertools = "0.13"
+
+[dependencies.regex]
+version = "1"
+default-features = false
+features = ["std", "perf"]
