@@ -173,16 +173,20 @@ mod test {
                 assert_eq!(path, vec![(5, 5), (4, 4), (3, 3), (2, 2), (1, 1), (0, 0)]);
                 return;
             }
-            let (x, y) = key;
 
-            dij.push((x - 1, y - 1), key, cost + 1);
-            dij.push((x, y - 1), key, cost + 1);
-            dij.push((x + 1, y - 1), key, cost + 1);
-            dij.push((x - 1, y), key, cost + 1);
-            dij.push((x + 1, y), key, cost + 1);
-            dij.push((x - 1, y + 1), key, cost + 1);
-            dij.push((x, y + 1), key, cost + 1);
-            dij.push((x + 1, y + 1), key, cost + 1);
+            let (x, y) = key;
+            [
+                (x - 1, y - 1),
+                (x, y - 1),
+                (x + 1, y - 1),
+                (x - 1, y),
+                (x + 1, y),
+                (x - 1, y + 1),
+                (x, y + 1),
+                (x + 1, y + 1),
+            ]
+            .into_iter()
+            .for_each(|xy| dij.push(xy, key, cost + 1));
         }
         unreachable!();
     }
