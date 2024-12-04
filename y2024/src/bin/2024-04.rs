@@ -13,26 +13,24 @@ const VECTORS: [(isize, isize); 8] = [
 
 fn part1_sol(map: &Output) -> Solved {
     let mut cnt = 0;
-    for y in map.yrange() {
-        for x in map.xrange() {
-            if map[(x, y)] == b'X' {
-                VECTORS
-                    .iter()
-                    .filter(|(dx, dy)| map.in_bounds(x as isize + dx * 3, y as isize + dy * 3))
-                    .for_each(|(dx, dy)| {
-                        let mut bar = [0; 3];
-                        bar.iter_mut().enumerate().for_each(|(i, cell)| {
-                            let x = (x as isize + dx * (i + 1) as isize) as usize;
-                            let y = (y as isize + dy * (i + 1) as isize) as usize;
-                            *cell = map[(x, y)];
-                        });
-                        if &bar == b"MAS" {
-                            cnt += 1;
-                        }
+    map.xyrange().for_each(|(x, y)| {
+        if map[(x, y)] == b'X' {
+            VECTORS
+                .iter()
+                .filter(|(dx, dy)| map.in_bounds(x as isize + dx * 3, y as isize + dy * 3))
+                .for_each(|(dx, dy)| {
+                    let mut bar = [0; 3];
+                    bar.iter_mut().enumerate().for_each(|(i, cell)| {
+                        let x = (x as isize + dx * (i + 1) as isize) as usize;
+                        let y = (y as isize + dy * (i + 1) as isize) as usize;
+                        *cell = map[(x, y)];
                     });
-            }
+                    if &bar == b"MAS" {
+                        cnt += 1;
+                    }
+                });
         }
-    }
+    });
     cnt
 }
 

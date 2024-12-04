@@ -97,48 +97,10 @@ impl<T> FlatVec2D<T> {
         1..self.2 - 1
     }
 
-    // pub fn xyrange(&self) -> FlatVec2DIdxIter {
-    //     FlatVec2DIdxIter {
-    //         x: 0,
-    //         xlen: self.1,
-    //         y: 0,
-    //         ylen: self.2,
-    //     }
-    // }
+    pub fn xyrange(&self) -> impl Iterator<Item = (usize, usize)> + use<'_, T> {
+        (0..self.2).flat_map(|y| (0..self.1).map(move |x| (x, y)))
+    }
 }
-
-// pub struct FlatVec2DIdxIter {
-//     x: usize,
-//     xlen: usize,
-//     y: usize,
-//     ylen: usize,
-// }
-
-// impl FusedIterator for FlatVec2DIdxIter {}
-
-// impl Iterator for FlatVec2DIdxIter {
-//     type Item = (usize, usize);
-
-//     fn next(&mut self) -> Option<Self::Item> {
-//         if self.y >= self.ylen {
-//             return None;
-//         }
-
-//         if self.x < self.xlen {
-//             let r = (self.x, self.y);
-//             self.x += 1;
-//             Some(r)
-//         } else {
-//             self.x = 0;
-//             self.y += 1;
-//             if self.y < self.ylen {
-//                 Some((self.x, self.y))
-//             } else {
-//                 None
-//             }
-//         }
-//     }
-// }
 
 impl FlatVec2D<u8> {
     pub fn write_pgm(&self, writable: &mut impl Write) -> std::io::Result<()> {
