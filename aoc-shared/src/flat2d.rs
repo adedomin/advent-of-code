@@ -1,6 +1,7 @@
 use std::{
     fmt::Write as FmtWrite,
     io::Write,
+    // iter::FusedIterator,
     ops::{Index, IndexMut},
 };
 
@@ -18,6 +19,7 @@ impl<T> FlatVec2D<T> {
         FlatVec2D(vec![T::default(); xdim * ydim], xdim, ydim)
     }
 
+    /// Try and get an index
     pub fn get(&self, (x, y): (usize, usize)) -> Option<&T> {
         if self.in_bounds(x as isize, y as isize) {
             Some(&self[(x, y)])
@@ -26,6 +28,7 @@ impl<T> FlatVec2D<T> {
         }
     }
 
+    /// Try and get an index, allowing for user calculations that could be negative.
     pub fn get_isize(&self, (x, y): (isize, isize)) -> Option<&T> {
         if self.in_bounds(x, y) {
             Some(&self[(x as usize, y as usize)])
@@ -93,7 +96,49 @@ impl<T> FlatVec2D<T> {
     pub fn pad_yrange(&self) -> std::ops::Range<usize> {
         1..self.2 - 1
     }
+
+    // pub fn xyrange(&self) -> FlatVec2DIdxIter {
+    //     FlatVec2DIdxIter {
+    //         x: 0,
+    //         xlen: self.1,
+    //         y: 0,
+    //         ylen: self.2,
+    //     }
+    // }
 }
+
+// pub struct FlatVec2DIdxIter {
+//     x: usize,
+//     xlen: usize,
+//     y: usize,
+//     ylen: usize,
+// }
+
+// impl FusedIterator for FlatVec2DIdxIter {}
+
+// impl Iterator for FlatVec2DIdxIter {
+//     type Item = (usize, usize);
+
+//     fn next(&mut self) -> Option<Self::Item> {
+//         if self.y >= self.ylen {
+//             return None;
+//         }
+
+//         if self.x < self.xlen {
+//             let r = (self.x, self.y);
+//             self.x += 1;
+//             Some(r)
+//         } else {
+//             self.x = 0;
+//             self.y += 1;
+//             if self.y < self.ylen {
+//                 Some((self.x, self.y))
+//             } else {
+//                 None
+//             }
+//         }
+//     }
+// }
 
 impl FlatVec2D<u8> {
     pub fn write_pgm(&self, writable: &mut impl Write) -> std::io::Result<()> {
@@ -103,6 +148,26 @@ impl FlatVec2D<u8> {
         Ok(())
     }
 }
+
+/// Return a slice of the underlying vector, for a given row.
+/// This could improve performance over potentially costly indexing operations.
+// impl<T> Index<usize> for FlatVec2D<T> {
+//     type Output = [T];
+
+//     fn index(&self, y: usize) -> &Self::Output {
+//         let off = y * self.1;
+//         let end = off + self.1;
+//         &self.0[off..end]
+//     }
+// }
+
+// impl<T> IndexMut<usize> for FlatVec2D<T> {
+//     fn index_mut(&mut self, y: usize) -> &mut Self::Output {
+//         let off = y * self.1;
+//         let end = off + self.1;
+//         &mut self.0[off..end]
+//     }
+// }
 
 impl<T> Index<(usize, usize)> for FlatVec2D<T> {
     type Output = T;
@@ -163,6 +228,12 @@ pub enum Rot2D {
 
 pub fn flat_coord(x: usize, y: usize, dim: usize) -> usize {
     x + y * dim
+}
+
+pub fn inverse_flat_coord(i: usize, dim: usize) -> (usize, usize) {
+    let x = i % dim;
+    let y = i / dim;
+    (x, y)
 }
 
 pub fn flat_coord_rot(x: usize, y: usize, xdim: usize, ydim: usize, rot: Rot2D) -> usize {
