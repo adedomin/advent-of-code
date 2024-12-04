@@ -18,6 +18,22 @@ impl<T> FlatVec2D<T> {
         FlatVec2D(vec![T::default(); xdim * ydim], xdim, ydim)
     }
 
+    pub fn get(&self, (x, y): (usize, usize)) -> Option<&T> {
+        if self.in_bounds(x as isize, y as isize) {
+            Some(&self[(x, y)])
+        } else {
+            None
+        }
+    }
+
+    pub fn get_isize(&self, (x, y): (isize, isize)) -> Option<&T> {
+        if self.in_bounds(x, y) {
+            Some(&self[(x as usize, y as usize)])
+        } else {
+            None
+        }
+    }
+
     /// Get all adjacent (including diagonal) neighbors, filtering for those out of bounds.
     pub fn get_neigh(&self, x: usize, y: usize) -> Vec<Neighbor<&T>> {
         let x = x as isize;
