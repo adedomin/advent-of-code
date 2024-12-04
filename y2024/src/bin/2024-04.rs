@@ -20,14 +20,15 @@ fn part1_sol(map: &Output) -> Solved {
                     .iter()
                     .filter(|(dx, dy)| map.in_bounds(x as isize + dx * 3, y as isize + dy * 3))
                     .for_each(|(dx, dy)| {
-                        for (d, find) in (1..4).zip([b'M', b'A', b'S']) {
-                            let (dx, dy) = (dx * d, dy * d);
-                            if map[((x as isize + dx) as usize, (y as isize + dy) as usize)] != find
-                            {
-                                return;
-                            }
+                        let mut bar = [0; 4];
+                        bar.iter_mut().enumerate().for_each(|(i, cell)| {
+                            let x = (x as isize + dx * i as isize) as usize;
+                            let y = (y as isize + dy * i as isize) as usize;
+                            *cell = map[(x, y)];
+                        });
+                        if &bar == b"XMAS" {
+                            cnt += 1;
                         }
-                        cnt += 1;
                     });
             }
         }
