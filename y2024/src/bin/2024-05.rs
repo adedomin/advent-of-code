@@ -1,14 +1,11 @@
 use aoc_shared::{fold_decimal_from, read_input_to_string};
-use std::{
-    collections::{BinaryHeap, HashMap},
-    io,
-};
+use std::{collections::HashMap, io};
 
 type Output = Vec<Vec<Job>>;
 type Solved = usize;
 type Int = u8;
 
-#[derive(PartialEq, Eq, Debug)]
+#[derive(PartialEq, Eq, Debug, Clone)]
 struct Job {
     value: Int,
     insert: usize,
@@ -17,14 +14,12 @@ struct Job {
 
 impl Ord for Job {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        let is_greater = self.prio.iter().any(|&v| other.value == v);
-        let is_lesser = other.prio.iter().any(|&v| self.value == v);
-        if is_greater {
-            std::cmp::Ordering::Greater
-        } else if is_lesser {
+        if self.prio.iter().any(|&v| other.value == v) {
             std::cmp::Ordering::Less
+        } else if other.prio.iter().any(|&v| self.value == v) {
+            std::cmp::Ordering::Greater
         } else {
-            other.insert.cmp(&self.insert)
+            self.insert.cmp(&other.insert)
         }
     }
 }
@@ -72,26 +67,17 @@ fn solve(input: &Output) -> (Solved, Solved) {
         let midpoint = jobs.len() / 2;
         let jmid = jobs[midpoint].value as Solved;
 
-        let mut pline = jobs.iter().map(|j| j.value);
-        let mut heap = BinaryHeap::from_iter(jobs.iter());
-        let mut out_of_order = false;
-        let mut i = 0;
-        let mut heapmid = 0;
-        // BinaryHeap iterators are NOT in order, even when consumed with into_iter()
-        while let Some(Job { value, .. }) = heap.pop() {
-            let orderval = pline.next().expect("binheap and pline should be same size");
-            if *value != orderval {
-                out_of_order = true;
-            }
-            if i == midpoint {
-                heapmid = *value as Solved;
-            }
-            i += 1;
-        }
-        if out_of_order {
-            (p1, p2 + heapmid)
-        } else {
+        let mut sline = jobs.clone();
+        // note that the ord impl should NEVER be Ordering::Equal because insert order is always unique.
+        sline.sort_unstable();
+        let smid = sline[midpoint].value as Solved;
+
+        println!("{jobs:?} {sline:?}");
+
+        if sline.iter().eq(jobs.iter()) {
             (p1 + jmid, p2)
+        } else {
+            (p1, p2 + smid)
         }
     })
 }
