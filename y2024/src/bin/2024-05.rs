@@ -67,14 +67,12 @@ fn solve(input: &Output) -> (Solved, Solved) {
         let midpoint = jobs.len() / 2;
         let jmid = jobs[midpoint].value as Solved;
 
-        let mut sline = jobs.clone();
+        let mut sjobs = jobs.clone();
         // note that the ord impl should NEVER be Ordering::Equal because insert order is always unique.
-        sline.sort_unstable();
-        let smid = sline[midpoint].value as Solved;
+        sjobs.sort_unstable();
+        let smid = sjobs[midpoint].value as Solved;
 
-        println!("{jobs:?} {sline:?}");
-
-        if sline.iter().eq(jobs.iter()) {
+        if sjobs.iter().eq(jobs.iter()) {
             (p1 + jmid, p2)
         } else {
             (p1, p2 + smid)
