@@ -62,19 +62,17 @@ fn parse_input(input: &str) -> Output {
         .collect::<Output>()
 }
 
-fn solve(input: &Output) -> (Solved, Solved) {
-    input.iter().fold((0, 0), |(p1, p2), jobs| {
+fn solve(input: Output) -> (Solved, Solved) {
+    println!("ok");
+    input.into_iter().fold((0, 0), |(p1, p2), mut jobs| {
         let midpoint = jobs.len() / 2;
         let jmid = jobs[midpoint].value as Solved;
 
-        let mut sjobs = jobs.clone();
-        // note that the ord impl should NEVER be Ordering::Equal because insert order is always unique.
-        sjobs.sort_unstable();
-        let smid = sjobs[midpoint].value as Solved;
-
-        if sjobs.iter().eq(jobs.iter()) {
+        if jobs.is_sorted() {
             (p1 + jmid, p2)
         } else {
+            let (_, smid, _) = jobs.select_nth_unstable(midpoint);
+            let smid = smid.value as Solved;
             (p1, p2 + smid)
         }
     })
@@ -85,7 +83,7 @@ fn solve(input: &Output) -> (Solved, Solved) {
 fn main() -> io::Result<()> {
     let input = read_input_to_string()?;
     let parsed_input = parse_input(&input);
-    let (part1, part2) = solve(&parsed_input);
+    let (part1, part2) = solve(parsed_input);
     println!("Part1: {part1}, Part2: {part2}");
     Ok(())
 }
