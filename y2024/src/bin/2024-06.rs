@@ -39,10 +39,13 @@ fn move_next(x: isize, dx: isize, y: isize, dy: isize) -> (usize, usize) {
 fn patrol(
     map: &Output,
     (sx, sy): (isize, isize),
-    (njx, njy): (isize, isize),
+    njxy: (isize, isize),
 ) -> Option<HashSet<(isize, isize)>> {
     let (mut x, mut dx, mut y, mut dy) = (sx, 0, sy, -1);
     let mut visited = HashSet::new();
+    if (sx, sy) == njxy {
+        return Some(visited); // can't start here so not a valid loop
+    }
     let mut cycle_det = HashSet::new();
     while !matches!(map[(x, y)], X::Out) {
         if !visited.insert((x, y)) && !cycle_det.insert((x, dx, y, dy)) {
@@ -57,7 +60,7 @@ fn patrol(
         */
         for _ in 0..2 {
             let (mx, my) = move_next(x, dx, y, dy);
-            if (mx as isize, my as isize) == (njx, njy) || matches!(map[(mx, my)], X::Junk) {
+            if (mx as isize, my as isize) == njxy || matches!(map[(mx, my)], X::Junk) {
                 (dx, dy) = rot_right_90(dx, dy);
             } else {
                 break;
