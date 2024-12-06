@@ -7,7 +7,6 @@ edition = "2021"
 aoc-shared = { path = "../aoc-shared" }
 itertools = "0.13"
 rayon = "1"
-rustc-hash = "2"
 
 [dependencies.regex]
 version = "1"
