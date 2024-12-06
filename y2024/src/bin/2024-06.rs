@@ -1,4 +1,5 @@
 use aoc_shared::{pad_to_flat2d, read_input, FlatVec2D};
+use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use std::{collections::HashSet, io};
 
 #[derive(Default, Copy, Clone)]
@@ -81,11 +82,13 @@ fn solve(map: &Output) -> (Solved, Solved) {
 
     if let Some((x, y)) = pos {
         let part1_visit = patrol(map, (x, y), (-1, -1)).expect("input should be cycle free");
-        let part2_cycling_sum = part1_visit
-            .iter()
-            .map(|(njx, njy)| usize::from(patrol(map, (x, y), (*njx, *njy)).is_none()))
+        let p1 = part1_visit.len();
+        // sum of all cycling inputs possible from a given visit map.
+        let p2 = part1_visit
+            .into_par_iter()
+            .map(|(njx, njy)| usize::from(patrol(map, (x, y), (njx, njy)).is_none()))
             .sum();
-        (part1_visit.len(), part2_cycling_sum)
+        (p1, p2)
     } else {
         panic!("no guard on map");
     }
