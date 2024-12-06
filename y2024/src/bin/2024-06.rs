@@ -1,6 +1,7 @@
 use aoc_shared::{pad_to_flat2d, read_input, FlatVec2D};
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
-use std::{collections::HashSet, io};
+use rustc_hash::FxHashSet;
+use std::io;
 
 #[derive(Default, Copy, Clone)]
 enum X {
@@ -26,10 +27,10 @@ type Output = FlatVec2D<X>;
 type Solved = usize;
 
 // right turn (clockwise 90deg)
-const NINTY_SIN: isize = 1;
-const NINTY_COS: isize = 0;
+// note that cos(90deg) is always ~0
+// note that sin(90deg) is always ~1
 fn rot_right_90(x: isize, y: isize) -> (isize, isize) {
-    (x * NINTY_COS - y * NINTY_SIN, x * NINTY_SIN + y * NINTY_COS)
+    (-y, x)
 }
 
 fn move_next(x: isize, dx: isize, y: isize, dy: isize) -> (usize, usize) {
@@ -40,13 +41,13 @@ fn patrol(
     map: &Output,
     (sx, sy): (isize, isize),
     njxy: (isize, isize),
-) -> Option<HashSet<(isize, isize)>> {
+) -> Option<FxHashSet<(isize, isize)>> {
     let (mut x, mut dx, mut y, mut dy) = (sx, 0, sy, -1);
-    let mut visited = HashSet::new();
+    let mut visited = FxHashSet::default();
     if (sx, sy) == njxy {
         return Some(visited); // can't start here so not a valid loop
     }
-    let mut cycle_det = HashSet::new();
+    let mut cycle_det = FxHashSet::default();
     while !matches!(map[(x, y)], X::Out) {
         if !visited.insert((x, y)) && !cycle_det.insert((x, dx, y, dy)) {
             return None; // contains a cycle.
