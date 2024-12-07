@@ -1,5 +1,5 @@
 use aoc_shared::{fold_decimal_from, read_input_to_string};
-use std::{collections::VecDeque, io};
+use std::io;
 
 type Output = Vec<(Solved, Vec<Solved>)>;
 type Solved = u64;
@@ -24,19 +24,19 @@ fn parse_input(input: &str) -> Output {
 }
 
 fn test_calibration(target: Solved, values: &[Solved], part2: bool) -> bool {
-    let mut queue = VecDeque::from([(values[0], 1)]);
-    while let Some((acc, i)) = queue.pop_back() {
+    let mut stack = vec![(values[0], 1)];
+    while let Some((acc, i)) = stack.pop() {
         if i == values.len() && acc == target {
             return true;
         } else if i == values.len() || acc > target {
             continue;
         }
 
-        queue.push_front((acc + values[i], i + 1));
-        queue.push_front((acc * values[i], i + 1));
+        stack.push((acc + values[i], i + 1));
+        stack.push((acc * values[i], i + 1));
         if part2 {
             let num_digits = 1 + values[i].ilog(10);
-            queue.push_front((acc * 10u64.pow(num_digits) + values[i], i + 1));
+            stack.push((acc * 10u64.pow(num_digits) + values[i], i + 1));
         }
     }
     false
