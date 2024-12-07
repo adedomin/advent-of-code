@@ -1,8 +1,8 @@
 use aoc_shared::{fold_decimal_from, read_input_to_string};
 use std::io;
 
-type Output = Vec<(Solved, Vec<Solved>)>;
-type Solved = u64;
+type Int = u64;
+type Output = Vec<(Int, Vec<Int>)>;
 
 fn parse_input(input: &str) -> Output {
     input
@@ -17,13 +17,13 @@ fn parse_input(input: &str) -> Output {
                 }
             });
             let target = iter.next().unwrap();
-            let values = iter.collect::<Vec<Solved>>();
+            let values = iter.collect::<Vec<Int>>();
             (target, values)
         })
         .collect::<Output>()
 }
 
-fn test_calibration(target: Solved, values: &[Solved], part2: bool) -> bool {
+fn test_calibration(target: Int, values: &[Int], part2: bool) -> bool {
     let mut stack = vec![(values[0], 1)];
     while let Some((acc, i)) = stack.pop() {
         if i == values.len() && acc == target {
@@ -36,13 +36,14 @@ fn test_calibration(target: Solved, values: &[Solved], part2: bool) -> bool {
         stack.push((acc * values[i], i + 1));
         if part2 {
             let num_digits = 1 + values[i].ilog(10);
-            stack.push((acc * 10u64.pow(num_digits) + values[i], i + 1));
+            let pow: Int = 10;
+            stack.push((acc * pow.pow(num_digits) + values[i], i + 1));
         }
     }
     false
 }
 
-fn solve(input: &Output) -> (Solved, Solved) {
+fn solve(input: &Output) -> (Int, Int) {
     input.iter().fold((0, 0), |(p1, p2), (target, values)| {
         if test_calibration(*target, values, false) {
             (p1 + *target, p2 + *target)
@@ -54,7 +55,7 @@ fn solve(input: &Output) -> (Solved, Solved) {
     })
 }
 
-// fn part2_sol(input: &Output) -> Solved {}
+// fn part2_sol(input: &Output) -> Int {}
 
 fn main() -> io::Result<()> {
     let input = read_input_to_string()?;
