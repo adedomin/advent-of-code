@@ -24,20 +24,24 @@ fn parse_input(input: &str) -> Output {
 }
 
 fn test_calibration(target: Int, values: &[Int], part2: bool) -> bool {
-    let mut stack = vec![(values[0], 1)];
+    let mut stack = vec![(target, values.len())];
     while let Some((acc, i)) = stack.pop() {
-        if i == values.len() && acc == target {
+        if i == 0 && acc == 0 {
             return true;
-        } else if i == values.len() || acc > target {
+        } else if i == 0 {
             continue;
         }
+        let last = values[i - 1];
+        let digits_mult = (10 as Int).pow(last.ilog10() + 1);
 
-        stack.push((acc + values[i], i + 1));
-        stack.push((acc * values[i], i + 1));
-        if part2 {
-            let num_digits = 1 + values[i].ilog(10);
-            let pow: Int = 10;
-            stack.push((acc * pow.pow(num_digits) + values[i], i + 1));
+        if acc != 0 && last != 0 && acc % last == 0 {
+            stack.push((acc / last, i - 1));
+        }
+        if acc >= last {
+            stack.push((acc - last, i - 1));
+        }
+        if part2 && acc >= last && (acc - last) % digits_mult == 0 {
+            stack.push((acc / digits_mult, i - 1));
         }
     }
     false
