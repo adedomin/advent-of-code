@@ -32,47 +32,51 @@ fn manhattan_slope(lhs: (usize, usize), rhs: (usize, usize)) -> (isize, isize) {
 // in the line segment, going downslope, antipats only occur 2 distances from starting point.
 // this is not the case in part2, however.
 const PART1_NUM: Int = 2;
-fn get_count(antis: &FlatVec2D<(bool, bool)>) -> (Int, Int) {
-    antis.0.iter().fold((0, 0), |(p1, p2), &(p1v, p2v)| {
-        (p1 + Int::from(p1v), p2 + Int::from(p2v))
-    })
-}
-
 fn solve(map: &Output) -> (Int, Int) {
-    let mut antis = FlatVec2D::<(bool, bool)>::new(map.1, map.2);
+    let mut antis = FlatVec2D::<bool>::new(map.1, map.2);
+    let mut antis_p2 = FlatVec2D::<bool>::new(map.1, map.2);
     let fmap = |(x, y)| match map[(x, y)] {
         X::Dot => None,
         X::Hash => None,
-        X::Antenna(label) => Some((label, x, y)),
+        X::Antenna(label) => Some((label, (x, y))),
     };
-    map.xyrange().filter_map(fmap).for_each(|(label, lx, ly)| {
-        map.xyrange()
-            .filter_map(|xy| {
-                let X::Antenna(label2) = map[xy] else {
-                    return None;
-                };
-                if label == label2 && (lx, ly) != xy {
-                    fmap(xy)
-                } else {
-                    None
-                }
-            })
-            .for_each(|(_, rx, ry)| {
-                let (dx, dy) = manhattan_slope((lx, ly), (rx, ry));
-                // going down, remember we visit each line segment twice.
-                for i in 1.. {
-                    let (x, y) = (lx as isize + (dx * i), ly as isize + (dy * i));
-                    if map.in_bounds(x, y) {
-                        (!antis[(x as usize, y as usize)].0 && i as usize == PART1_NUM)
-                            .then(|| antis[(x as usize, y as usize)].0 = true);
-                        antis[(x as usize, y as usize)].1 = true;
-                    } else {
-                        break;
+
+    let mut antennas = vec![vec![]; u8::MAX as usize];
+    map.xyrange()
+        .filter_map(fmap)
+        .for_each(|(label, coord)| antennas[label as usize].push(coord));
+
+    antennas
+        .into_iter()
+        .filter(|a| !a.is_empty())
+        .for_each(|atn_t| {
+            atn_t.iter().for_each(|&a| {
+                atn_t.iter().for_each(|&b| {
+                    if a == b {
+                        return;
                     }
-                }
+
+                    let (dx, dy) = manhattan_slope(a, b);
+                    // going down, remember we visit each line segment twice.
+                    for i in 1.. {
+                        let (x, y) = (a.0 as isize + (dx * i), a.1 as isize + (dy * i));
+                        if map.in_bounds(x, y) {
+                            if i as usize == PART1_NUM {
+                                antis[(x as usize, y as usize)] = true;
+                            }
+                            antis_p2[(x as usize, y as usize)] = true;
+                        } else {
+                            break;
+                        }
+                    }
+                });
             });
-    });
-    get_count(&antis)
+        });
+
+    (
+        antis.0.into_iter().map(Int::from).sum(),
+        antis_p2.0.into_iter().map(Int::from).sum(),
+    )
 }
 
 // fn part2_sol(map: &Output) -> Solved {}
