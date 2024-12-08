@@ -29,10 +29,6 @@ fn manhattan_slope(lhs: (usize, usize), rhs: (usize, usize)) -> (isize, isize) {
     )
 }
 
-fn y_inter(lhs: (usize, usize)) -> isize {
-    -(lhs.0 as isize) - -(lhs.1 as isize)
-}
-
 fn get_count(antis: &FlatVec2D<bool>) -> Int {
     antis.0.iter().map(|&v| Int::from(v)).sum()
 }
