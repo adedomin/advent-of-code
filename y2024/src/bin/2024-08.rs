@@ -29,13 +29,17 @@ fn manhattan_slope(lhs: (usize, usize), rhs: (usize, usize)) -> (isize, isize) {
     )
 }
 
-fn get_count(antis: &FlatVec2D<bool>) -> Int {
-    antis.0.iter().map(|&v| Int::from(v)).sum()
+// in the line segment, going downslope, antipats only occur 2 distances from starting point.
+// this is not the case in part2, however.
+const PART1_NUM: Int = 2;
+fn get_count(antis: &FlatVec2D<(bool, bool)>) -> (Int, Int) {
+    antis.0.iter().fold((0, 0), |(p1, p2), &(p1v, p2v)| {
+        (p1 + Int::from(p1v), p2 + Int::from(p2v))
+    })
 }
 
 fn solve(map: &Output) -> (Int, Int) {
-    let mut antis = FlatVec2D::<bool>::new(map.1, map.2);
-    let mut antis_p2 = FlatVec2D::<bool>::new(map.1, map.2);
+    let mut antis = FlatVec2D::<(bool, bool)>::new(map.1, map.2);
     let fmap = |(x, y)| match map[(x, y)] {
         X::Dot => None,
         X::Hash => None,
@@ -54,33 +58,21 @@ fn solve(map: &Output) -> (Int, Int) {
                 }
             })
             .for_each(|(_, rx, ry)| {
-                let (sx, sy) = manhattan_slope((lx, ly), (rx, ry));
-                let (mut atx, mut aty) = (lx as isize + -sx, ly as isize + -sy);
-                let (mut abx, mut aby) = (lx as isize + (sx * 2), ly as isize + (sy * 2));
-
-                // part 1
-                #[allow(clippy::option_map_unit_fn)]
-                {
-                    antis.get_isize_mut((atx, aty)).map(|m| *m = true);
-                    antis.get_isize_mut((abx, aby)).map(|m| *m = true);
-                }
-
-                // part 2 going up
-                while map.in_bounds(atx, aty) {
-                    antis_p2[(atx as usize, aty as usize)] = true;
-                    (atx, aty) = (atx + -sx, aty + -sy);
-                }
-
-                // part 2 going down
-                // atennas are also antis in p2, roll it back one
-                (abx, aby) = (abx + -sx, aby + -sy);
-                while map.in_bounds(abx, aby) {
-                    antis_p2[(abx as usize, aby as usize)] = true;
-                    (abx, aby) = (abx + sx, aby + sy);
+                let (dx, dy) = manhattan_slope((lx, ly), (rx, ry));
+                // going down, remember we visit each line segment twice.
+                for i in 1.. {
+                    let (x, y) = (lx as isize + (dx * i), ly as isize + (dy * i));
+                    if map.in_bounds(x, y) {
+                        (!antis[(x as usize, y as usize)].0 && i as usize == PART1_NUM)
+                            .then(|| antis[(x as usize, y as usize)].0 = true);
+                        antis[(x as usize, y as usize)].1 = true;
+                    } else {
+                        break;
+                    }
                 }
             });
     });
-    (get_count(&antis), get_count(&antis_p2))
+    get_count(&antis)
 }
 
 // fn part2_sol(map: &Output) -> Solved {}
