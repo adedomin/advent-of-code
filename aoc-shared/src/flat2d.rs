@@ -37,6 +37,15 @@ impl<T> FlatVec2D<T> {
         }
     }
 
+    /// Try and get an index, allowing for user calculations that could be negative.
+    pub fn get_isize_mut(&mut self, (x, y): (isize, isize)) -> Option<&mut T> {
+        if self.in_bounds(x, y) {
+            Some(&mut self[(x as usize, y as usize)])
+        } else {
+            None
+        }
+    }
+
     /// Get all adjacent (including diagonal) neighbors, filtering for those out of bounds.
     pub fn get_neigh(&self, x: usize, y: usize) -> Vec<Neighbor<&T>> {
         let x = x as isize;
