@@ -1,5 +1,5 @@
-use aoc_shared::{debug, parse_to_flat2d, read_input, FlatVec2D};
-use std::{collections::HashSet, io};
+use aoc_shared::{parse_to_flat2d, read_input, FlatVec2D};
+use std::io;
 
 #[derive(Default, Copy, Clone, Eq, PartialEq)]
 enum X {
@@ -59,11 +59,10 @@ fn solve(map: &Output) -> (Int, Int) {
                 let (mut abx, mut aby) = (lx as isize + (sx * 2), ly as isize + (sy * 2));
 
                 // part 1
-                if let Some(m) = antis.get_isize_mut((atx, aty)) {
-                    *m = true;
-                }
-                if let Some(m) = antis.get_isize_mut((abx, aby)) {
-                    *m = true;
+                #[allow(clippy::option_map_unit_fn)]
+                {
+                    antis.get_isize_mut((atx, aty)).map(|m| *m = true);
+                    antis.get_isize_mut((abx, aby)).map(|m| *m = true);
                 }
 
                 // part 2 going up
