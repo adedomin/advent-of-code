@@ -62,11 +62,6 @@ fn solve(map: &Output) -> (Int, Int) {
                 let (mut atx, mut aty) = (lx as isize + -sx, ly as isize + -sy);
                 let (mut abx, mut aby) = (lx as isize + (sx * 2), ly as isize + (sy * 2));
 
-                println!(
-                    "{}:(({lx},{ly}), ({rx},{ry})) -> {sx},{sy} -> (({atx},{aty}), ({abx},{aby}))",
-                    char::from(label)
-                );
-
                 // part 1
                 if let Some(m) = antis.get_isize_mut((atx, aty)) {
                     *m = true;
@@ -85,7 +80,6 @@ fn solve(map: &Output) -> (Int, Int) {
                 // atennas are also antis in p2, roll it back one
                 (abx, aby) = (abx + -sx, aby + -sy);
                 while map.in_bounds(abx, aby) {
-                    println!("{abx},{aby}");
                     antis_p2[(abx as usize, aby as usize)] = true;
                     (abx, aby) = (abx + sx, aby + sy);
                 }
