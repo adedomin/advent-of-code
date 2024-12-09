@@ -90,6 +90,8 @@ fn part2_sol(input: &Output) -> Id {
                     }
                     nj -= 1;
                     if nj == 0 {
+                        // Ironically, since the first file by definition is id 0,
+                        // we don't need to do the checksum on it.
                         break 'out;
                     }
                 }
