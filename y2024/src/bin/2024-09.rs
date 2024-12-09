@@ -1,8 +1,14 @@
 use aoc_shared::read_input;
-use std::{io, iter};
+use std::{
+    cmp::Reverse,
+    collections::{BinaryHeap, HashSet},
+    io, iter,
+};
 
+const MAX_FSIZE: usize = 9;
+type FreeList = Vec<BinaryHeap<Reverse<(usize, usize)>>>;
 type UsedList = Vec<Use>;
-type Output = (Vec<DiskUse>, UsedList, UsedList);
+type Output = (Vec<DiskUse>, FreeList, UsedList);
 
 #[derive(Clone, Copy)]
 enum DiskUse {
@@ -19,7 +25,7 @@ struct Use {
 
 fn parse_input(input: &[u8]) -> Output {
     let mut disk = vec![];
-    let mut free = vec![];
+    let mut free: FreeList = vec![BinaryHeap::new(); MAX_FSIZE];
     let mut used = vec![];
     input
         .iter()
@@ -27,23 +33,25 @@ fn parse_input(input: &[u8]) -> Output {
         .enumerate()
         .for_each(|(start, sz)| {
             let len = (sz - b'0') as usize;
+            assert!(len < 10);
             if start % 2 == 0 {
                 let id = start / 2;
                 let start = disk.len();
+                let end = start + len;
                 disk.extend(iter::repeat_n(DiskUse::Used(id), len));
-                used.push(Use {
-                    id,
-                    start,
-                    end: disk.len(),
-                });
+                // should not happen?
+                if len != 0 {
+                    used.push(Use { id, start, end });
+                }
             } else {
                 let start = disk.len();
+                let end = start + len;
                 disk.extend(iter::repeat_n(DiskUse::Free, len));
-                free.push(Use {
-                    id: 0,
-                    start,
-                    end: disk.len(),
-                });
+                // the secret weapon... we have a max file size.
+                // so we can just store free space in a heap for each free size available
+                free[..len]
+                    .iter_mut()
+                    .for_each(|heap| heap.push(Reverse((start, end))));
             };
         });
     (disk, free, used)
@@ -72,24 +80,36 @@ fn part1_sol(input: Vec<DiskUse>) -> usize {
     ans
 }
 
-fn part2_sol(mut freelist: UsedList, usedlist: UsedList) -> usize {
-    let mut ans = 0;
+fn part2_sol(mut freelist: FreeList, mut usedlist: UsedList) -> usize {
+    // since we store the free space for each size it could cover, we need to track when we use it.
+    let mut already_used = HashSet::new();
     usedlist
-        .into_iter()
+        .iter_mut()
         .rev()
-        .for_each(|Use { id, start, end }| {
-            if let Some(Use { start: fstart, .. }) = freelist.iter_mut().find(
-                |Use {
-                     start: fs, end: fe, ..
-                 }| (end - start) <= (fe - fs) && *fs < start,
-            ) {
-                (0..(end - start)).for_each(|idx| ans += (*fstart + idx) * id);
-                *fstart += end - start;
-            } else {
-                (start..end).for_each(|idx| ans += idx * id);
+        .for_each(|Use { start, end, .. }| {
+            loop {
+                if let Some(Reverse((fs, fe))) = freelist[*end - *start - 1].pop() {
+                    // left of this free space or we already seen this "free space"
+                    if fs >= *start || !already_used.insert((fs, fe)) {
+                        continue;
+                    } else {
+                        // reinsert smaller free space, if applicable
+                        let len = (fe - fs) - (*end - *start);
+                        freelist[..len]
+                            .iter_mut()
+                            .for_each(|heap| heap.push(Reverse((fe - len, fe))));
+                    }
+                    // move
+                    *end = fs + (*end - *start);
+                    *start = fs;
+                }
+                break;
             }
         });
-    ans
+    usedlist
+        .into_iter()
+        .map(|Use { id, start, end }| (start..end).sum::<usize>() * id)
+        .sum()
 }
 
 fn main() -> io::Result<()> {
