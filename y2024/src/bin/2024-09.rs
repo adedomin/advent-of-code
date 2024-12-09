@@ -1,6 +1,6 @@
 use aoc_shared::read_input;
 use itertools::Itertools;
-use std::{fmt::Write, io};
+use std::io;
 
 type Output = Vec<DiskUse>;
 type Id = u64;
@@ -9,15 +9,6 @@ type Id = u64;
 enum DiskUse {
     Free,
     Used(Id),
-}
-
-impl std::fmt::Debug for DiskUse {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            DiskUse::Free => f.write_char('.'),
-            DiskUse::Used(b) => f.write_char(char::from(*b as u8 + b'0')),
-        }
-    }
 }
 
 fn digit_to_len(v: u8) -> usize {
@@ -65,36 +56,28 @@ fn part1_sol(input: &Output) -> Id {
     ans
 }
 
-fn find_free_w_size(input: &[DiskUse], size: usize) -> Option<usize> {
-    if let Some((_, _, start)) = input
+fn get_freelist(input: &[DiskUse]) -> Vec<(usize, usize)> {
+    input
         .iter()
         .enumerate()
-        .map(|(start, a)| (*a, 1, start))
+        .map(|(start, a)| (*a, start, start + 1))
         .coalesce(|a, b| {
             if a.0 == b.0 {
-                Ok((a.0, a.1 + 1, a.2))
+                Ok((a.0, a.1, a.2 + 1))
             } else {
                 Err((a, b))
             }
         })
-        .find(|(d, len, _)| match d {
-            DiskUse::Free if size <= *len => true,
-            DiskUse::Free => false,
-            DiskUse::Used(_) => false,
+        .filter_map(|(d, s, l)| match d {
+            DiskUse::Free => Some((s, l)),
+            DiskUse::Used(_) => None,
         })
-    {
-        Some(start)
-    } else {
-        None
-    }
+        .collect::<Vec<(usize, usize)>>()
 }
 
-fn part2_sol(mut input: Output) -> Id {
-    // #[cfg(debug_assertions)]
-    // {
-    //     input.iter().for_each(|d| print!("{d:?}"));
-    //     println!();
-    // }
+fn part2_sol(input: &Output) -> Id {
+    let mut ans = 0;
+    let mut freelist = get_freelist(input);
     let mut j = input.len() - 1;
     'out: while j != 0 {
         match input[j] {
@@ -112,35 +95,26 @@ fn part2_sol(mut input: Output) -> Id {
                 }
                 let len = j - nj;
                 j -= len - 1;
-                if let Some(free) = find_free_w_size(&input[..j], len) {
-                    (0..len).for_each(|idx| {
-                        input.swap(free + idx, j + idx);
-                    });
+                if let Some((fstart, _)) =
+                    freelist.iter_mut().find(|(s, l)| len <= (l - s) && j >= *l)
+                {
+                    (0..len).for_each(|idx| ans += ((*fstart + idx) as Id) * cid);
+                    *fstart += len;
+                } else {
+                    (0..len).for_each(|idx| ans += ((j + idx) as Id) * cid);
                 }
             }
         }
-        #[cfg(debug_assertions)]
-        {
-            input.iter().for_each(|d| print!("{d:?}"));
-            println!();
-        }
         j -= 1;
     }
-    input
-        .into_iter()
-        .enumerate()
-        .map(|(i, d)| match d {
-            DiskUse::Free => 0,
-            DiskUse::Used(id) => (i as Id) * id,
-        })
-        .sum()
+    ans
 }
 
 fn main() -> io::Result<()> {
     let input = read_input()?;
     let parsed_input = parse_input(&input);
     let part1 = part1_sol(&parsed_input);
-    let part2 = part2_sol(parsed_input);
+    let part2 = part2_sol(&parsed_input);
     print!("Part1: {part1}, ");
     print!("Part2: {part2}");
     println!();
