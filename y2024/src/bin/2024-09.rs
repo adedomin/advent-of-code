@@ -1,122 +1,108 @@
 use aoc_shared::read_input;
-use itertools::Itertools;
 use std::io;
 
-type Output = Vec<DiskUse>;
-type Id = u64;
+type Output = Vec<(DiskUse, usize, usize)>;
+type Id = usize;
 
-#[derive(Clone, Copy, Eq, PartialEq)]
+#[derive(Clone, Copy, Eq, PartialEq, Debug)]
 enum DiskUse {
     Free,
     Used(Id),
 }
 
-fn digit_to_len(v: u8) -> usize {
-    (v - b'0') as usize
-}
-
 fn parse_input(input: &[u8]) -> Output {
     let mut id = 0;
+    let mut totlen = 0;
     input
         .iter()
         .filter(|d| d.is_ascii_digit())
         .enumerate()
-        .flat_map(|(i, &v)| {
-            if i & 1 == 0 {
-                let r = vec![DiskUse::Used(id); digit_to_len(v)];
+        .map(|(start, sz)| {
+            let len = (sz - b'0') as usize;
+            let r = if start & 1 == 0 {
+                let r = (DiskUse::Used(id), totlen, totlen + len);
                 id += 1;
                 r
             } else {
-                vec![DiskUse::Free; digit_to_len(v)]
-            }
+                (DiskUse::Free, totlen, totlen + len)
+            };
+            totlen += len;
+            r
         })
         .collect::<Output>()
 }
 
-fn part1_sol(input: &Output) -> Id {
+fn part1_sol(mut input: Output) -> Id {
     let mut ans = 0;
-    let mut i = 0;
+    let mut i = 1; // we can skip the first (always zero and filled)
     let mut j = input.len() - 1;
     while i <= j {
         match input[i] {
-            DiskUse::Free => loop {
+            (DiskUse::Free, start, len) => {
                 match input[j] {
-                    DiskUse::Free => j -= 1,
-                    DiskUse::Used(id) => {
-                        ans += (i as Id) * id;
-                        j -= 1;
-                        break;
+                    (DiskUse::Free, _, _) => j -= 1,
+                    (DiskUse::Used(id), s, l) => {
+                        let min = if (l - s) >= (len - start) {
+                            len - start
+                        } else {
+                            l - s
+                        };
+                        for s in start..start + min {
+                            ans += s * id;
+                            // use up spaces
+                        }
+                        input[i].1 += min;
+                        input[j].2 -= min;
+                        if input[i].1 == input[i].2 {
+                            i += 1;
+                        }
+                        if input[j].1 == input[j].2 {
+                            j -= 1;
+                        }
                     }
                 };
-            },
-            DiskUse::Used(id) => ans += (i as Id) * id,
+            }
+            (DiskUse::Used(id), start, len) => {
+                (start..len).for_each(|idx| ans += idx * id);
+                input[i].2 -= len - start;
+                i += 1;
+            }
         }
-        i += 1;
     }
     ans
 }
 
-fn get_freelist(input: &[DiskUse]) -> Vec<(usize, usize)> {
-    input
-        .iter()
-        .enumerate()
-        .map(|(start, a)| (*a, start, start + 1))
-        .coalesce(|a, b| {
-            if a.0 == b.0 {
-                Ok((a.0, a.1, a.2 + 1))
-            } else {
-                Err((a, b))
-            }
-        })
-        .filter_map(|(d, s, l)| match d {
-            DiskUse::Free => Some((s, l)),
-            DiskUse::Used(_) => None,
-        })
-        .collect::<Vec<(usize, usize)>>()
-}
+type FreeList = Vec<(usize, usize)>;
+type UsedList = Vec<(Id, usize, usize)>;
 
-fn part2_sol(input: &Output) -> Id {
+fn part2_sol(input: Output) -> Id {
     let mut ans = 0;
-    let mut freelist = get_freelist(input);
-    let mut j = input.len() - 1;
-    'out: while j != 0 {
-        match input[j] {
-            DiskUse::Free => (),
-            DiskUse::Used(cid) => {
-                let mut nj = j;
-                while let DiskUse::Used(id) = input[nj] {
-                    if cid != id {
-                        break;
-                    }
-                    nj -= 1;
-                    if nj == 0 {
-                        // Since the first file by definition is id 0,
-                        // we don't need to do the checksum on it, since 0 * anything = 0...
-                        break 'out;
-                    }
-                }
-                let len = j - nj;
-                j -= len - 1;
-                if let Some((fstart, _)) =
-                    freelist.iter_mut().find(|(s, l)| len <= (l - s) && j >= *l)
-                {
-                    (0..len).for_each(|idx| ans += ((*fstart + idx) as Id) * cid);
-                    *fstart += len;
-                } else {
-                    (0..len).for_each(|idx| ans += ((j + idx) as Id) * cid);
-                }
-            }
+    let mut freelist: FreeList = Vec::with_capacity(input.len());
+    let mut usedlist: UsedList = Vec::with_capacity(input.len());
+    input.into_iter().for_each(|(d, s, l)| match d {
+        DiskUse::Free => freelist.push((s, l)),
+        DiskUse::Used(id) => usedlist.push((id, s, l)),
+    });
+
+    usedlist.into_iter().rev().for_each(|(id, us, ul)| {
+        if let Some((fstart, _)) = freelist
+            .iter_mut()
+            .find(|(fs, fl)| (ul - us) <= (fl - fs) && *fs < us)
+        {
+            (0..(ul - us)).for_each(|idx| ans += (*fstart + idx) * id);
+            *fstart += ul - us;
+        } else {
+            (us..ul).for_each(|idx| ans += idx * id);
         }
-        j -= 1;
-    }
+    });
     ans
 }
 
 fn main() -> io::Result<()> {
     let input = read_input()?;
     let parsed_input = parse_input(&input);
-    let part1 = part1_sol(&parsed_input);
-    let part2 = part2_sol(&parsed_input);
+    let part1 = part1_sol(parsed_input.clone());
+    let part2 = part2_sol(parsed_input);
     print!("Part1: {part1}, ");
     print!("Part2: {part2}");
     println!();
