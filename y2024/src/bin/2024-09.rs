@@ -33,16 +33,13 @@ fn parse_input(input: &[u8]) -> Output {
         .enumerate()
         .for_each(|(start, sz)| {
             let len = (sz - b'0') as usize;
-            assert!(len < 10);
             if start % 2 == 0 {
                 let id = start / 2;
                 let start = disk.len();
                 let end = start + len;
                 disk.extend(iter::repeat_n(DiskUse::Used(id), len));
-                // should not happen?
-                if len != 0 {
-                    used.push(Use { id, start, end });
-                }
+                assert!(len != 0, "What do we do if we have a zero sized file?");
+                used.push(Use { id, start, end });
             } else {
                 let start = disk.len();
                 let end = start + len;
