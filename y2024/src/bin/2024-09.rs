@@ -17,20 +17,20 @@ fn digit_to_len(v: u8) -> usize {
 
 fn parse_input(input: &[u8]) -> Output {
     let mut id = 0;
-    let mut disk = vec![];
     input
         .iter()
         .filter(|d| d.is_ascii_digit())
         .enumerate()
-        .for_each(|(i, &v)| {
-            if (i & 1) == 0 {
-                disk.extend(vec![DiskUse::Used(id); digit_to_len(v)]);
+        .flat_map(|(i, &v)| {
+            if i & 1 == 0 {
+                let r = vec![DiskUse::Used(id); digit_to_len(v)];
                 id += 1;
+                r
             } else {
-                disk.extend(vec![DiskUse::Free; digit_to_len(v)]);
+                vec![DiskUse::Free; digit_to_len(v)]
             }
-        });
-    disk
+        })
+        .collect::<Output>()
 }
 
 fn part1_sol(input: &Output) -> Id {
