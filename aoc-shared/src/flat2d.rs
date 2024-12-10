@@ -109,6 +109,11 @@ impl<T> FlatVec2D<T> {
     pub fn xyrange(&self) -> impl Iterator<Item = (usize, usize)> + use<'_, T> {
         (0..self.2).flat_map(|y| (0..self.1).map(move |x| (x, y)))
     }
+
+    pub fn swap(&mut self, (x, y): (usize, usize), (ox, oy): (usize, usize)) {
+        self.0
+            .swap(flat_coord(x, y, self.1), flat_coord(ox, oy, self.1));
+    }
 }
 
 impl FlatVec2D<u8> {
