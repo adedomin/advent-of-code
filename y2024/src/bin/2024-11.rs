@@ -1,6 +1,6 @@
 use aoc_shared::{fold_decimal_from, read_input_to_string};
 use rustc_hash::FxHashMap;
-use std::io;
+use std::{io, mem};
 
 type Int = u64;
 type Output = Vec<u64>;
@@ -26,39 +26,36 @@ fn rules(i: Int) -> Result<Int, [Int; 2]> {
     }
 }
 
-fn find_cnt(memo: &mut FxHashMap<(Int, Int), Int>, i: Int, find: Int) -> Int {
-    fn rec(memo: &mut FxHashMap<(Int, Int), Int>, i: Int, depth: Int, find: Int) -> Int {
-        if depth == find {
-            return 1;
-        }
+const P1_CYCLE: Int = 25;
+// we reuse the existing p1 cycle for p2
+const P2_CONT: Int = 75 - P1_CYCLE;
 
-        if let Some(m) = memo.get(&(i, depth)) {
-            return *m;
-        }
-
-        let counts = match rules(i) {
-            Ok(ni) => rec(memo, ni, depth + 1, find),
-            Err(ni) => ni.into_iter().map(|i| rec(memo, i, depth + 1, find)).sum(),
-        };
-        memo.insert((i, depth), counts);
-        counts
-    }
-    rec(memo, i, 0, find)
-}
-
-fn solve(input: &Output, cycle: Int) -> Int {
+fn solve(input: &Output) -> [Int; 2] {
     let mut memo = FxHashMap::default();
-    input
-        .iter()
-        .map(|&num| find_cnt(&mut memo, num, cycle))
-        .sum()
+    let mut memo2 = FxHashMap::default();
+    input.iter().for_each(|&n| {
+        *memo.entry(n).or_default() += 1;
+    });
+
+    [P1_CYCLE, P2_CONT].map(|cycles| {
+        for _ in 0..cycles {
+            memo.drain().for_each(|(plu, counts)| {
+                let mut add_new = |plu| *memo2.entry(plu).or_default() += counts;
+                match rules(plu) {
+                    Ok(new) => add_new(new),
+                    Err(new) => new.into_iter().for_each(add_new),
+                }
+            });
+            mem::swap(&mut memo, &mut memo2);
+        }
+        memo.values().sum()
+    })
 }
 
 fn main() -> io::Result<()> {
     let input = read_input_to_string()?;
     let parsed_input = parse_input(&input);
-    let part1 = solve(&parsed_input, 25);
-    let part2 = solve(&parsed_input, 75);
+    let [part1, part2] = solve(&parsed_input);
     println!("Part1: {part1}, Part2: {part2}");
     Ok(())
 }
