@@ -26,8 +26,7 @@ fn rules(i: Int) -> Result<Int, [Int; 2]> {
     }
 }
 
-fn find_cnt(i: Int, find: Int) -> Int {
-    let mut memo = FxHashMap::default();
+fn find_cnt(memo: &mut FxHashMap<(Int, Int), Int>, i: Int, find: Int) -> Int {
     fn rec(memo: &mut FxHashMap<(Int, Int), Int>, i: Int, depth: Int, find: Int) -> Int {
         if depth == find {
             return 1;
@@ -44,11 +43,15 @@ fn find_cnt(i: Int, find: Int) -> Int {
         memo.insert((i, depth), counts);
         counts
     }
-    rec(&mut memo, i, 0, find)
+    rec(memo, i, 0, find)
 }
 
 fn solve(input: &Output, cycle: Int) -> Int {
-    input.iter().map(|&num| find_cnt(num, cycle)).sum()
+    let mut memo = FxHashMap::default();
+    input
+        .iter()
+        .map(|&num| find_cnt(&mut memo, num, cycle))
+        .sum()
 }
 
 fn main() -> io::Result<()> {
