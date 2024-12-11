@@ -12,17 +12,17 @@ fn parse_input(input: &str) -> Output {
         .collect::<Output>()
 }
 
-fn rules(i: Int) -> Vec<Int> {
+fn rules(i: Int) -> Result<Int, [Int; 2]> {
     if i == 0 {
-        return vec![1];
+        return Ok(1);
     }
 
     let id = i.ilog10() + 1;
     if id % 2 == 0 {
         let mult = (10 as Int).pow(id / 2);
-        vec![i / mult, i % mult]
+        Err([i / mult, i % mult])
     } else {
-        vec![i * 2024]
+        Ok(i * 2024)
     }
 }
 
@@ -37,10 +37,10 @@ fn find_cnt(i: Int, find: Int) -> Int {
             return *m;
         }
 
-        let counts = rules(i)
-            .into_iter()
-            .map(|i| rec(memo, i, depth + 1, find))
-            .sum();
+        let counts = match rules(i) {
+            Ok(ni) => rec(memo, ni, depth + 1, find),
+            Err(ni) => ni.into_iter().map(|i| rec(memo, i, depth + 1, find)).sum(),
+        };
         memo.insert((i, depth), counts);
         counts
     }
@@ -50,8 +50,6 @@ fn find_cnt(i: Int, find: Int) -> Int {
 fn solve(input: &Output, cycle: Int) -> Int {
     input.iter().map(|&num| find_cnt(num, cycle)).sum()
 }
-
-// fn part2_sol(input: &Output) -> Int {}
 
 fn main() -> io::Result<()> {
     let input = read_input_to_string()?;
