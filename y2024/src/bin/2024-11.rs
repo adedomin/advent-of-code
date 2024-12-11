@@ -12,20 +12,6 @@ fn parse_input(input: &str) -> Output {
         .collect::<Output>()
 }
 
-// fn find_cycle(i: Int, cycle: Int) -> Int {
-//     let mut nums = vec![i];
-//     println!("{nums:?}");
-//     for _ in 0..cycle {
-//         nums = nums
-//             .drain(..)
-//             .flat_map(|n| {
-//             })
-//             .collect::<Vec<_>>();
-//         // println!("{nums:?}");
-//     }
-//     nums.len() as Int
-// }
-
 fn rules(i: Int) -> Vec<Int> {
     if i == 0 {
         return vec![1];
