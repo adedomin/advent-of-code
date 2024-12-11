@@ -47,8 +47,8 @@ fn find_cnt(i: Int, find: Int) -> Int {
     rec(&mut memo, i, 0, find)
 }
 
-fn part1_sol(input: &Output) -> Int {
-    input.iter().map(|&num| find_cnt(num, 75)).sum()
+fn solve(input: &Output, cycle: Int) -> Int {
+    input.iter().map(|&num| find_cnt(num, cycle)).sum()
 }
 
 // fn part2_sol(input: &Output) -> Int {}
@@ -56,10 +56,8 @@ fn part1_sol(input: &Output) -> Int {
 fn main() -> io::Result<()> {
     let input = read_input_to_string()?;
     let parsed_input = parse_input(&input);
-    let part1 = part1_sol(&parsed_input);
-    // let part2 = part2_sol(&parsed_input);
-    print!("Part1: {part1}, ");
-    // print!("Part2: {part2}");
-    println!();
+    let part1 = solve(&parsed_input, 25);
+    let part2 = solve(&parsed_input, 75);
+    println!("Part1: {part1}, Part2: {part2}");
     Ok(())
 }
