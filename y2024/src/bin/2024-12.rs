@@ -1,7 +1,7 @@
 use aoc_shared::{pad_to_flat2d, read_input, FlatVec2D};
 use itertools::Itertools;
 use rustc_hash::{FxHashMap, FxHashSet};
-use std::io;
+use std::{collections::BinaryHeap, io};
 
 #[derive(Default, Copy, Clone, PartialEq, Eq)]
 struct X(u8);
@@ -33,7 +33,7 @@ const OUT_OF_BOUNDS: X = X(b'Z' + 1);
 type ShapeBoundsSides = (
     FxHashSet<(usize, usize)>,
     FxHashMap<(usize, usize), usize>,
-    FxHashMap<(u8, usize), Vec<usize>>,
+    FxHashMap<(u8, usize), BinaryHeap<usize>>,
 );
 
 fn get_shape(
@@ -49,7 +49,7 @@ fn get_shape(
     let mut frontier = FxHashMap::default();
     let mut segments: std::collections::HashMap<
         (u8, usize),
-        Vec<usize>,
+        BinaryHeap<usize>,
         rustc_hash::FxBuildHasher,
     > = FxHashMap::default();
     let mut stack = vec![(x, y)];
@@ -79,9 +79,9 @@ fn get_shape(
     Some((shape, frontier, segments))
 }
 
-fn count_contiguous_lines(mut points: Vec<usize>) -> usize {
-    points.sort_unstable();
+fn count_contiguous_lines(points: BinaryHeap<usize>) -> usize {
     points
+        .into_sorted_vec()
         .into_iter()
         .coalesce(|x, y| if x + 1 == y { Ok(y) } else { Err((x, y)) })
         .count()
