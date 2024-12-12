@@ -109,8 +109,6 @@ fn solve(map: &Output) -> (usize, usize) {
     (p1, p2)
 }
 
-// fn part2_sol(map: &Output) -> Solved {}
-
 fn main() -> io::Result<()> {
     let input = read_input()?;
     let parsed_input = pad_to_flat2d(&input, OUT_OF_BOUNDS);
