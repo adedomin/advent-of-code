@@ -96,12 +96,14 @@ fn solve(map: &Output) -> (usize, usize) {
         let Some((shape, bounds, segments)) = get_shape(map, &mut visit, (x, y)) else {
             continue;
         };
-        p1 += shape.len() * bounds.values().sum::<usize>();
+        let area = shape.len();
+        let perimeter = bounds.values().sum::<usize>();
         let sides = segments
             .into_values()
             .map(count_contiguous_lines)
             .sum::<usize>();
-        p2 += shape.len() * sides;
+        p1 += area * perimeter;
+        p2 += area * sides;
         stack.extend(bounds.into_keys());
     }
     (p1, p2)
