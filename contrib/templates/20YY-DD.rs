@@ -1,19 +1,19 @@
-use aoc_shared::{read_input, Token, Tokenize};
+use aoc_shared::read_input_to_string;
 use std::io;
 
-type Output = Vec<!>;
-type Solved = i64;
+type Int = i32;
+type Output = Vec<Int>;
 
-fn parse_input(input: &[u8]) -> Output {
-    input.tokenize();
+fn parse_input(input: &str) -> Output {
+    input.do_something()
 }
 
-fn part1_sol(input: &Output) -> Solved {}
+fn part1_sol(input: &Output) -> Int {}
 
-fn part2_sol(input: &Output) -> Solved {}
+fn part2_sol(input: &Output) -> Int {}
 
 fn main() -> io::Result<()> {
-    let input = read_input()?;
+    let input = read_input_to_string()?;
     let parsed_input = parse_input(&input);
     let part1 = part1_sol(&parsed_input);
     let part2 = part2_sol(&parsed_input);

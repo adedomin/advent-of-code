@@ -125,8 +125,8 @@ impl FlatVec2D<u8> {
     }
 }
 
-/// Return a slice of the underlying vector, for a given row.
-/// This could improve performance over potentially costly indexing operations.
+// Return a slice of the underlying vector, for a given row.
+// This could improve performance over potentially costly indexing operations.
 // impl<T> Index<usize> for FlatVec2D<T> {
 //     type Output = [T];
 

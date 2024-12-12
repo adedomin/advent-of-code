@@ -39,21 +39,23 @@ fn part1_sol(mut map: Output) -> Int {
     let mut move_mat = vec![];
     for i in 1.. {
         let mut moved = false;
-        let herds = get_herds(&map);
-        for j in EAST..SOUTH + 1 {
-            herds[j].iter().for_each(|&(x, y)| {
-                let (nx, ny) = if j == EAST {
-                    ((x + 1) % map.1, y)
-                } else {
-                    (x, (y + 1) % map.2)
-                };
-                if matches!(map[(nx, ny)], Cucumber::Nil) {
-                    moved = true;
-                    move_mat.push(((x, y), (nx, ny)));
-                }
+        get_herds(&map)
+            .into_iter()
+            .enumerate()
+            .for_each(|(dir, herd)| {
+                herd.iter().for_each(|&(x, y)| {
+                    let (nx, ny) = if dir == EAST {
+                        ((x + 1) % map.1, y)
+                    } else {
+                        (x, (y + 1) % map.2)
+                    };
+                    if matches!(map[(nx, ny)], Cucumber::Nil) {
+                        moved = true;
+                        move_mat.push(((x, y), (nx, ny)));
+                    }
+                });
+                move_mat.drain(..).for_each(|(xy, nxy)| map.swap(xy, nxy));
             });
-            move_mat.drain(..).for_each(|(xy, nxy)| map.swap(xy, nxy));
-        }
 
         if !moved {
             return i;
