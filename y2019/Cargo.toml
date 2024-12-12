@@ -1,0 +1,7 @@
+[package]
+name = "y2019"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+aoc-shared = { path = "../aoc-shared" }
