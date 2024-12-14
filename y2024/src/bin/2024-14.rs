@@ -41,7 +41,7 @@ const P1_MOVE: Int = 100;
 ///
 /// HOWEVER, this could potentially fail if there is a giant line, but no tree...
 /// Shameful, but I'm not sure how to generalize this without some kind of CV system.
-const P1_DISTORTION_LIM: f64 = 1f64;
+const P2_DISTORTION_LIM: f64 = 1f64;
 
 fn part1_sol(input: &Output) -> Int {
     let quads = P1_QUADS.map(|(xs, xe, ys, ye)| (xs..xe, ys..ye));
@@ -113,7 +113,7 @@ fn part2_sol(input: &Output) -> Int {
 
         let (disorder, _mis, _set) = calc_disorder(&picture);
         // literal
-        if disorder < P1_DISTORTION_LIM {
+        if disorder < P2_DISTORTION_LIM {
             #[cfg(debug_assertions)]
             {
                 print_tree(&picture);
