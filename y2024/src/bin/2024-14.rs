@@ -34,12 +34,13 @@ const P1_QUADS: [(Int, Int, Int, Int); 4] = [
 ];
 
 const P1_MOVE: Int = 100;
-/// after reading spoilers and other solutions, this works because:
-/// the christmas tree is put in a box, thus distortion mismatch
-/// goes below (trivially) the number of set pixels, this also works because
-/// the leaves and branches of the shape do the same.
-/// however, this could potentially fail if there is a giant line, but no tree.
-/// Shameful, but I'm not sure how ot generalize this without some kind of CV system.
+/// This works because:
+///   1) The christmas tree contains a lot of line-like structures (obviously).
+///   2) lots of lines means more adjacently set pixels (x Axis) and lower distortion.
+///   3) This number is sort of a guess though, and not a good one.
+///
+/// HOWEVER, this could potentially fail if there is a giant line, but no tree...
+/// Shameful, but I'm not sure how to generalize this without some kind of CV system.
 const P1_DISTORTION_LIM: f64 = 1f64;
 
 fn part1_sol(input: &Output) -> Int {
