@@ -34,8 +34,13 @@ const P1_QUADS: [(Int, Int, Int, Int); 4] = [
 ];
 
 const P1_MOVE: Int = 100;
-// the distortion of the picture must be under this number????
-const P1_TOTAL_GUESS: f64 = 1f64;
+/// after reading spoilers and other solutions, this works because:
+/// the christmas tree is put in a box, thus distortion mismatch
+/// goes below (trivially) the number of set pixels, this also works because
+/// the leaves and branches of the shape do the same.
+/// however, this could potentially fail if there is a giant line, but no tree.
+/// Shameful, but I'm not sure how ot generalize this without some kind of CV system.
+const P1_DISTORTION_LIM: f64 = 1f64;
 
 fn part1_sol(input: &Output) -> Int {
     let quads = P1_QUADS.map(|(xs, xe, ys, ye)| (xs..xe, ys..ye));
@@ -107,7 +112,7 @@ fn part2_sol(input: &Output) -> Int {
 
         let (disorder, _mis, _set) = calc_disorder(&picture);
         // literal
-        if disorder < P1_TOTAL_GUESS {
+        if disorder < P1_DISTORTION_LIM {
             #[cfg(debug_assertions)]
             {
                 print_tree(&picture);
