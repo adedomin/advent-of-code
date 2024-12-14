@@ -67,19 +67,17 @@ fn part1_sol(input: &Output) -> Int {
         .product()
 }
 
+/// Calculate the disorder in an image.
+///
+/// Disorder is defined as:
+///
+///   Immediately adjacent pixels left -> right (or next line even) that are not the same.
+///   Divided by the total number of pixels that are *on*.
+///
+/// If pixels are neatly together in some fashion, it's assumed the picture distortion is *low*.
 fn calc_disorder(picture: &FlatVec2D<bool>) -> (f64, f64, f64) {
-    let (mis, set) = array_windows(&picture.0).fold((0f64, 0f64), |(mismatch, set), [l, r]| {
-        let mut mis = mismatch;
-        let mut set = set;
-        if l != r {
-            mis += 1f64;
-        }
-
-        if *l {
-            set += 1f64;
-        }
-
-        (mis, set)
+    let (mis, set) = array_windows(&picture.0).fold((0f64, 0f64), |(mis, set), [l, r]| {
+        (mis + f64::from(l != r), set + f64::from(*l))
     });
     // there has to be at least one set pixel (>0)
     (mis / set, mis, set)
