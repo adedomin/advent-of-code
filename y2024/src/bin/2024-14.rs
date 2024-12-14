@@ -61,7 +61,7 @@ fn part1_sol(input: &Output) -> Int {
         .product()
 }
 
-fn calc_disorder(picture: &FlatVec2D<bool>) -> f64 {
+fn calc_disorder(picture: &FlatVec2D<bool>) -> (f64, f64, f64) {
     let (mis, set) = array_windows(&picture.0).fold((0f64, 0f64), |(mismatch, set), [l, r]| {
         let mut mis = mismatch;
         let mut set = set;
@@ -76,9 +76,10 @@ fn calc_disorder(picture: &FlatVec2D<bool>) -> f64 {
         (mis, set)
     });
     // there has to be at least one set pixel (>0)
-    mis / set
+    (mis / set, mis, set)
 }
 
+#[cfg(debug_assertions)]
 fn print_tree(picture: &FlatVec2D<bool>) {
     for y in picture.yrange() {
         for x in picture.xrange() {
@@ -104,11 +105,14 @@ fn part2_sol(input: &Output) -> Int {
             picture[(*x as usize, *y as usize)] = true;
         });
 
-        let disorder = calc_disorder(&picture);
+        let (disorder, _mis, _set) = calc_disorder(&picture);
         // literal
         if disorder < P1_TOTAL_GUESS {
             #[cfg(debug_assertions)]
-            print_tree(&picture);
+            {
+                print_tree(&picture);
+                println!("Total Disorder {disorder} ({_mis} / {_set})");
+            }
             return i;
         }
     }
