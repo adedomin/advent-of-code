@@ -161,7 +161,7 @@ impl<T> IndexMut<(usize, usize)> for FlatVec2D<T> {
     }
 }
 
-fn wrap(idx: isize, bounds: isize) -> usize {
+pub fn wrap(idx: isize, bounds: isize) -> usize {
     let idx = idx % bounds;
     if idx < 0 {
         (bounds + idx) as usize
