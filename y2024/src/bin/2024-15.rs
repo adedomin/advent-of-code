@@ -56,11 +56,6 @@ const CARD: [(isize, isize); 4] = [
              (0,  1)
 ];
 
-const N: usize = 0;
-const W: usize = 1;
-const E: usize = 2;
-const S: usize = 3;
-
 fn from_move(byte: &u8) -> Option<usize> {
     match byte {
         b'^' => Some(0),
@@ -84,18 +79,20 @@ fn solve(mut grid: Output, moves: &Moves, part2: bool) -> Int {
     // bfs up/down from n|s (e|w is same in p1 and 2).
     let mut queue = VecDeque::new();
     // filters out visited.
-    let mut moveset = FlatVec2D::<bool>::new(grid.1, grid.2);
+    let mut moveset = FxHashSet::default();
+    // swap pairs
+    let mut swap_pairs = vec![];
     moves.iter().for_each(|&card| {
         #[cfg(debug_assertions)]
-        println!("{grid:?}");
+        println!("{card:?}\n{grid:?}");
         let (dx, dy) = CARD[card];
         queue.clear();
         queue.push_back((x, y));
-        moveset.0.fill(false);
+        moveset.clear();
+        swap_pairs.clear();
         while let Some((cx, cy)) = queue.pop_front() {
             let (nx, ny) = ((cx as isize + dx) as usize, (cy as isize + dy) as usize);
-            if !moveset[(cx, cy)] {
-                moveset[(cx, cy)] = true;
+            if moveset.insert((cx, cy)) {
                 match grid[(nx, ny)] {
                     X::Wall => return, // can't move.
                     // part1 has a box of width 1, vs box of width 2
@@ -104,35 +101,14 @@ fn solve(mut grid: Output, moves: &Moves, part2: bool) -> Int {
                     X::VBox => queue.extend(&[(nx - 1, ny), (nx, ny)]),
                     _ => (),
                 }
+                // cancel out the non-moving vector, invert direction so we swap in right order.
+                swap_pairs.push((cx as isize * -dx + cy as isize * -dy, (cx, cy), (nx, ny)));
             }
         }
-
-        // "match arms have incompatible types"...
-        let moves = match card {
-            N => grid
-                .pad_xrange()
-                .flat_map(|x| grid.pad_yrange().map(move |y| (x, y)))
-                .collect::<Vec<_>>(),
-            S => grid
-                .pad_xrange()
-                .flat_map(|x| grid.pad_yrange().rev().map(move |y| (x, y)))
-                .collect::<Vec<_>>(),
-            W => grid
-                .pad_yrange()
-                .flat_map(|y| grid.pad_xrange().map(move |x| (x, y)))
-                .collect::<Vec<_>>(),
-            E => grid
-                .pad_yrange()
-                .flat_map(|y| grid.pad_xrange().rev().map(move |x| (x, y)))
-                .collect::<Vec<_>>(),
-            _ => unreachable!(),
-        };
-        moves.into_iter().tuple_windows().for_each(|(x, y)| {
-            // println!("{x:?}, {y:?}, {}, {}", moveset[x], moveset[y]);
-            if moveset[y] {
-                grid.swap(x, y);
-            }
-        });
+        swap_pairs.sort_unstable_by_key(|&(pos, _, _)| pos);
+        swap_pairs
+            .drain(..)
+            .for_each(|(_, xy, nxy)| grid.swap(xy, nxy));
         x = (x as isize + dx) as usize;
         y = (y as isize + dy) as usize;
     });
@@ -150,7 +126,7 @@ fn main() -> io::Result<()> {
         .expect("Grid to be followed by moves after two new lines");
 
     let grid: FlatVec2D<X> = parse_to_flat2d(grid.as_bytes());
-    let mut grid_p2 = FlatVec2D::<X>::new(grid.1 * 2, grid.2 * 2);
+    let mut grid_p2 = FlatVec2D::<X>::new(grid.1 * 2, grid.2);
     grid.0
         .iter()
         .enumerate()
