@@ -1,7 +1,6 @@
 use aoc_shared::{parse_to_flat2d, read_input_to_string, FlatVec2D};
-use itertools::Itertools;
 use rustc_hash::FxHashSet;
-use std::{collections::VecDeque, fmt::Write, io};
+use std::{fmt::Write, io};
 
 #[derive(Default, Copy, Clone)]
 enum X {
@@ -76,8 +75,7 @@ fn solve(mut grid: Output, moves: &Moves, part2: bool) -> Int {
         .find(|&xy| matches!(grid[xy], X::Robot))
         .expect("No Robot found.");
 
-    // bfs up/down from n|s (e|w is same in p1 and 2).
-    let mut queue = VecDeque::new();
+    let mut stack = vec![];
     // filters out visited.
     let mut moveset = FxHashSet::default();
     // swap pairs
@@ -86,19 +84,19 @@ fn solve(mut grid: Output, moves: &Moves, part2: bool) -> Int {
         #[cfg(debug_assertions)]
         println!("{card:?}\n{grid:?}");
         let (dx, dy) = CARD[card];
-        queue.clear();
-        queue.push_back((x, y));
+        stack.clear();
+        stack.push((x, y));
         moveset.clear();
         swap_pairs.clear();
-        while let Some((cx, cy)) = queue.pop_front() {
+        while let Some((cx, cy)) = stack.pop() {
             let (nx, ny) = ((cx as isize + dx) as usize, (cy as isize + dy) as usize);
             if moveset.insert((cx, cy)) {
                 match grid[(nx, ny)] {
                     X::Wall => return, // can't move.
                     // part1 has a box of width 1, vs box of width 2
-                    X::Box => queue.extend(&[(nx, ny), (nx + 1, ny)][..if part2 { 2 } else { 1 }]),
+                    X::Box => stack.extend(&[(nx, ny), (nx + 1, ny)][..if part2 { 2 } else { 1 }]),
                     // will never show in p1.
-                    X::VBox => queue.extend(&[(nx - 1, ny), (nx, ny)]),
+                    X::VBox => stack.extend(&[(nx - 1, ny), (nx, ny)]),
                     _ => (),
                 }
                 // cancel out the non-moving vector, invert direction so we swap in right order.
