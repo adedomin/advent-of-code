@@ -1,0 +1,170 @@
+use aoc_shared::{parse_to_flat2d, read_input_to_string, FlatVec2D};
+use itertools::Itertools;
+use rustc_hash::FxHashSet;
+use std::{collections::VecDeque, fmt::Write, io};
+
+#[derive(Default, Copy, Clone)]
+enum X {
+    #[default]
+    Wall,
+    Box,
+    VBox,
+    Robot,
+    Dot,
+}
+
+impl std::fmt::Debug for X {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            X::Wall => f.write_char('#'),
+            X::Box => f.write_char('['),
+            X::VBox => f.write_char(']'),
+            X::Robot => f.write_char('@'),
+            X::Dot => f.write_char('.'),
+        }
+    }
+}
+
+impl From<u8> for X {
+    fn from(value: u8) -> Self {
+        match value {
+            b'#' => Self::Wall,
+            b'@' => Self::Robot,
+            b'O' => Self::Box,
+            b'[' => Self::Box,
+            b']' => Self::VBox,
+            _ => Self::Dot,
+        }
+    }
+}
+
+impl X {
+    fn to_wide(self) -> [Self; 2] {
+        match self {
+            X::Wall => [self; 2],
+            X::Box => [X::Box, X::VBox],
+            X::Robot => [self, X::Dot],
+            _ => [X::Dot; 2],
+        }
+    }
+}
+
+#[rustfmt::skip]
+const CARD: [(isize, isize); 4] = [
+             (0, -1),
+    (-1 ,0),          (1, 0),
+             (0,  1)
+];
+
+const N: usize = 0;
+const W: usize = 1;
+const E: usize = 2;
+const S: usize = 3;
+
+fn from_move(byte: &u8) -> Option<usize> {
+    match byte {
+        b'^' => Some(0),
+        b'<' => Some(1),
+        b'>' => Some(2),
+        b'v' => Some(3),
+        _ => None,
+    }
+}
+
+type Int = usize;
+type Output = FlatVec2D<X>;
+type Moves = Vec<usize>;
+
+fn solve(mut grid: Output, moves: &Moves, part2: bool) -> Int {
+    let (mut x, mut y) = grid
+        .xyrange()
+        .find(|&xy| matches!(grid[xy], X::Robot))
+        .expect("No Robot found.");
+
+    // bfs up/down from n|s (e|w is same in p1 and 2).
+    let mut queue = VecDeque::new();
+    // filters out visited.
+    let mut moveset = FlatVec2D::<bool>::new(grid.1, grid.2);
+    moves.iter().for_each(|&card| {
+        #[cfg(debug_assertions)]
+        println!("{grid:?}");
+        let (dx, dy) = CARD[card];
+        queue.clear();
+        queue.push_back((x, y));
+        moveset.0.fill(false);
+        while let Some((cx, cy)) = queue.pop_front() {
+            let (nx, ny) = ((cx as isize + dx) as usize, (cy as isize + dy) as usize);
+            if !moveset[(cx, cy)] {
+                moveset[(cx, cy)] = true;
+                match grid[(nx, ny)] {
+                    X::Wall => return, // can't move.
+                    // part1 has a box of width 1, vs box of width 2
+                    X::Box => queue.extend(&[(nx, ny), (nx + 1, ny)][..if part2 { 2 } else { 1 }]),
+                    // will never show in p1.
+                    X::VBox => queue.extend(&[(nx - 1, ny), (nx, ny)]),
+                    _ => (),
+                }
+            }
+        }
+
+        // "match arms have incompatible types"...
+        let moves = match card {
+            N => grid
+                .pad_xrange()
+                .flat_map(|x| grid.pad_yrange().map(move |y| (x, y)))
+                .collect::<Vec<_>>(),
+            S => grid
+                .pad_xrange()
+                .flat_map(|x| grid.pad_yrange().rev().map(move |y| (x, y)))
+                .collect::<Vec<_>>(),
+            W => grid
+                .pad_yrange()
+                .flat_map(|y| grid.pad_xrange().map(move |x| (x, y)))
+                .collect::<Vec<_>>(),
+            E => grid
+                .pad_yrange()
+                .flat_map(|y| grid.pad_xrange().rev().map(move |x| (x, y)))
+                .collect::<Vec<_>>(),
+            _ => unreachable!(),
+        };
+        moves.into_iter().tuple_windows().for_each(|(x, y)| {
+            // println!("{x:?}, {y:?}, {}, {}", moveset[x], moveset[y]);
+            if moveset[y] {
+                grid.swap(x, y);
+            }
+        });
+        x = (x as isize + dx) as usize;
+        y = (y as isize + dy) as usize;
+    });
+
+    grid.xyrange()
+        .filter(|&xy| matches!(grid[xy], X::Box))
+        .map(|(x, y)| 100 * y + x)
+        .sum::<Int>()
+}
+
+fn main() -> io::Result<()> {
+    let input = read_input_to_string()?;
+    let (grid, moves) = input
+        .split_once("\n\n")
+        .expect("Grid to be followed by moves after two new lines");
+
+    let grid: FlatVec2D<X> = parse_to_flat2d(grid.as_bytes());
+    let mut grid_p2 = FlatVec2D::<X>::new(grid.1 * 2, grid.2 * 2);
+    grid.0
+        .iter()
+        .enumerate()
+        .for_each(|(i, x)| [grid_p2.0[i * 2], grid_p2.0[i * 2 + 1]] = x.to_wide());
+    let moves = moves
+        .as_bytes()
+        .iter()
+        .filter_map(from_move)
+        .collect::<Moves>();
+
+    let part1 = solve(grid, &moves, false);
+    let part2 = solve(grid_p2, &moves, true);
+    print!("Part1: {part1}, ");
+    print!("Part2: {part2}");
+    println!();
+    Ok(())
+}
