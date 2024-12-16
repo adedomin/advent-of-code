@@ -52,6 +52,20 @@ type Int = isize;
 type Output = FlatVec2D<X>;
 type Key = (Int, Int, Int, Int);
 
+macro_rules! push_path {
+    ($dij:ident, $pathmap:ident, $key:ident, $cost:ident, $oldkey:ident) => {
+        if let Some(t) = $dij.push_equal($key, $cost) {
+            let vis = $pathmap.entry($key).or_default();
+            if t {
+                vis.clear();
+                vis.push($oldkey);
+            } else {
+                vis.push($oldkey);
+            }
+        }
+    };
+}
+
 fn part1_sol(map: &Output) -> (Int, Int) {
     let (mut sx, mut sy) = (-1, -1);
     let (mut ex, mut ey) = (-1, -1);
@@ -67,16 +81,26 @@ fn part1_sol(map: &Output) -> (Int, Int) {
     let mut dij = Dijkstra::<Key, Int>::new();
     let mut p2_pathmap: std::collections::HashMap<Key, Vec<Key>, rustc_hash::FxBuildHasher> =
         FxHashMap::default();
+    let mut visited = FxHashSet::default();
+    let mut part1 = Int::MAX;
     dij.push((sx, sy, 1, 0), 0); // reindeer start easterly
     while let Some(HeapState { key, cost }) = dij.pop() {
         let (x, y, dx, dy) = key;
+        // so we don't waste time traversing further... see below comment.
+        if cost > part1 {
+            break;
+        }
         match map[(x, y)] {
             X::Wall => continue,
             X::End => {
+                // I don't think it's possible for inputs (and not for example)
+                // for there to be unique approaches to end with the *SAME* cost....
+                // however, for the sake of my sanity, we keep popping til we see a cost higher than the lowest...
+                part1 = cost;
+
                 #[cfg(debug_assertions)]
                 let mut debug_map = map.clone();
                 let mut stack = vec![key];
-                let mut visited = FxHashSet::default();
                 while let Some(key) = stack.pop() {
                     if let Some(keys) = p2_pathmap.get(&key) {
                         keys.iter().for_each(|&(x, y, _dx, _dy)| {
@@ -92,24 +116,19 @@ fn part1_sol(map: &Output) -> (Int, Int) {
                 }
                 #[cfg(debug_assertions)]
                 println!("{debug_map:?}");
-                return (cost, visited.len() as Int + 1);
             }
             _ => (),
         }
         let cwkey = (x, y, -dy, dx);
         let ccwkey = (x, y, dy, -dx);
         let stepkey = (x + dx, y + dy, dx, dy);
-        if dij.push_equal(cwkey, cost + 1000).is_some() {
-            p2_pathmap.entry(cwkey).or_default().push(key);
-        }
-        if dij.push_equal(ccwkey, cost + 1000).is_some() {
-            p2_pathmap.entry(ccwkey).or_default().push(key);
-        }
-        if dij.push_equal(stepkey, cost + 1).is_some() {
-            p2_pathmap.entry(stepkey).or_default().push(key);
-        }
+        let rotcost = cost + 1000;
+        let stepcost = cost + 1;
+        push_path!(dij, p2_pathmap, cwkey, rotcost, key);
+        push_path!(dij, p2_pathmap, ccwkey, rotcost, key);
+        push_path!(dij, p2_pathmap, stepkey, stepcost, key);
     }
-    panic!("no solution");
+    (part1, visited.len() as Int + 1)
 }
 
 fn main() -> io::Result<()> {
