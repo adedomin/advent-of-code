@@ -83,6 +83,28 @@ where
             false
         }
     }
+
+    /// This is for weird problems where we need to track equivalent cost
+    /// keys reachable for an older key.
+    ///
+    /// Returns Some(true) if inserted and lower cost than old map
+    /// Returns Some(false) if already in distance map with the same cost
+    /// Returns None if key exists, but is a higher cost.
+    pub fn push_equal(&mut self, key: K, cost: C) -> Option<bool> {
+        let olddist = self.distmap.get(&key).cloned();
+        if self.push_bool(key, cost) {
+            Some(true)
+        } else if let Some(old) = olddist {
+            if old == cost {
+                Some(false)
+            } else {
+                None
+            }
+        } else {
+            // push_bool can only return false if the key already exists.
+            unreachable!()
+        }
+    }
 }
 
 pub struct DijkstraPath<K, C>
