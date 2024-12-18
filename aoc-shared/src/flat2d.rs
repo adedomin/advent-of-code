@@ -28,6 +28,15 @@ impl<T> FlatVec2D<T> {
         }
     }
 
+    /// Try and get a mutable index
+    pub fn get_mut(&mut self, (x, y): (usize, usize)) -> Option<&mut T> {
+        if self.in_bounds(x as isize, y as isize) {
+            Some(&mut self[(x, y)])
+        } else {
+            None
+        }
+    }
+
     /// Try and get an index, allowing for user calculations that could be negative.
     pub fn get_isize(&self, (x, y): (isize, isize)) -> Option<&T> {
         if self.in_bounds(x, y) {
