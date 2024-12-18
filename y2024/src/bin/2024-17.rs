@@ -119,22 +119,14 @@ fn part1_sol(mut reg: Reg, prog: &Prog, into: &mut Prog) {
     }
 }
 
-// fn parse_input_hardcode(input: &str) -> Int {
-//     let mut iter = input
-//         .split(|n: char| !n.is_ascii_digit())
-//         .filter_map(|num| {
-//             if num.is_empty() {
-//                 None
-//             } else {
-//                 num.parse::<Int>().ok()
-//             }
-//         });
-//     iter.next().expect("Expected a A register value.")
-// }
-
+// SOME NOTES:
+// there is one `jnz` in *MY* input and I'm guessing everyone else's, otherwise
+// finding "A" would be very difficult, if not impossible.
+// We can exploit that this particular program also always shfits off (divides via adv)
+// by a constant amount: 3 bits per loop, thus we can simply "build up" the number 3 bits at a time
+// and check if it outputs a program that matches the end of the input program.
+//
 // fn part1_hardcode(mut a: Int) -> Prog {
-//     // let mut b = 0;
-//     // let mut c = 0;
 //     let mut ret = vec![];
 //     while a != 0 {
 //         let mut b = a & 0b111;
@@ -142,8 +134,7 @@ fn part1_sol(mut reg: Reg, prog: &Prog, into: &mut Prog) {
 //         let c = a >> b;
 //         b ^= 5;
 //         b ^= c;
-//         b &= 0b111;
-//         ret.push(b);
+//         ret.push(b & 0b111);
 //         a >>= 3;
 //     }
 //     ret
