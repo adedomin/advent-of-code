@@ -38,7 +38,11 @@ case "$1" in
       | lynx -stdin -dump > "$out"
   ;;
   i*)
-      [[ -d input ]] && out="input/$Dpadded"
+      if [[ -d input ]]; then
+          out="input/$Dpadded"
+      elif [[ -d "y${Y}/input" ]]; then
+          out="y${Y}/input/$Dpadded"
+      fi
       curl "https://adventofcode.com/$Y/day/$D/input" \
         --fail \
         --cookie session="$AoC_session" \
