@@ -84,13 +84,10 @@ fn main() -> io::Result<()> {
             }
         })
         .unwrap_err()
-        + P1CORR;
-    let (p2x, p2y) = if part1_sol(&parsed_input, (P1BOUND, P1BOUND), part2).is_some() {
-        parsed_input[part2]
-    } else {
-        parsed_input[part2 - 1]
-    };
+        + P1CORR
+        - 1;
 
+    let (p2x, p2y) = parsed_input[part2];
     print!("Part2: {p2x},{p2y}");
     println!();
     Ok(())
