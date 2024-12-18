@@ -76,14 +76,7 @@ fn main() -> io::Result<()> {
     print!("Part1: {part1}, ");
     let part2 = (P1CORR..parsed_input.len())
         .collect::<Vec<_>>()
-        .binary_search_by(|&v| {
-            if part1_sol(&parsed_input, (P1BOUND, P1BOUND), v).is_some() {
-                std::cmp::Ordering::Less
-            } else {
-                std::cmp::Ordering::Greater
-            }
-        })
-        .unwrap_err()
+        .partition_point(|&v| part1_sol(&parsed_input, (P1BOUND, P1BOUND), v).is_some())
         + P1CORR
         - 1;
 
