@@ -21,17 +21,20 @@ fn parse_input(input: &str) -> Output<'_> {
 
 fn solve<'a>(subtowel: &[&'a str], towels: &[&'a str]) -> (Int, Int) {
     towels.iter().fold((0, 0), |(p1, p2), towel| {
-        let mut mat = vec![0; towel.len() + 1];
+        let mut residue = vec![0; towel.len() + 1];
         // if no pattern matches the front, then the rest of the matchers are moot.
-        mat[0] = 1;
+        residue[0] = 1;
         // window over every postfix substring
         (0..towel.len()).for_each(|start| {
             subtowel
                 .iter()
                 .filter(|&st| towel[start..].starts_with(st)) // filter matching prefix
-                .for_each(|st| mat[start + st.len()] += mat[start]); // move value up from last matching.
+                .for_each(|st| residue[start + st.len()] += residue[start]); // move value up from last matching.
         });
-        (p1 + (mat[towel.len()] != 0) as Int, p2 + mat[towel.len()])
+        (
+            p1 + (residue[towel.len()] != 0) as Int,
+            p2 + residue[towel.len()],
+        )
     })
 }
 
