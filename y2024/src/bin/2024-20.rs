@@ -39,7 +39,7 @@ fn solve(map: &Output) -> (usize, usize) {
     let (sx, sy) = start.expect("expected a start.");
     let (ex, ey) = end.expect("expected an end.");
     // find start dir
-    let (dx, dy) = map
+    let (mut dx, mut dy) = map
         .get_neigh_cardinal(sx as usize, sy as usize)
         .into_iter()
         .find_map(|Neighbor(t, x, y)| {
@@ -51,29 +51,23 @@ fn solve(map: &Output) -> (usize, usize) {
         })
         .expect("A starting vector.");
 
-    let mut distmap = FlatVec2D::<usize>::new(map.1, map.2);
     // there can be only one path, so just crawl through and find it.
-    let mut path = vec![(sx, sy, dx, dy, 0)];
-    loop {
-        let &(x, y, dx, dy, time) = path.last().unwrap();
-        distmap[(x as usize, y as usize)] = time;
-        if (x, y) == (ex, ey) {
-            break;
-        }
-
-        for (dx, dy) in [(dy, -dx), (dx, dy), (-dy, dx)]
+    let mut path = vec![(sx, sy, 0)];
+    let (mut x, mut y) = (sx, sy);
+    while (x, y) != (ex, ey) {
+        (dx, dy) = [(dy, -dx), (dx, dy), (-dy, dx)]
             .into_iter()
-            .filter(|(dx, dy)| map.in_bounds(x + dx, y + dy))
-        {
-            if !matches!(map[(x + dx, y + dy)], X::Hash) {
-                path.push((x + dx, y + dy, dx, dy, time + 1));
-                break;
-            }
-        }
+            .find(|(dx, dy)| {
+                let (nx, ny) = (x + dx, y + dy);
+                map.in_bounds(nx, ny) && !matches!(map[(nx, ny)], X::Hash)
+            })
+            .expect("We reached a dead end.");
+        (x, y) = (x + dx, y + dy);
+        path.push((x, y, path.len()));
     }
-    path.into_iter().tuple_combinations().fold(
-        (0, 0),
-        |(p1, p2), ((x1, y1, _, _, _), (x2, y2, _, _, _))| {
+    path.into_iter()
+        .tuple_combinations()
+        .fold((0, 0), |(p1, p2), ((x1, y1, t1), (x2, y2, t2))| {
             // manhattan distance.
             let cheat_dur = x1.abs_diff(x2) + y1.abs_diff(y2);
             // can't have a cheat of "one" it is meaningless for p1 or 2.
@@ -85,15 +79,12 @@ fn solve(map: &Output) -> (usize, usize) {
             // implies we went backwards and ADDED time taking this cheat.
             //
             // tuple_combinations should be unique pairs, so no worries of dupes.
-            let s = distmap[(x1, y1)];
-            let e = distmap[(x2, y2)];
-            if e.abs_diff(s).abs_diff(cheat_dur) >= P1_SAVING_MIN {
+            if t1.abs_diff(t2).abs_diff(cheat_dur) >= P1_SAVING_MIN {
                 (p1 + if cheat_dur == 2 { 1 } else { 0 }, p2 + 1)
             } else {
                 (p1, p2)
             }
-        },
-    )
+        })
 }
 // fn part2_sol(map: &Output) -> Solved {}
 
