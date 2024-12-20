@@ -52,8 +52,8 @@ fn solve(map: &Output) -> (usize, usize) {
         .expect("A starting vector.");
 
     // there can be only one path, so just crawl through and find it.
-    let mut path = vec![(sx, sy, 0)];
     let (mut x, mut y) = (sx, sy);
+    let mut path = vec![(x, y, 0)];
     while (x, y) != (ex, ey) {
         (dx, dy) = [(dy, -dx), (dx, dy), (-dy, dx)]
             .into_iter()
