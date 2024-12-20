@@ -98,12 +98,16 @@ fn solve(map: &Output) -> (usize, usize) {
         .into_iter()
         .tuple_combinations()
         .filter(|((x, y, _, _, _), (x2, y2, _, _, _))| {
+            // manhattan distance.
             let cheat_dur = x.abs_diff(*x2) + y.abs_diff(*y2);
             if cheat_dur > P2_CHEAT_GT {
                 return false;
             }
-            // since we can approach these cheats from either side, we'll take the abs diff of the distance
-            // tuple_combinations should be unique pairs.
+            // Since we can approach these cheats from either side, we'll take the absolute value.
+            // The absolute value of the distance should be the "optimal" pick since the negative case
+            // implies we went backwards and ADDED time taking this cheat.
+            //
+            // tuple_combinations should be unique pairs, so no worries of dupes.
             let s = distmap[(*x, *y)].expect("starting point of cheat HAD to be visted");
             let e = distmap[(*x2, *y2)]
                 .expect("all empty paths should be a part of the unitary path in input");
