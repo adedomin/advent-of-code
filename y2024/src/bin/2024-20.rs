@@ -54,12 +54,6 @@ fn solve(map: &Output) -> (usize, usize) {
     let mut distmap = FlatVec2D::<Option<isize>>::new(map.1, map.2);
     // there can be only one path, so just crawl through and find it.
     let mut path = vec![(sx, sy, dx, dy, 0)];
-    let mut p1_cheats = vec![];
-    // edge case: check if immediately behind me is a cheat.
-    let (cdsx, cdsy) = (sx - dx * 2, sy - dy * 2);
-    if map.in_bounds(cdsx, cdsy) && !matches!(map[(cdsx, cdsy)], X::Hash) {
-        p1_cheats.push(((sx, sy), (cdsx, cdsy)));
-    }
     loop {
         let &(x, y, dx, dy, time) = path.last().unwrap();
         distmap[(x as usize, y as usize)].get_or_insert(time);
@@ -70,51 +64,38 @@ fn solve(map: &Output) -> (usize, usize) {
         [(dy, -dx), (dx, dy), (-dy, dx)]
             .into_iter()
             .filter(|(dx, dy)| map.in_bounds(x + dx, y + dy))
-            .for_each(|(dx, dy)| {
-                let (cdx, cdy) = (x + dx * 2, y + dy * 2);
-                if matches!(map[(x + dx, y + dy)], X::Hash) {
-                    if map.in_bounds(cdx, cdy)
-                        && !matches!(map[(cdx, cdy)], X::Hash)
-                        && distmap[(cdx, cdy)].is_none()
-                    // backtracking makes zero sense here.
-                    {
-                        p1_cheats.push(((x, y), (cdx, cdy)));
-                    }
-                } else {
+            .find(|&(dx, dy)| {
+                if !matches!(map[(x + dx, y + dy)], X::Hash) {
                     path.push((x + dx, y + dy, dx, dy, time + 1));
+                    true
+                } else {
+                    false
                 }
             });
     }
-    let p1 = p1_cheats
-        .into_iter()
-        .filter(|&(start, end)| {
-            let s = distmap[start].expect("starting point of cheat HAD to be visted");
-            let e = distmap[end]
-                .expect("all empty paths should be a part of the unitary path in input");
-            ((e - s) - 2) > P1_SAVING_LT
-        })
-        .count();
-    let p2 = path
-        .into_iter()
-        .tuple_combinations()
-        .filter(|((x, y, _, _, _), (x2, y2, _, _, _))| {
+    path.into_iter().tuple_combinations().fold(
+        (0, 0),
+        |(p1, p2), ((x1, y1, _, _, _), (x2, y2, _, _, _))| {
             // manhattan distance.
-            let cheat_dur = x.abs_diff(*x2) + y.abs_diff(*y2);
+            let cheat_dur = x1.abs_diff(x2) + y1.abs_diff(y2);
             if cheat_dur > P2_CHEAT_GT {
-                return false;
+                return (p1, p2);
             }
             // Since we can approach these cheats from either side, we'll take the absolute value.
             // The absolute value of the distance should be the "optimal" pick since the negative case
             // implies we went backwards and ADDED time taking this cheat.
             //
             // tuple_combinations should be unique pairs, so no worries of dupes.
-            let s = distmap[(*x, *y)].expect("starting point of cheat HAD to be visted");
-            let e = distmap[(*x2, *y2)]
+            let s = distmap[(x1, y1)].expect("starting point of cheat HAD to be visted");
+            let e = distmap[(x2, y2)]
                 .expect("all empty paths should be a part of the unitary path in input");
-            e.abs_diff(s).abs_diff(cheat_dur) > P1_SAVING_LT as usize
-        })
-        .count();
-    (p1, p2)
+            if e.abs_diff(s).abs_diff(cheat_dur) > P1_SAVING_LT as usize {
+                (p1 + if cheat_dur == 2 { 1 } else { 0 }, p2 + 1)
+            } else {
+                (p1, p2)
+            }
+        },
+    )
 }
 // fn part2_sol(map: &Output) -> Solved {}
 
