@@ -78,7 +78,8 @@ fn solve(map: &Output) -> (usize, usize) {
         |(p1, p2), ((x1, y1, _, _, _), (x2, y2, _, _, _))| {
             // manhattan distance.
             let cheat_dur = x1.abs_diff(x2) + y1.abs_diff(y2);
-            if cheat_dur > P2_CHEAT_GT {
+            // can't have a cheat of "one" it is meaningless for p1 or 2.
+            if !(2..P2_CHEAT_GT + 1).contains(&cheat_dur) {
                 return (p1, p2);
             }
             // Since we can approach these cheats from either side, we'll take the absolute value.
