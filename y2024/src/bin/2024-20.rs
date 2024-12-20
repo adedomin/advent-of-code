@@ -61,17 +61,15 @@ fn solve(map: &Output) -> (usize, usize) {
             break;
         }
 
-        [(dy, -dx), (dx, dy), (-dy, dx)]
+        for (dx, dy) in [(dy, -dx), (dx, dy), (-dy, dx)]
             .into_iter()
             .filter(|(dx, dy)| map.in_bounds(x + dx, y + dy))
-            .find(|&(dx, dy)| {
-                if !matches!(map[(x + dx, y + dy)], X::Hash) {
-                    path.push((x + dx, y + dy, dx, dy, time + 1));
-                    true
-                } else {
-                    false
-                }
-            });
+        {
+            if !matches!(map[(x + dx, y + dy)], X::Hash) {
+                path.push((x + dx, y + dy, dx, dy, time + 1));
+                break;
+            }
+        }
     }
     path.into_iter().tuple_combinations().fold(
         (0, 0),
