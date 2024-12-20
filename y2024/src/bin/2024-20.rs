@@ -24,8 +24,8 @@ impl From<u8> for X {
 
 type Output = FlatVec2D<X>;
 
-const P1_SAVING_LT: isize = 99;
-const P2_CHEAT_GT: usize = 20;
+const P1_SAVING_MIN: usize = 100;
+const P2_CHEAT_LIM: usize = 21;
 
 fn solve(map: &Output) -> (usize, usize) {
     // find starting params.
@@ -51,12 +51,12 @@ fn solve(map: &Output) -> (usize, usize) {
         })
         .expect("A starting vector.");
 
-    let mut distmap = FlatVec2D::<Option<isize>>::new(map.1, map.2);
+    let mut distmap = FlatVec2D::<usize>::new(map.1, map.2);
     // there can be only one path, so just crawl through and find it.
     let mut path = vec![(sx, sy, dx, dy, 0)];
     loop {
         let &(x, y, dx, dy, time) = path.last().unwrap();
-        distmap[(x as usize, y as usize)].get_or_insert(time);
+        distmap[(x as usize, y as usize)] = time;
         if (x, y) == (ex, ey) {
             break;
         }
@@ -79,7 +79,7 @@ fn solve(map: &Output) -> (usize, usize) {
             // manhattan distance.
             let cheat_dur = x1.abs_diff(x2) + y1.abs_diff(y2);
             // can't have a cheat of "one" it is meaningless for p1 or 2.
-            if !(2..P2_CHEAT_GT + 1).contains(&cheat_dur) {
+            if !(2..P2_CHEAT_LIM).contains(&cheat_dur) {
                 return (p1, p2);
             }
             // Since we can approach these cheats from either side, we'll take the absolute value.
@@ -87,10 +87,9 @@ fn solve(map: &Output) -> (usize, usize) {
             // implies we went backwards and ADDED time taking this cheat.
             //
             // tuple_combinations should be unique pairs, so no worries of dupes.
-            let s = distmap[(x1, y1)].expect("starting point of cheat HAD to be visted");
-            let e = distmap[(x2, y2)]
-                .expect("all empty paths should be a part of the unitary path in input");
-            if e.abs_diff(s).abs_diff(cheat_dur) > P1_SAVING_LT as usize {
+            let s = distmap[(x1, y1)];
+            let e = distmap[(x2, y2)];
+            if e.abs_diff(s).abs_diff(cheat_dur) >= P1_SAVING_MIN {
                 (p1 + if cheat_dur == 2 { 1 } else { 0 }, p2 + 1)
             } else {
                 (p1, p2)
