@@ -164,6 +164,7 @@ fn expand_pad_pattern(
     let mut min = usize::MAX;
     let mut stack = vec![(from, vec![])];
     while let Some((from, pattern)) = stack.pop() {
+        // there is a dead space in the keypads we have to avoid or the robot arms spontaneously explode or something.
         match expn {
             ExpandFrom::Num if from == NUMPAD_DEADZONE => continue,
             ExpandFrom::Dir if from == DIRPAD_DEADZONE => continue,
