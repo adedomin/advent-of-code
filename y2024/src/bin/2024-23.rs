@@ -1,7 +1,7 @@
 use aoc_shared::read_input_to_string;
 use itertools::Itertools;
 use rustc_hash::{FxHashMap, FxHashSet};
-use std::{collections::BinaryHeap, io};
+use std::io;
 
 type Output<'a> = FxHashMap<&'a str, FxHashSet<&'a str>>;
 
