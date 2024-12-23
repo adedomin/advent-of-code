@@ -49,12 +49,14 @@ fn part2_sol(verts: &Output) -> String {
             *counts.entry(e).or_default() += 1;
         });
     });
+    // find the edges with the most representation in the 3 ring subgraphs...
     let max_edges = counts
         .drain()
         .max_set_by_key(|(_, v)| *v)
         .into_iter()
         .map(|(e, _)| e)
         .collect::<FxHashSet<_>>();
+    // recreate the verticies with only the max edges.
     let max_verts = max_edges
         .iter()
         .map(|&e| {
@@ -67,10 +69,12 @@ fn part2_sol(verts: &Output) -> String {
             (e, adj)
         })
         .collect::<Output>();
+    // get 3-cliques in this new subgraph of max connected.
     let mut password = cliques3(&max_verts)
         .flat_map(|ring| ring.into_iter())
         .unique()
         .collect_vec();
+    // we should only have the dominating clique?
     password.sort();
     password.into_iter().join(",")
 }
