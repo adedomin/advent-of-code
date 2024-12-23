@@ -70,6 +70,8 @@ fn part2_sol(verts: &Output) -> String {
         })
         .collect::<Output>();
     // get 3-cliques in this new subgraph of max connected.
+    // even if other nodes have a high representation in other 3-cliques, this should
+    // only give us a list of the max-clique we're looking for.
     let mut password = cliques3(&max_verts)
         .flat_map(|ring| ring.into_iter())
         .unique()
