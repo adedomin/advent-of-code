@@ -26,12 +26,13 @@ fn cliques3<'a>(verts: &'a Output<'a>) -> impl Iterator<Item = [&'a str; 3]> {
     verts
         .iter()
         .flat_map(|(e, v)| {
-            v.iter().flat_map(|e2| {
-                let v2 = verts.get(e2).expect("should have a reverse mapping.");
-                v2.iter()
-                    .filter_map(|e3| verts.get(e3)?.contains(e).then_some(e3))
-                    .map(|e3| gen_lexographic_pair([e, e2, e3]))
-            })
+            v.iter()
+                .filter_map(|e2| verts.get(e2).map(|v2| (e2, v2)))
+                .flat_map(|(e2, v2)| {
+                    v2.iter()
+                        .filter_map(|e3| verts.get(e3)?.contains(e).then_some(e3))
+                        .map(|e3| gen_lexographic_pair([e, e2, e3]))
+                })
         })
         .unique()
 }
@@ -59,15 +60,7 @@ fn part2_sol(verts: &Output) -> String {
     // recreate the verticies with only the max edges.
     let max_verts = max_edges
         .iter()
-        .map(|&e| {
-            let adj = verts
-                .get(e)
-                .map(|adj| max_edges.intersection(adj))
-                .unwrap()
-                .cloned()
-                .collect::<FxHashSet<_>>();
-            (e, adj)
-        })
+        .map(|&e| (e, verts.get(e).unwrap().clone()))
         .collect::<Output>();
     // get 3-cliques in this new subgraph of max connected.
     // even if other nodes have a high representation in other 3-cliques, this should
