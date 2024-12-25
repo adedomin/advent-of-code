@@ -2,11 +2,6 @@ use aoc_shared::read_input_to_string;
 use std::io;
 
 type Output = Vec<u64>;
-// const KEY: usize = 0;
-// const LOCK: usize = 1;
-// const PIN_CNT: usize = 5;
-// const LOCK_DEPTH: Int = 7;
-// const BITS: usize = 5 * 7;
 
 fn parse_input(input: &str) -> Output {
     let pat = |b| (b == b'#') as u64;
