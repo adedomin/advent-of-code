@@ -1,10 +1,10 @@
 use aoc_shared::read_input_to_string;
+use itertools::Itertools;
 use std::io;
 
 type Output = Vec<u64>;
 
 fn parse_input(input: &str) -> Output {
-    let pat = |b| (b == b'#') as u64;
     input
         .split("\n\n")
         .filter(|pat| !pat.is_empty())
@@ -13,23 +13,19 @@ fn parse_input(input: &str) -> Output {
                 .as_bytes()
                 .iter()
                 .filter(|&&b| b == b'.' || b == b'#')
-                .fold(0u64, |acc, &b| acc << 1 | pat(b))
+                .fold(0u64, |acc, &b| acc << 1 | (b == b'#') as u64)
         })
         .collect::<Vec<u64>>()
 }
 
-fn part1_sol(keys_and_locks: Output) -> u64 {
+fn part1_sol(keys_and_locks: Output) -> usize {
     // we exploit the top and bottom rows differentiating the two and they *ALWAYS* self filter
     // we basically just ask if both lock and key occupy the same space, if not, then ANDing them is always 0.
     keys_and_locks
         .iter()
-        .enumerate()
-        .flat_map(|(idx, kl)| {
-            keys_and_locks[..idx]
-                .iter()
-                .map(move |&kl2| ((kl & kl2) == 0) as u64)
-        })
-        .sum()
+        .tuple_combinations()
+        .filter(|(a, b)| *a & *b == 0)
+        .count()
 }
 
 fn main() -> io::Result<()> {
