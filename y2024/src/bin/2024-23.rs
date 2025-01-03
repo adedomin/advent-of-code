@@ -7,7 +7,7 @@ type Output<'a> = FxHashMap<&'a str, FxHashSet<&'a str>>;
 
 // Generates a pair in lexicographic order.
 fn gen_lexographic_pair(mut a: [&str; 3]) -> [&str; 3] {
-    a.sort();
+    a.sort_unstable();
     a
 }
 fn parse_input(input: &str) -> Output<'_> {
@@ -22,50 +22,50 @@ fn parse_input(input: &str) -> Output<'_> {
     verts
 }
 
-fn cliques3<'a>(verts: &'a Output<'a>) -> impl Iterator<Item = [&'a str; 3]> {
-    verts
+fn cliques3<'a>(edges: &'a Output<'a>) -> impl Iterator<Item = [&'a str; 3]> {
+    edges
         .iter()
-        .flat_map(|(e, v)| {
-            v.iter()
-                .filter_map(|e2| verts.get(e2).map(|v2| (e2, v2)))
-                .flat_map(|(e2, v2)| {
-                    v2.iter()
-                        .filter_map(|e3| verts.get(e3)?.contains(e).then_some(e3))
-                        .map(|e3| gen_lexographic_pair([e, e2, e3]))
+        .flat_map(|(v, e)| {
+            e.iter()
+                .filter_map(|v2| edges.get(v2).map(|e2| (v2, e2)))
+                .flat_map(|(v2, e2)| {
+                    e2.iter()
+                        .filter_map(|v3| edges.get(v3)?.contains(v).then_some(v3))
+                        .map(|v3| gen_lexographic_pair([v, v2, v3]))
                 })
         })
         .unique()
 }
 
-fn part1_sol(verts: &Output) -> usize {
-    cliques3(verts)
-        .filter(|clique| clique.iter().any(|e| e.starts_with("t")))
+fn part1_sol(edges: &Output) -> usize {
+    cliques3(edges)
+        .filter(|clique| clique.iter().any(|vert| vert.starts_with("t")))
         .count()
 }
 
-fn part2_sol(verts: &Output) -> String {
+fn part2_sol(edges: &Output) -> String {
     let mut counts: FxHashMap<&str, i32> = FxHashMap::default();
-    cliques3(verts).for_each(|ring| {
+    cliques3(edges).for_each(|ring| {
         ring.iter().for_each(|e| {
             *counts.entry(e).or_default() += 1;
         });
     });
     // find the edges with the most representation in the 3 ring subgraphs...
-    let max_edges = counts
+    let max_verts = counts
         .drain()
         .max_set_by_key(|(_, v)| *v)
         .into_iter()
         .map(|(e, _)| e)
         .collect::<FxHashSet<_>>();
     // recreate the verticies with only the max edges.
-    let max_verts = max_edges
+    let max_edges = max_verts
         .iter()
-        .map(|&e| (e, verts.get(e).unwrap().clone()))
+        .map(|&v| (v, edges.get(v).unwrap().clone()))
         .collect::<Output>();
     // get 3-cliques in this new subgraph of max connected.
     // even if other nodes have a high representation in other 3-cliques, this should
     // only give us a list of the max-clique we're looking for.
-    let mut password = cliques3(&max_verts)
+    let mut password = cliques3(&max_edges)
         .flat_map(|ring| ring.into_iter())
         .unique()
         .collect_vec();
