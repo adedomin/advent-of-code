@@ -45,31 +45,34 @@ fn part1_sol(edges: &Output) -> usize {
 
 fn part2_sol(edges: &Output) -> String {
     let mut counts: FxHashMap<&str, i32> = FxHashMap::default();
+    // get all 3-rings and count vertex representation in these 3-rings.
     cliques3(edges).for_each(|ring| {
         ring.iter().for_each(|e| {
             *counts.entry(e).or_default() += 1;
         });
     });
-    // find the edges with the most representation in the 3 ring subgraphs...
+    // find the vertices with the most representation in the 3 ring subgraphs...
     let max_verts = counts
         .drain()
         .max_set_by_key(|(_, v)| *v)
         .into_iter()
         .map(|(e, _)| e)
         .collect::<FxHashSet<_>>();
-    // recreate the verticies with only the max edges.
+    // create new edges with only the vertices that are most represented in the 3-ring subgraphs.
+    // when trying to find 3-rings, the members that aren't in the max-clique will be self filtered.
     let max_edges = max_verts
         .iter()
         .map(|&v| (v, edges.get(v).unwrap().clone()))
         .collect::<Output>();
     // get 3-cliques in this new subgraph of max connected.
-    // even if other nodes have a high representation in other 3-cliques, this should
+    // even if other vertices have a high representation in other 3-cliques, this should
     // only give us a list of the max-clique we're looking for.
+    // this works because the problem would be unsolvable if there were multiple,
+    // equally large, cliques in the graph.
     let mut password = cliques3(&max_edges)
         .flat_map(|ring| ring.into_iter())
         .unique()
         .collect_vec();
-    // we should only have the dominating clique?
     password.sort();
     password.into_iter().join(",")
 }
