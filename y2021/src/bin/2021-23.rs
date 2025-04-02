@@ -1,5 +1,5 @@
 use aoc_shared::{read_input_to_string, Dijkstra, HeapState};
-use itertools::Itertools;
+use itertools::{Either, Itertools};
 use std::io;
 
 type Output = Key;
@@ -249,28 +249,18 @@ fn move_into_hallway(
     am: Amphipod,
     imoves: u32,
 ) {
-    let lrange = 0..ki;
-    let rrange = ki + 1..11;
-    lrange
-        .rev()
-        .take_while(|&li| !matches!(key.0[li], Room::Hallway(Some(_))))
-        .filter(|&li| matches!(key.0[li], Room::Hallway(None)))
-        .for_each(|li| {
-            let mut nkey = key.0;
-            nkey[li] = Room::Hallway(Some(am));
-            nkey[ki] = replace_with;
-            let moves = li.abs_diff(ki) as u32;
-            heap.push(Key(nkey), cost + ((moves + imoves) * am.cost()))
-        });
-    rrange
-        .take_while(|&ri| !matches!(key.0[ri], Room::Hallway(Some(_))))
-        .filter(|&ri| matches!(key.0[ri], Room::Hallway(None)))
-        .for_each(|ri| {
-            let mut nkey = key.0;
-            nkey[ri] = Room::Hallway(Some(am));
-            nkey[ki] = replace_with;
-            let moves = ki.abs_diff(ri) as u32;
-            heap.push(Key(nkey), cost + ((moves + imoves) * am.cost()))
+    [Either::Left((0..ki).rev()), Either::Right((ki + 1)..11)]
+        .into_iter()
+        .for_each(|e| {
+            e.take_while(|&ri| !matches!(key.0[ri], Room::Hallway(Some(_))))
+                .filter(|&ri| matches!(key.0[ri], Room::Hallway(None)))
+                .for_each(|ri| {
+                    let mut nkey = key.0;
+                    nkey[ri] = Room::Hallway(Some(am));
+                    nkey[ki] = replace_with;
+                    let moves = ki.abs_diff(ri) as u32;
+                    heap.push(Key(nkey), cost + ((moves + imoves) * am.cost()))
+                });
         });
 }
 
@@ -291,39 +281,23 @@ fn move_from_hallway_or_room(
         target + 1..ki
     };
     let moves = range.len() as u32;
-    // we're right on edge of the room.
-    if moves == 0 {
-        if let Some((room, imoves)) = key.0[target].try_insert(am) {
-            let mut nkey = key.0;
-            nkey[target] = room;
-            nkey[ki] = replace_with;
-            heap.push(
-                Key(nkey),
-                cost + ((moves + imoves + extra_moves) * am.cost()),
-            );
-            true
-        } else {
-            false
+    // try to move to edge of room.
+    for probe in range {
+        if let Room::Hallway(Some(_)) = key.0[probe] {
+            return false;
         }
+    }
+    if let Some((room, imoves)) = key.0[target].try_insert(am) {
+        let mut nkey = key.0;
+        nkey[target] = room;
+        nkey[ki] = replace_with;
+        heap.push(
+            Key(nkey),
+            cost + ((moves + imoves + extra_moves) * am.cost()),
+        );
+        true
     } else {
-        // try to move to edge of room.
-        for probe in range {
-            if let Room::Hallway(Some(_)) = key.0[probe] {
-                return false;
-            }
-        }
-        if let Some((room, imoves)) = key.0[target].try_insert(am) {
-            let mut nkey = key.0;
-            nkey[target] = room;
-            nkey[ki] = replace_with;
-            heap.push(
-                Key(nkey),
-                cost + ((moves + imoves + extra_moves) * am.cost()),
-            );
-            true
-        } else {
-            false
-        }
+        false
     }
 }
 
