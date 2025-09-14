@@ -1,4 +1,7 @@
-use std::collections::{BinaryHeap, HashMap};
+use std::{
+    cmp::Ordering,
+    collections::{BinaryHeap, HashMap},
+};
 
 /// Minimum heap key state for BinaryHeap
 /// Inverts Ord/PartialOrd for the cost field for Dijkstra problems.
@@ -87,18 +90,18 @@ where
     /// This is for weird problems where we need to track equivalent cost
     /// keys reachable for an older key.
     ///
-    /// Returns Some(true) if inserted and lower cost than old map
-    /// Returns Some(false) if already in distance map with the same cost
-    /// Returns None if key exists, but is a higher cost.
-    pub fn push_equal(&mut self, key: K, cost: C) -> Option<bool> {
+    /// Returns Ordering::Less if the newest key path is lower cost than the old path one.
+    /// Returns Ordering::Equal if both the new key path and old key path have the same cost.
+    /// Returns Ordering::Greater if the new key path is higher cost.
+    pub fn push_equal(&mut self, key: K, cost: C) -> Ordering {
         let olddist = self.distmap.get(&key).cloned();
         if self.push_bool(key, cost) {
-            Some(true)
+            Ordering::Less
         } else if let Some(old) = olddist {
             if old == cost {
-                Some(false)
+                Ordering::Equal
             } else {
-                None
+                Ordering::Greater
             }
         } else {
             // push_bool can only return false if the key already exists.
@@ -181,12 +184,12 @@ where
 mod test {
     use super::{DijkstraPath, HeapState};
 
-    type Key = (i32, i32);
-    type Cost = u32;
-    const TARGET: Key = (5, 5);
-
     #[test]
     fn dij_path_test() {
+        type Key = (i32, i32);
+        type Cost = u32;
+        const TARGET: Key = (5, 5);
+
         let mut dij = DijkstraPath::<Key, Cost>::new();
         dij.push_init((0, 0), 0);
         while let Some(HeapState { key, cost }) = dij.pop() {

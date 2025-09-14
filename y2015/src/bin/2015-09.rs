@@ -18,7 +18,7 @@ fn gen_city_pair<'a>(city_a: &'a [u8], city_b: &'a [u8]) -> (&'a [u8], &'a [u8])
     }
 }
 
-fn parse_input(input: &[u8]) -> Output {
+fn parse_input(input: &'_ [u8]) -> Output<'_> {
     let re =
         Regex::new(r##"(?m)^(?<city1>[A-Za-z]+) to (?<city2>[A-Za-z]+) = (?<cost>[[:digit:]]+)$"##)
             .unwrap();

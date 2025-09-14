@@ -54,14 +54,17 @@ type Key = (Int, Int, Int, Int);
 
 macro_rules! push_path {
     ($dij:ident, $pathmap:ident, $key:ident, $cost:ident, $oldkey:ident) => {
-        if let Some(t) = $dij.push_equal($key, $cost) {
-            let vis = $pathmap.entry($key).or_default();
-            if t {
+        match $dij.push_equal($key, $cost) {
+            std::cmp::Ordering::Less => {
+                let vis = $pathmap.entry($key).or_default();
                 vis.clear();
                 vis.push($oldkey);
-            } else {
+            }
+            std::cmp::Ordering::Equal => {
+                let vis = $pathmap.entry($key).or_default();
                 vis.push($oldkey);
             }
+            _ => {}
         }
     };
 }

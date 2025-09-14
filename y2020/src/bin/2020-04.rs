@@ -21,7 +21,7 @@ const P2_RE: &[&str] = &[
     r"^hgt:((1[5-8][0-9]|19[0-3])cm|(59|6[0-9]|7[0-6])in)$",
 ];
 
-fn parse_input(input: &str) -> Output {
+fn parse_input(input: &'_ str) -> Output<'_> {
     input
         .split("\n\n")
         .map(|strings| strings.split_ascii_whitespace().collect::<Vec<&str>>())

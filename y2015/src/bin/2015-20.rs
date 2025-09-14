@@ -59,7 +59,7 @@ fn find_lowest(sigma_n: i32, pfact: &[i32]) -> Option<i32> {
             if let Some(nsig) = sigma_from(&parts) {
                 if nsig >= sigma_n {
                     if let Some(num) = into_num(&parts) {
-                        if min.map_or(true, |m| num < m) {
+                        if min.is_none_or(|m| num < m) {
                             min = Some(num);
                         }
                     } else {

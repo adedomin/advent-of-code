@@ -9,7 +9,7 @@ use std::{
 
 type Output<'a> = (Vec<&'a [u8]>, HashMap<(&'a [u8], &'a [u8]), i64>);
 
-fn parse_input(input: &[u8]) -> Output {
+fn parse_input(input: &'_ [u8]) -> Output<'_> {
     let re =
         Regex::new(r##"(?m)^(?<p1>[A-Za-z]+) would (?<verb>gain|lose) (?<value>[[:digit:]]+) happiness units by sitting next to (?<p2>[A-Za-z]+).$"##)
             .unwrap();

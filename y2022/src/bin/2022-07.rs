@@ -1,5 +1,5 @@
-use std::{collections::HashMap, io};
 use aoc_shared::{fold_decimal, read_input};
+use std::{collections::HashMap, io};
 
 type Output<'a> = HashMap<Vec<&'a [u8]>, usize>;
 
@@ -14,7 +14,7 @@ enum Pstate<'a> {
 const FS_AVAIL: usize = 70_000_000;
 const FS_TARGET: usize = 30_000_000;
 
-fn parse_input(input: &[u8]) -> Output {
+fn parse_input(input: &'_ [u8]) -> Output<'_> {
     input
         .split(|&chr| chr == b'\n')
         .filter_map(|line| {

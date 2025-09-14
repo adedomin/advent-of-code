@@ -15,17 +15,20 @@ impl From<u8> for X {
     }
 }
 
-const N: u8 = 0;
-const E: u8 = 1;
-const S: u8 = 2;
-const W: u8 = 3;
+#[derive(PartialEq, Eq, Hash, Clone, Copy)]
+enum Card {
+    N,
+    E,
+    S,
+    W,
+}
 
 type Output = FlatVec2D<X>;
 #[rustfmt::skip]
-const CARD: [(u8, isize, isize); 4] = [
-                (N, 0, -1),
-    (W, -1 ,0),             (E, 1, 0),
-                (S, 0,  1)
+const CARD: [(Card, isize, isize); 4] = [
+                (Card::N, 0, -1),
+    (Card::W, -1 ,0),             (Card::E, 1, 0),
+                (Card::S, 0,  1)
 ];
 
 const OUT_OF_BOUNDS: X = X(b'Z' + 1);
@@ -33,7 +36,7 @@ const OUT_OF_BOUNDS: X = X(b'Z' + 1);
 type ShapeBoundsSides = (
     FxHashSet<(usize, usize)>,
     FxHashMap<(usize, usize), usize>,
-    FxHashMap<(u8, usize), BinaryHeap<usize>>,
+    FxHashMap<(Card, usize), BinaryHeap<usize>>,
 );
 
 fn get_shape(
@@ -48,7 +51,7 @@ fn get_shape(
     let mut shape = FxHashSet::default();
     let mut frontier = FxHashMap::default();
     let mut segments: std::collections::HashMap<
-        (u8, usize),
+        (Card, usize),
         BinaryHeap<usize>,
         rustc_hash::FxBuildHasher,
     > = FxHashMap::default();
@@ -67,9 +70,8 @@ fn get_shape(
             if n != c {
                 *frontier.entry((nx, ny)).or_default() += 1;
                 match card {
-                    N | S => segments.entry((card, y)).or_default().push(x),
-                    W | E => segments.entry((card, x)).or_default().push(y),
-                    _ => unreachable!(),
+                    Card::N | Card::S => segments.entry((card, y)).or_default().push(x),
+                    Card::W | Card::E => segments.entry((card, x)).or_default().push(y),
                 }
             } else {
                 stack.push((nx, ny));

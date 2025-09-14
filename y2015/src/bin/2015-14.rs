@@ -20,7 +20,7 @@ impl Piecewise {
     }
 }
 
-fn parse_input(input: &[u8]) -> Output {
+fn parse_input(input: &'_ [u8]) -> Output<'_> {
     let regex = Regex::new(r##"(?m)^(?<rein>[A-Za-z]+) can fly (?<linear>[[:digit:]]+) km/s for (?<upto>[[:digit:]]+) seconds, but then must rest for (?<rest>[[:digit:]]+) seconds.$"##)
             .unwrap();
 

@@ -99,7 +99,7 @@ const RINGS: [Gear; 7] = [
 
 type Gears = (i16, Gear, Gear, Gear, Gear);
 
-const GEAR_COMBINATIONS: [Gears; WEAPONS.len() * ARMOR.len() * RINGS.len() * RINGS.len()] = {
+static GEAR_COMBINATIONS: [Gears; WEAPONS.len() * ARMOR.len() * RINGS.len() * RINGS.len()] = {
     let mut arr = [(0, NO_RING, NO_RING, NO_RING, NO_RING);
         WEAPONS.len() * ARMOR.len() * RINGS.len() * RINGS.len()];
     let mut wep = 0usize;

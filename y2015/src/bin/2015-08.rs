@@ -86,7 +86,7 @@ impl CodeCharSz for Escaped {
     }
 }
 
-fn parse_input(input: &[u8]) -> Output {
+fn parse_input(input: &'_ [u8]) -> Output<'_> {
     use Escaped::*;
     use NToken::*;
     let (tokens, _, _) = AoCTokenizer::new(input)

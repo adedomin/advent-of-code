@@ -1,0 +1,2 @@
+[env]
+Z3_SYS_Z3_HEADER = { value = "/usr/include/z3/z3.h", force = true }

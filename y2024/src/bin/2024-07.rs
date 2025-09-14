@@ -10,7 +10,7 @@ fn parse_input(input: &str) -> Output {
         .map(|line| {
             let mut iter = line.split_ascii_whitespace().enumerate().map(|(pos, num)| {
                 if pos == 0 {
-                    let blen = num.as_bytes().len();
+                    let blen = num.len();
                     fold_decimal_from(&num.as_bytes()[..blen - 1])
                 } else {
                     fold_decimal_from(num.as_bytes())

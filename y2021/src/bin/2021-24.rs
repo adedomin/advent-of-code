@@ -6,18 +6,22 @@ type Output = Vec<(Input, Vec<Instr>)>;
 
 #[derive(Debug)]
 enum Imm {
+    #[allow(dead_code)]
     Reg(usize),
     Imm(Int),
 }
 
 #[derive(Debug)]
 struct Instr {
+    #[allow(dead_code)]
     op: fn(Int, Int) -> Int,
+    #[allow(dead_code)]
     lhs: usize,
     rhs: Imm,
 }
 
 #[derive(Debug)]
+#[allow(dead_code)]
 struct Input(usize);
 
 const W: usize = 0;

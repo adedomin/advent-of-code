@@ -8,7 +8,7 @@ use std::{
 #[derive(Debug, Clone)]
 struct Replacer<'a>(&'a [u8], &'a [u8]);
 
-fn parse_input(input: &[u8]) -> (Vec<Replacer>, &[u8]) {
+fn parse_input(input: &'_ [u8]) -> (Vec<Replacer<'_>>, &'_ [u8]) {
     let (replacements, _, mol, _) = input.tokenize().fold(
         (Vec::new(), None, None, false),
         |(mut acc, mol1, mol2, is_final), tok| match tok {
