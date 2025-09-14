@@ -62,10 +62,16 @@ where
         self.heap.pop()
     }
 
+    /// see: `push_bool`
     pub fn push(&mut self, key: K, cost: C) {
         self.push_bool(key, cost);
     }
 
+    /// Attempt to add key with cost to the heap.
+    /// If the new key and cost were added, this returns true.
+    /// If the key is already in with the same cost, this will return false.
+    ///
+    /// If you need to handle equal costs, see `push_equal`
     pub fn push_bool(&mut self, key: K, cost: C) -> bool {
         let mut changed = true;
         let dent = self
@@ -96,16 +102,14 @@ where
     pub fn push_equal(&mut self, key: K, cost: C) -> Ordering {
         let olddist = self.distmap.get(&key).cloned();
         if self.push_bool(key, cost) {
-            Ordering::Less
-        } else if let Some(old) = olddist {
-            if old == cost {
-                Ordering::Equal
-            } else {
-                Ordering::Greater
-            }
+            return Ordering::Less;
+        }
+
+        // olddist cannot be none if push_bool is false.
+        if olddist.unwrap() == cost {
+            Ordering::Equal
         } else {
-            // push_bool can only return false if the key already exists.
-            unreachable!()
+            Ordering::Greater
         }
     }
 }
