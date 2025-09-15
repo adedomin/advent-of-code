@@ -1,9 +1,7 @@
-use aoc_shared::{pad_to_flat2d, read_input, FlatVec2D};
-use itertools::Itertools;
-use rustc_hash::{FxHashMap, FxHashSet};
-use std::{collections::BinaryHeap, io};
+use aoc_shared::{debug, pad_to_flat2d, read_input, FlatVec2D};
+use rustc_hash::FxHashMap;
 
-#[derive(Default, Copy, Clone, PartialEq, Eq)]
+#[derive(Default, Copy, Clone, PartialEq, Eq, Debug)]
 struct X(u8);
 
 impl From<u8> for X {
@@ -15,78 +13,66 @@ impl From<u8> for X {
     }
 }
 
-#[derive(PartialEq, Eq, Hash, Clone, Copy)]
-enum Card {
-    N,
-    E,
-    S,
-    W,
-}
-
 type Output = FlatVec2D<X>;
 #[rustfmt::skip]
-const CARD: [(Card, isize, isize); 4] = [
-                (Card::N, 0, -1),
-    (Card::W, -1 ,0),             (Card::E, 1, 0),
-                (Card::S, 0,  1)
-];
+const CARD: [(isize, isize); 4] = {
+    let (sx, sy) = (0,-1);
+    let mut card = [(sx,sy); 4];
+    let mut i = 1;
+    while i < card.len() {
+        card[i] = rot90(card[i-1]);
+        i += 1;
+    }
+    card
+};
+
+const fn rot90((x, y): (isize, isize)) -> (isize, isize) {
+    (-y, x)
+}
 
 const OUT_OF_BOUNDS: X = X(b'Z' + 1);
 
-type ShapeBoundsSides = (
-    FxHashSet<(usize, usize)>,
-    FxHashMap<(usize, usize), usize>,
-    FxHashMap<(Card, usize), BinaryHeap<usize>>,
-);
+type ShapeBoundsSides = (usize, FxHashMap<(usize, usize), usize>, usize);
 
 fn get_shape(
     map: &Output,
     visit: &mut FlatVec2D<bool>,
     (x, y): (usize, usize),
 ) -> Option<ShapeBoundsSides> {
-    if visit[(x, y)] || map[(x, y)] == OUT_OF_BOUNDS {
+    if std::mem::replace(&mut visit[(x, y)], true) || map[(x, y)] == OUT_OF_BOUNDS {
         return None;
     }
 
-    let mut shape = FxHashSet::default();
+    let mut area = 1usize;
     let mut frontier = FxHashMap::default();
-    let mut segments: std::collections::HashMap<
-        (Card, usize),
-        BinaryHeap<usize>,
-        rustc_hash::FxBuildHasher,
-    > = FxHashMap::default();
+    let mut corners = 0usize;
     let mut stack = vec![(x, y)];
+    let c = map[(x, y)];
     while let Some((x, y)) = stack.pop() {
-        visit[(x, y)] = true;
-        if !shape.insert((x, y)) {
-            continue;
-        }
-
-        let c = map[(x, y)];
-        for (card, dx, dy) in CARD {
+        for (dx, dy) in CARD {
             let (nx, ny) = ((x as isize + dx) as usize, (y as isize + dy) as usize);
             let n = map[(nx, ny)];
 
             if n != c {
                 *frontier.entry((nx, ny)).or_default() += 1;
-                match card {
-                    Card::N | Card::S => segments.entry((card, y)).or_default().push(x),
-                    Card::W | Card::E => segments.entry((card, x)).or_default().push(y),
-                }
-            } else {
+                let (cdx, cdy) = rot90((dx, dy));
+                let (cnx, cny) = ((x as isize + cdx) as usize, (y as isize + cdy) as usize);
+                let cn = map[(cnx, cny)];
+                let (anx, any) = ((nx as isize + cdx) as usize, (ny as isize + cdy) as usize);
+                let an = map[(anx, any)];
+                debug!(
+                    "Shape {c:?}({x},{y}): n:{n:?}({nx},{ny}) cn:{cn:?}({cnx},{cny}), an:{an:?}({anx},{any}), cn != c || an == c {}",
+                    cn != c || an == c
+                );
+                corners += usize::from(cn != c || an == c);
+            } else if !std::mem::replace(&mut visit[(nx, ny)], true) {
                 stack.push((nx, ny));
+                area += 1;
             }
         }
     }
-    Some((shape, frontier, segments))
-}
-
-fn count_contiguous_lines(points: BinaryHeap<usize>) -> usize {
-    points
-        .into_sorted_vec()
-        .into_iter()
-        .coalesce(|x, y| if x + 1 == y { Ok(y) } else { Err((x, y)) })
-        .count()
+    debug!("Shape {c:?}: {area}, {corners}");
+    Some((area, frontier, corners))
 }
 
 fn solve(map: &Output) -> (usize, usize) {
@@ -95,15 +81,10 @@ fn solve(map: &Output) -> (usize, usize) {
     let mut p2 = 0;
     let mut stack = vec![(1, 1)];
     while let Some((x, y)) = stack.pop() {
-        let Some((shape, bounds, segments)) = get_shape(map, &mut visit, (x, y)) else {
+        let Some((area, bounds, sides)) = get_shape(map, &mut visit, (x, y)) else {
             continue;
         };
-        let area = shape.len();
         let perimeter = bounds.values().sum::<usize>();
-        let sides = segments
-            .into_values()
-            .map(count_contiguous_lines)
-            .sum::<usize>();
         p1 += area * perimeter;
         p2 += area * sides;
         stack.extend(bounds.into_keys());
@@ -111,7 +92,7 @@ fn solve(map: &Output) -> (usize, usize) {
     (p1, p2)
 }
 
-fn main() -> io::Result<()> {
+fn main() -> std::io::Result<()> {
     let input = read_input()?;
     let parsed_input = pad_to_flat2d(&input, OUT_OF_BOUNDS);
     let (part1, part2) = solve(&parsed_input);
