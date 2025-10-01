@@ -18,7 +18,7 @@ fn rules(i: Int) -> Result<Int, [Int; 2]> {
     }
 
     let id = i.ilog10() + 1;
-    if id % 2 == 0 {
+    if id.is_multiple_of(2) {
         let mult = (10 as Int).pow(id / 2);
         Err([i / mult, i % mult])
     } else {

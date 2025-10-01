@@ -40,7 +40,7 @@ fn test_calibration(target: Int, values: &[Int], part2: bool) -> bool {
         if acc >= last {
             stack.push((acc - last, i - 1));
         }
-        if part2 && acc >= last && (acc - last) % digits_mult == 0 {
+        if part2 && acc >= last && (acc - last).is_multiple_of(digits_mult) {
             stack.push((acc / digits_mult, i - 1));
         }
     }
