@@ -1,13 +1,9 @@
-use aoc_shared::{debug, read_input_to_string, try_atoi};
+use aoc_shared::{read_input_to_string, try_atoi};
 use itertools::Itertools;
 use rustc_hash::FxHashMap;
 use std::{io, mem::swap};
 
-type Output<'a> = (
-    [u64; 2],
-    FxHashMap<&'a str, bool>,
-    Vec<(&'a str, (Op, [&'a str; 2]))>,
-);
+type Output<'a> = (FxHashMap<&'a str, bool>, Vec<(&'a str, (Op, [&'a str; 2]))>);
 
 #[derive(Clone, Copy, Debug)]
 enum Op {
@@ -55,23 +51,12 @@ fn parse_input<'a>(input: &'a str) -> Output<'a> {
     let (start, instructions) = input
         .split_once("\n\n")
         .expect("input needs to be delimited.");
-    let mut outputs: FxHashMap<&'a str, bool> = FxHashMap::default();
-    let start = start
+    let outputs = start
         .split([':', ' ', '\n'])
         .filter(|v| !v.is_empty())
         .tuples()
-        .fold([0u64; 2], |mut xy, (ident, val)| {
-            let val = val == "1";
-            outputs.entry(ident).or_insert(val);
-            if ident.starts_with("x") {
-                xy[0] |= convert_to(ident, val);
-            } else if ident.starts_with("y") {
-                xy[1] |= convert_to(ident, val);
-            } else {
-                panic!("Invalid input ident: {ident}");
-            }
-            xy
-        });
+        .map(|(i, v)| (i, v == "1"))
+        .collect::<FxHashMap<&'a str, bool>>();
     let wires = instructions
         .split('\n')
         .filter(|line| !line.is_empty())
@@ -89,7 +74,7 @@ fn parse_input<'a>(input: &'a str) -> Output<'a> {
             (out, (op, [from, to]))
         })
         .collect::<Vec<_>>();
-    (start, outputs, wires)
+    (outputs, wires)
 }
 
 fn part1_sol<'a>(
@@ -191,18 +176,7 @@ fn recurse_check<'a>(
       \---------/            |             |
     <CARRY> -------------------------------/
 */
-fn part2_sol<'a>(
-    part1: u64,
-    [x, y]: [u64; 2],
-    wires: Vec<(&'a str, (Op, [&'a str; 2]))>,
-) -> String {
-    let correct = x + y;
-    debug!("solved? {}", correct == part1);
-    debug!("{x} + {y} =");
-    debug!("{:0b}", x + y);
-    debug!("incorrect (?) = ");
-    debug!("{:0b}", part1);
-
+fn part2_sol<'a>(wires: Vec<(&'a str, (Op, [&'a str; 2]))>) -> String {
     let rev_map = wires
         .iter()
         .map(|(out, (op, [i1, i2]))| (*out, (*op, *i1, *i2)))
@@ -221,7 +195,6 @@ fn part2_sol<'a>(
             }
         })
         .collect::<Vec<_>>();
-    println!("{zs:?}");
     zs.into_iter().for_each(|(key, iter)| {
         let oper = rev_map.get(key).expect("huh?");
         if let Err(e) = recurse_check(key, oper, &rev_map, 0, iter, zmax) {
@@ -234,9 +207,9 @@ fn part2_sol<'a>(
 
 fn main() -> io::Result<()> {
     let input = read_input_to_string()?;
-    let (start, outs, wires) = parse_input(&input);
+    let (outs, wires) = parse_input(&input);
     let part1 = part1_sol(outs, wires.clone());
-    let part2 = part2_sol(part1, start, wires);
+    let part2 = part2_sol(wires);
     println!("Part1: {part1}");
     println!("Part2: {part2}");
     // println!("Part2: Read comments above part2_sol");
