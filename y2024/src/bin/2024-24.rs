@@ -212,7 +212,5 @@ fn main() -> io::Result<()> {
     let part2 = part2_sol(wires);
     println!("Part1: {part1}");
     println!("Part2: {part2}");
-    // println!("Part2: Read comments above part2_sol");
-    // println!("       dwp,ffj,gjh,jdr,kfm,z08,z22,z31");
     Ok(())
 }
