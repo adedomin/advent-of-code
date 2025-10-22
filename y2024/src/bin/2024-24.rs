@@ -1,7 +1,7 @@
 use aoc_shared::{read_input_to_string, try_atoi};
 use itertools::Itertools;
 use rustc_hash::FxHashMap;
-use std::{io, mem::swap};
+use std::io;
 
 type Output<'a> = (FxHashMap<&'a str, bool>, Vec<(&'a str, (Op, [&'a str; 2]))>);
 
@@ -82,26 +82,25 @@ fn part1_sol<'a>(
     mut wiremap: Vec<(&'a str, (Op, [&'a str; 2]))>,
 ) -> u64 {
     let mut z = 0;
-    let mut wiremap_unres = vec![];
-    loop {
+    while !wiremap.is_empty() {
         let len = wiremap.len();
-        wiremap.drain(..).for_each(|(out, opera @ (op, operands))| {
-            match op.resolve(&outs, &operands) {
-                Ok(v) => {
-                    _ = outs.insert(out, v);
-                    if out.starts_with('z') {
-                        z |= convert_to(out, v);
+        wiremap = wiremap
+            .drain(..)
+            .flat_map(
+                |(out, opera @ (op, operands))| match op.resolve(&outs, &operands) {
+                    Ok(v) => {
+                        _ = outs.insert(out, v);
+                        if out.starts_with('z') {
+                            z |= convert_to(out, v);
+                        }
+                        None
                     }
-                }
-                Err(_) => wiremap_unres.push((out, opera)),
-            }
-        });
+                    Err(_) => Some((out, opera)),
+                },
+            )
+            .collect::<Vec<_>>();
         // means we are not making forward progress.
-        assert_ne!(len, wiremap_unres.len());
-        if wiremap_unres.is_empty() {
-            break;
-        }
-        swap(&mut wiremap_unres, &mut wiremap);
+        assert_ne!(len, wiremap.len());
     }
     z
 }

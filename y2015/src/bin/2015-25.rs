@@ -23,16 +23,20 @@ const START: i64 = 20_151_125;
 const MULT: i64 = 252_533;
 const MODULO: i64 = 33_554_393;
 
+// solve by modular exponentiation.
 fn part1_sol((x, y): (usize, usize)) -> Solved {
-    let position = (x + y - 2) * (x + y - 1) / 2 + y - 1;
+    let mut exponent = (x + y - 2) * (x + y - 1) / 2 + y - 1;
     let mut last = START;
-    for _ in 0..position {
-        last = last * MULT % MODULO;
+    let mut mult = MULT;
+    while exponent > 0 {
+        if !exponent.is_multiple_of(2) {
+            last = (last * mult) % MODULO;
+        }
+        mult = (mult * mult) % MODULO;
+        exponent >>= 1;
     }
     last
 }
-
-// fn part2_sol(input: &Output) -> Solved {}
 
 fn main() -> io::Result<()> {
     let input = read_input_to_string()?;

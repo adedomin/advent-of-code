@@ -64,14 +64,16 @@ fn get_shape(
                 perim += 1;
 
                 // Check the immediate cw 90deg rot from the frontier node.
-                // ___
-                //    | * <- What we're looking for here.
+                // |         * <----- Frontier (nx, ny)
+                // |___________
+                // (x, y) -> * | * <- What we're looking for here.
                 let cn = map[get_right(x, y, dx, dy)];
                 let is_right_edge = cn != c;
 
                 // We now check to see if we're a concave corner
-                // - Frontier -> * | * <- the node we're checking
-                //     border ->___|   <- Same shape (color)
+                //  Frontier (nx, ny) --> * | * <--- What we're looking for here.
+                //  ________________________|   <--- Same shape (color)
+                // |           (x, y) --> *     <-/
                 let an = map[get_right(nx, ny, dx, dy)];
                 let is_concave = an == c;
 
