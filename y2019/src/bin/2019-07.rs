@@ -17,7 +17,6 @@ fn run_program(program: &[i64]) -> i64 {
                     .expect("No execution errors")
                 {
                     Exec::Ok(new_pc) => pc = new_pc,
-
                     Exec::Output(new_pc, output) => {
                         pc = new_pc;
                         out = output;
@@ -43,7 +42,6 @@ fn run_feedback(Feedback { pc, input, program }: &mut Feedback, last_sig: i64) -
     loop {
         match execute(*pc, program, input).expect("No execution errors") {
             Exec::Ok(new_pc) => *pc = new_pc,
-
             Exec::Output(new_pc, out) => {
                 *pc = new_pc;
                 return Some(out);
