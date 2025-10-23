@@ -25,8 +25,6 @@ mod flat2d;
 pub use flat2d::*;
 mod atoi;
 pub use atoi::*;
-mod pop_if;
-pub use pop_if::pop_if;
 mod dijkstra;
 pub use dijkstra::*;
 

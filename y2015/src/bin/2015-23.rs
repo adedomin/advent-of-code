@@ -70,11 +70,11 @@ impl Computer {
                     ..self
                 },
                 Instruction::JieA(addr) => Computer {
-                    pc: self.pc + if self.a % 2 == 0 { *addr } else { 1 },
+                    pc: self.pc + if self.a.is_multiple_of(2) { *addr } else { 1 },
                     ..self
                 },
                 Instruction::JieB(addr) => Computer {
-                    pc: self.pc + if self.b % 2 == 0 { *addr } else { 1 },
+                    pc: self.pc + if self.b.is_multiple_of(2) { *addr } else { 1 },
                     ..self
                 },
                 Instruction::JioA(addr) => Computer {

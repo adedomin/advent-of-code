@@ -72,7 +72,7 @@ fn pow_mat<const RLEN: usize, const DIM: usize>(matrix: &[u128; DIM], exp: u64) 
     let mut ex = exp;
 
     while ex - 1 != 0 {
-        if ex % 2 != 0 {
+        if !ex.is_multiple_of(2) {
             residue = mult_mat::<RLEN, DIM>(&residue, &matrix_clone);
         }
         matrix_clone = mult_mat::<RLEN, DIM>(&matrix_clone, &matrix_clone);

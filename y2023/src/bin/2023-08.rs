@@ -21,7 +21,7 @@ fn factorize(n: u32) -> Vec<(usize, u32)> {
     let mut i = 0;
     let mut n = n;
     while n > 1 {
-        if n % PRIMES_TO_1009[i] == 0 {
+        if n.is_multiple_of(PRIMES_TO_1009[i]) {
             n /= PRIMES_TO_1009[i];
             ret[i] += 1;
         } else {
