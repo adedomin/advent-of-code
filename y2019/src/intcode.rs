@@ -189,7 +189,7 @@ pub fn brk(oob: usize, program: &mut Vec<i64>) -> Result<(), IntCodeErr> {
     Ok(())
 }
 
-macro_rules! four_op {
+macro_rules! arith_op {
     ($self:ident, $p1:ident, $p2:ident, $p3:ident, $program:ident, $oper:path) => {{
         let p1 = get_mode($self.pc + 1, $self.rb, $p1, $program)?;
         let p2 = get_mode($self.pc + 2, $self.rb, $p2, $program)?;
@@ -222,7 +222,7 @@ fn jeq(p1: i64, p2: i64) -> bool {
     p1 == p2
 }
 
-fn ne(p1: i64, p2: i64) -> bool {
+fn jne(p1: i64, p2: i64) -> bool {
     p1 != p2
 }
 
@@ -240,12 +240,8 @@ impl IntCode {
     ) -> Result<Option<i64>, IntCodeErr> {
         let Oper { p1, p2, p3, opcode } = get_op(self.pc, program)?;
         self.pc += match opcode {
-            Op::Add => {
-                four_op!(self, p1, p2, p3, program, std::ops::Add::add)
-            }
-            Op::Mul => {
-                four_op!(self, p1, p2, p3, program, std::ops::Mul::mul)
-            }
+            Op::Add => arith_op!(self, p1, p2, p3, program, std::ops::Add::add),
+            Op::Mul => arith_op!(self, p1, p2, p3, program, std::ops::Mul::mul),
             Op::Inp => {
                 if let Some(input) = input.take() {
                     set_mode(self.pc + 1, self.rb, p1, program, input)?;
@@ -259,18 +255,10 @@ impl IntCode {
                 self.pc += 2;
                 return Ok(Some(out));
             }
-            Op::Jit => {
-                jmp_op!(self, p1, p2, program, ne)
-            }
-            Op::Jif => {
-                jmp_op!(self, p1, p2, program, jeq)
-            }
-            Op::Lt => {
-                four_op!(self, p1, p2, p3, program, lt)
-            }
-            Op::Eq => {
-                four_op!(self, p1, p2, p3, program, eq)
-            }
+            Op::Jit => jmp_op!(self, p1, p2, program, jne),
+            Op::Jif => jmp_op!(self, p1, p2, program, jeq),
+            Op::Lt => arith_op!(self, p1, p2, p3, program, lt),
+            Op::Eq => arith_op!(self, p1, p2, p3, program, eq),
             Op::Rba => {
                 let p1 = get_mode(self.pc + 1, self.rb, p1, program)?;
                 self.rb += p1;
