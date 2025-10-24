@@ -189,6 +189,43 @@ pub fn brk(oob: usize, program: &mut Vec<i64>) -> Result<(), IntCodeErr> {
     Ok(())
 }
 
+macro_rules! four_op {
+    ($self:ident, $p1:ident, $p2:ident, $p3:ident, $program:ident, $oper:path) => {{
+        let p1 = get_mode($self.pc + 1, $self.rb, $p1, $program)?;
+        let p2 = get_mode($self.pc + 2, $self.rb, $p2, $program)?;
+        set_mode($self.pc + 3, $self.rb, $p3, $program, $oper(p1, p2))?;
+        4
+    }};
+}
+
+macro_rules! jmp_op {
+    ($self:ident, $p1:ident, $p2:ident, $program:ident,  $oper:path) => {{
+        let p1 = get_mode($self.pc + 1, $self.rb, $p1, $program)?;
+        if $oper(p1, 0) {
+            let p2 = get_mode($self.pc + 2, $self.rb, $p2, $program).and_then(from_intcode)?;
+            $self.pc = p2;
+            return Ok(None);
+        }
+        3
+    }};
+}
+
+fn lt(p1: i64, p2: i64) -> i64 {
+    i64::from(p1 < p2)
+}
+
+fn eq(p1: i64, p2: i64) -> i64 {
+    i64::from(p1 == p2)
+}
+
+fn jeq(p1: i64, p2: i64) -> bool {
+    p1 == p2
+}
+
+fn ne(p1: i64, p2: i64) -> bool {
+    p1 != p2
+}
+
 impl IntCode {
     /// Execute one operation in the machine.
     /// If the machine errors with anything other than `IntCodeErr::End`
@@ -204,16 +241,10 @@ impl IntCode {
         let Oper { p1, p2, p3, opcode } = get_op(self.pc, program)?;
         self.pc += match opcode {
             Op::Add => {
-                let p1 = get_mode(self.pc + 1, self.rb, p1, program)?;
-                let p2 = get_mode(self.pc + 2, self.rb, p2, program)?;
-                set_mode(self.pc + 3, self.rb, p3, program, p1 + p2)?;
-                4
+                four_op!(self, p1, p2, p3, program, std::ops::Add::add)
             }
             Op::Mul => {
-                let p1 = get_mode(self.pc + 1, self.rb, p1, program)?;
-                let p2 = get_mode(self.pc + 2, self.rb, p2, program)?;
-                set_mode(self.pc + 3, self.rb, p3, program, p1 * p2)?;
-                4
+                four_op!(self, p1, p2, p3, program, std::ops::Mul::mul)
             }
             Op::Inp => {
                 if let Some(input) = input.take() {
@@ -229,34 +260,16 @@ impl IntCode {
                 return Ok(Some(out));
             }
             Op::Jit => {
-                let p1 = get_mode(self.pc + 1, self.rb, p1, program)?;
-                if p1 != 0 {
-                    let p2 = get_mode(self.pc + 2, self.rb, p2, program).and_then(from_intcode)?;
-                    self.pc = p2;
-                    return Ok(None);
-                }
-                3
+                jmp_op!(self, p1, p2, program, ne)
             }
             Op::Jif => {
-                let p1 = get_mode(self.pc + 1, self.rb, p1, program)?;
-                if p1 == 0 {
-                    let p2 = get_mode(self.pc + 2, self.rb, p2, program).and_then(from_intcode)?;
-                    self.pc = p2;
-                    return Ok(None);
-                }
-                3
+                jmp_op!(self, p1, p2, program, jeq)
             }
             Op::Lt => {
-                let p1 = get_mode(self.pc + 1, self.rb, p1, program)?;
-                let p2 = get_mode(self.pc + 2, self.rb, p2, program)?;
-                set_mode(self.pc + 3, self.rb, p3, program, i64::from(p1 < p2))?;
-                4
+                four_op!(self, p1, p2, p3, program, lt)
             }
             Op::Eq => {
-                let p1 = get_mode(self.pc + 1, self.rb, p1, program)?;
-                let p2 = get_mode(self.pc + 2, self.rb, p2, program)?;
-                set_mode(self.pc + 3, self.rb, p3, program, i64::from(p1 == p2))?;
-                4
+                four_op!(self, p1, p2, p3, program, eq)
             }
             Op::Rba => {
                 let p1 = get_mode(self.pc + 1, self.rb, p1, program)?;
