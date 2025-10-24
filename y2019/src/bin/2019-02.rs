@@ -1,6 +1,6 @@
 use std::io;
 
-use y2019::intcode::{execute, read_intcode, Exec};
+use y2019::intcode::{read_intcode, IntCode};
 
 const NOUN_OFF: usize = 1;
 const VERB_OFF: usize = 2;
@@ -11,12 +11,8 @@ fn cycle_machine(n: i64, v: i64, mut program: Vec<i64>) -> i64 {
     program[NOUN_OFF] = n;
     program[VERB_OFF] = v;
 
-    let mut pc = 0usize;
-    while let Exec::Ok(new_pc) | Exec::Output(new_pc, _) =
-        execute(pc, &mut program, &mut None).expect("No runtime errors.")
-    {
-        pc = new_pc;
-    }
+    let mut intcode = IntCode::default();
+    while intcode.execute(&mut program, &mut None).is_ok() {}
     program[0]
 }
 
