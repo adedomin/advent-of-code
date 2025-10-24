@@ -65,6 +65,8 @@ pub enum IntCodeErr {
     InvalidParamMode(i64),
     #[error("Output mode cannot be immediate.")]
     ImmediateOutputMode,
+    #[error("New Program Break too large, more than 4GiB!")]
+    BrkTooLarge,
     #[error("Program completed.")]
     End,
 }
@@ -174,7 +176,26 @@ pub struct IntCode {
     pub rb: i64,
 }
 
+/// 4GiB
+const MAX_ALLOWED_BRK: usize = 2usize.pow(32);
+
+/// Resize program break to fit the out of bounds index.
+/// All new cells are zero filled.
+pub fn brk(oob: usize, program: &mut Vec<i64>) -> Result<(), IntCodeErr> {
+    if oob.saturating_add(1) > MAX_ALLOWED_BRK {
+        return Err(IntCodeErr::BrkTooLarge);
+    }
+    program.resize_with(oob + 1, i64::default);
+    Ok(())
+}
+
 impl IntCode {
+    /// Execute one operation in the machine.
+    /// If the machine errors with anything other than `IntCodeErr::End`
+    /// the machine can be resumed if you handle it. The machine will not be changed otherwise.
+    ///
+    /// e.g. Set input to Some(value) if one gets `IntCodeErr::NeedInput`
+    ///      increase the program break with `brk` if you get `IntCodeErr::OutOfBounds`
     pub fn execute(
         &mut self,
         program: &mut [i64],

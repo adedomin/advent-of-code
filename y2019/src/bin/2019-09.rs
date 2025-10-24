@@ -1,8 +1,6 @@
 use std::io;
 
-use y2019::intcode::{read_intcode, IntCode, IntCodeErr};
-
-const MAX_MEM: usize = 2usize.pow(32);
+use y2019::intcode::{brk, read_intcode, IntCode, IntCodeErr};
 
 fn run_program(mut program: Vec<i64>, i: i64) -> i64 {
     let mut intcode = IntCode::default();
@@ -21,10 +19,7 @@ fn run_program(mut program: Vec<i64>, i: i64) -> i64 {
             Err(IntCodeErr::NeedInput) => input = Some(i),
             Err(IntCodeErr::End) => break,
             Err(IntCodeErr::OutOfBounds(fault)) => {
-                if fault + 1 > MAX_MEM {
-                    panic!("The VM demanded too much memory! {fault}");
-                }
-                program.resize_with(fault + 1, i64::default);
+                brk(fault, &mut program).expect("To resize the program break.")
             }
             Err(e) => panic!("{e}"),
         }

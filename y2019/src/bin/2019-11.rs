@@ -1,8 +1,6 @@
 use std::{collections::HashMap, io};
 
-use y2019::intcode::{read_intcode, IntCode, IntCodeErr};
-
-const MAX_MEM: usize = 2usize.pow(32);
+use y2019::intcode::{brk, read_intcode, IntCode, IntCodeErr};
 
 fn rot_left(xy: (isize, isize)) -> (isize, isize) {
     rot_right(rot_right(rot_right(xy)))
@@ -66,10 +64,7 @@ fn run_program(mut program: Vec<i64>, start: i64) -> i64 {
             }
             Err(IntCodeErr::End) => break,
             Err(IntCodeErr::OutOfBounds(fault)) => {
-                if fault + 1 > MAX_MEM {
-                    panic!("The VM demanded too much memory! {fault}");
-                }
-                program.resize_with(fault + 1, i64::default);
+                brk(fault, &mut program).expect("Resize program")
             }
             Err(e) => panic!("{e}"),
         }
@@ -82,13 +77,14 @@ fn run_program(mut program: Vec<i64>, start: i64) -> i64 {
             .map(|(k, _)| k)
             .collect::<Vec<_>>();
         white_panels.sort_unstable_by_key(|k| k.1 /* we only need to sort by y axis */);
+        let strlen = (minx.abs() + maxx) as usize; // minx.abs() + should shift everything negative out to the positive axis.
         let mut last_y = miny;
-        let mut outline = vec!['.'; (maxx.abs() + minx.abs()) as usize];
+        let mut outline = vec!['.'; strlen];
         for (x, y) in white_panels {
             if y != last_y {
                 last_y = y;
                 println!("{}", outline.drain(..).collect::<String>());
-                outline.resize_with((maxx.abs() + minx.abs()) as usize, || '.');
+                outline.resize_with(strlen, || '.');
             }
             outline[(x + minx.abs()) as usize] = '#';
         }
