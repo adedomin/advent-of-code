@@ -227,6 +227,20 @@ fn jne(p1: i64, p2: i64) -> bool {
 }
 
 impl IntCode {
+    /// Calls `execute` repeatedly til the machine yields, due to IO or Error.
+    pub fn execute_til(
+        &mut self,
+        program: &mut [i64],
+        input: &mut Option<i64>,
+    ) -> Result<i64, IntCodeErr> {
+        loop {
+            match self.execute(program, input) {
+                Ok(None) => (),
+                Ok(Some(out)) => break Ok(out),
+                Err(e) => break Err(e),
+            }
+        }
+    }
     /// Execute one operation in the machine.
     /// If the machine errors with anything other than `IntCodeErr::End`
     /// the machine can be resumed if you handle it. The machine will not be changed otherwise.

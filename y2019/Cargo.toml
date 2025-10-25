@@ -3,7 +3,11 @@ name = "y2019"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+term = ["dep:termion"]
+
 [dependencies]
 aoc-shared = { path = "../aoc-shared" }
 thiserror = "2"
 itertools = "0.14"
+termion = { version = "4", optional = true }
