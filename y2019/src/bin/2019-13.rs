@@ -47,15 +47,21 @@ impl TryFrom<i64> for TileId {
     }
 }
 
+impl From<TileId> for char {
+    fn from(value: TileId) -> Self {
+        match value {
+            TileId::Empty => ' ',
+            TileId::Wall => '█',
+            TileId::Block => '▒',
+            TileId::Paddle => '▔',
+            TileId::Ball => '●',
+        }
+    }
+}
+
 impl std::fmt::Display for TileId {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            TileId::Empty => f.write_char('.'),
-            TileId::Wall => f.write_char('▞'),
-            TileId::Block => f.write_char('▓'),
-            TileId::Paddle => f.write_char('▀'),
-            TileId::Ball => f.write_char('●'),
-        }
+        f.write_char(char::from(*self))
     }
 }
 
@@ -117,14 +123,16 @@ fn get_terminal() -> (RawTerminal<std::fs::File>, Receiver<()>) {
 
 #[cfg(feature = "term")]
 fn write_game_state<W: WriteT + AsFd>(tty: &mut RawTerminal<W>, tiles: &[Vec<TileId>], score: i64) {
-    write!(tty, "{}", termion::cursor::Goto(1, 1),).unwrap();
-    for line in tiles {
-        for tile in line {
-            write!(tty, "{tile}").unwrap();
-        }
-        write!(tty, "\r\n",).unwrap();
-    }
-    write!(tty, "Score: {score}\r\n",).unwrap();
+    let gameboard = tiles
+        .iter()
+        .flat_map(|line| line.iter().map(|&t| char::from(t)).chain(['\r', '\n']))
+        .collect::<String>();
+    write!(
+        tty,
+        "{}Score: {score}\r\n{gameboard}",
+        termion::cursor::Goto(1, 1),
+    )
+    .unwrap();
 }
 
 fn set_tile(tiles: &mut Vec<Vec<TileId>>, x: usize, y: usize, new_tile: TileId) {
