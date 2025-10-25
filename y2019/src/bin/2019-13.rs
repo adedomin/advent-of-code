@@ -221,14 +221,7 @@ fn run_program(mut program: Vec<i64>) -> (i64, i64) {
             Err(IntCodeErr::OutOfBounds(fault)) => {
                 brk(fault, &mut program).expect("Resize program")
             }
-            Err(IntCodeErr::End) => {
-                // draw final board
-                #[cfg(feature = "term")]
-                {
-                    write_score(&mut tty, tiles.len() as u16, score);
-                }
-                break;
-            }
+            Err(IntCodeErr::End) => break,
             Err(e) => panic!("{e}"),
         }
     }
