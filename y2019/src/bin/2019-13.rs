@@ -145,30 +145,9 @@ fn write_tile<W: WriteT + AsFd>(tty: &mut RawTerminal<W>, x: u16, y: u16, maxy: 
     .unwrap();
 }
 
-fn set_tile(tiles: &mut Vec<Vec<TileId>>, x: u16, y: u16, new_tile: TileId) {
-    let (x, y) = (x as usize, y as usize);
-    let line = match tiles.get_mut(y) {
-        Some(line) => line,
-        None => {
-            tiles.resize_with(y + 1, Vec::new);
-            &mut tiles[y]
-        }
-    };
-
-    let tile = match line.get_mut(x) {
-        Some(tile) => tile,
-        None => {
-            line.resize_with(x + 1, || TileId::Empty);
-            &mut line[x]
-        }
-    };
-    *tile = new_tile
-}
-
 const QUARTERS: i64 = 2;
 
 fn run_program(mut program: Vec<i64>) -> (i64, i64) {
-    let mut tiles: Vec<Vec<TileId>> = vec![];
     let mut intcode = IntCode::default();
     let mut input = None;
     let mut outstate = OutState::Init;
@@ -177,6 +156,7 @@ fn run_program(mut program: Vec<i64>) -> (i64, i64) {
     let mut score = 0;
     let mut ball_x = 0;
     let mut paddle_x = 0;
+    let mut max_y = 0u16;
     program[0] = QUARTERS;
 
     #[cfg(feature = "term")]
@@ -191,10 +171,10 @@ fn run_program(mut program: Vec<i64>) -> (i64, i64) {
                 outstate = outstate.next(output).expect("Valid Output.");
                 match outstate {
                     OutState::XYTile(x, y, tile) => {
-                        set_tile(&mut tiles, x, y, tile);
+                        max_y = std::cmp::max(max_y, y);
                         #[cfg(feature = "term")]
                         {
-                            write_tile(&mut tty, x, y, tiles.len() as u16, tile);
+                            write_tile(&mut tty, x, y, max_y, tile);
                             #[cfg(debug_assertions)]
                             sleep(Duration::from_millis(10));
                         }
@@ -208,7 +188,7 @@ fn run_program(mut program: Vec<i64>) -> (i64, i64) {
                     OutState::Score(s) => {
                         score = s;
                         #[cfg(feature = "term")]
-                        write_score(&mut tty, tiles.len() as u16, score);
+                        write_score(&mut tty, max_y, score);
                     }
                     _ => (),
                 }
