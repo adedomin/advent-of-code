@@ -5,6 +5,9 @@ use std::{
 #[cfg(feature = "term")]
 use std::{io::Write as WriteT, os::fd::AsFd};
 
+#[cfg(all(feature = "term", debug_assertions))]
+use std::{thread::sleep, time::Duration};
+
 #[cfg(feature = "term")]
 use termion::{
     get_tty,
@@ -44,7 +47,7 @@ impl std::fmt::Display for TileId {
             TileId::Wall => f.write_char('▞'),
             TileId::Block => f.write_char('▓'),
             TileId::Paddle => f.write_char('▀'),
-            TileId::Ball => f.write_char('⬤'),
+            TileId::Ball => f.write_char('●'),
         }
     }
 }
@@ -111,28 +114,28 @@ fn set_tile(tiles: &mut Vec<Vec<TileId>>, x: usize, y: usize, new_tile: TileId) 
     *tile = new_tile
 }
 
-fn run_program(mut program: Vec<i64>, quarters: Option<i64>) -> i64 {
+const QUARTERS: i64 = 2;
+
+fn run_program(mut program: Vec<i64>) -> (i64, i64) {
     let mut tiles: Vec<Vec<TileId>> = vec![];
     let mut intcode = IntCode::default();
     let mut input = None;
     let mut outstate = OutState::Init;
+
+    let mut starting_blocks = 0;
     let mut score = 0;
     let mut ball_x = 0;
     let mut paddle_x = 0;
     #[cfg(feature = "term")]
-    let mut tty = None;
-    if let Some(quarters) = quarters {
-        program[0] = quarters;
-        #[cfg(feature = "term")]
-        {
-            let mut out = get_tty()
-                .ok()
-                .and_then(|tty| tty.into_raw_mode().ok())
-                .expect("Need a raw tty.");
-            write!(out, "{}", termion::clear::All).unwrap();
-            tty = Some(out);
-        }
-    }
+    let mut tty = {
+        let mut tty = get_tty()
+            .ok()
+            .and_then(|tty| tty.into_raw_mode().ok())
+            .expect("Need a raw tty.");
+        write!(tty, "{}", termion::clear::All).unwrap();
+        tty
+    };
+    program[0] = QUARTERS;
     loop {
         match intcode.execute_til(&mut program, &mut input) {
             Ok(output) => {
@@ -143,6 +146,7 @@ fn run_program(mut program: Vec<i64>, quarters: Option<i64>) -> i64 {
                         match tile {
                             TileId::Paddle => paddle_x = x,
                             TileId::Ball => ball_x = x,
+                            TileId::Block => starting_blocks += 1,
                             _ => (),
                         }
                     }
@@ -152,15 +156,10 @@ fn run_program(mut program: Vec<i64>, quarters: Option<i64>) -> i64 {
             }
             Err(IntCodeErr::NeedInput) => {
                 #[cfg(feature = "term")]
-                if let Some(out) = tty.as_mut() {
-                    #[cfg(debug_assertions)]
-                    use std::{thread::sleep, time::Duration};
-
-                    write_game_state(out, &tiles, score);
+                {
+                    write_game_state(&mut tty, &tiles, score);
                     #[cfg(debug_assertions)]
                     sleep(Duration::from_millis(10));
-                } else {
-                    panic!("Must have a TTY to interact with the game!");
                 }
                 match ball_x.cmp(&paddle_x) {
                     std::cmp::Ordering::Less => input = Some(-1),
@@ -175,21 +174,12 @@ fn run_program(mut program: Vec<i64>, quarters: Option<i64>) -> i64 {
             Err(e) => panic!("{e}"),
         }
     }
-    if quarters.is_none() {
-        tiles
-            .into_iter()
-            .flatten()
-            .filter(|t| matches!(t, TileId::Block))
-            .count() as i64
-    } else {
-        score
-    }
+    (starting_blocks, score)
 }
 
 fn main() -> io::Result<()> {
     let program = read_intcode()?;
-    let part1 = run_program(program.clone(), None);
-    let part2 = run_program(program.clone(), Some(2));
+    let (part1, part2) = run_program(program);
     println!("Part1: {part1}, Part2: {part2}");
     Ok(())
 }
