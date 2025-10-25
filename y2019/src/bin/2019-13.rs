@@ -3,14 +3,21 @@ use std::{
     io::{self},
 };
 #[cfg(feature = "term")]
-use std::{io::Write as WriteT, os::fd::AsFd};
+use std::{
+    io::Write as WriteT,
+    os::fd::AsFd,
+    sync::mpsc::{self, Receiver},
+    thread,
+};
 
 #[cfg(all(feature = "term", debug_assertions))]
 use std::{thread::sleep, time::Duration};
 
 #[cfg(feature = "term")]
 use termion::{
+    event::Key,
     get_tty,
+    input::TermRead,
     raw::{IntoRawMode, RawTerminal},
 };
 
@@ -84,6 +91,31 @@ impl OutState {
 }
 
 #[cfg(feature = "term")]
+fn get_terminal() -> (RawTerminal<std::fs::File>, Receiver<()>) {
+    let mut tty = get_tty()
+        .ok()
+        .and_then(|tty| tty.into_raw_mode().ok())
+        .expect("Need a raw tty.");
+    write!(tty, "{}", termion::clear::All).unwrap();
+    let quit = {
+        let (send, recv) = mpsc::sync_channel(1);
+        thread::spawn(move || {
+            for k in get_tty().expect("Should be able to get input.").keys() {
+                if matches!(
+                    k.expect("to decode key"),
+                    Key::Ctrl('c') | Key::Ctrl('d') | Key::Ctrl('z') | Key::Esc
+                ) {
+                    _ = send.send(());
+                    break;
+                }
+            }
+        });
+        recv
+    };
+    (tty, quit)
+}
+
+#[cfg(feature = "term")]
 fn write_game_state<W: WriteT + AsFd>(tty: &mut RawTerminal<W>, tiles: &[Vec<TileId>], score: i64) {
     write!(tty, "{}", termion::cursor::Goto(1, 1),).unwrap();
     for line in tiles {
@@ -126,17 +158,15 @@ fn run_program(mut program: Vec<i64>) -> (i64, i64) {
     let mut score = 0;
     let mut ball_x = 0;
     let mut paddle_x = 0;
-    #[cfg(feature = "term")]
-    let mut tty = {
-        let mut tty = get_tty()
-            .ok()
-            .and_then(|tty| tty.into_raw_mode().ok())
-            .expect("Need a raw tty.");
-        write!(tty, "{}", termion::clear::All).unwrap();
-        tty
-    };
     program[0] = QUARTERS;
+
+    #[cfg(feature = "term")]
+    let (mut tty, quit) = get_terminal();
     loop {
+        #[cfg(feature = "term")]
+        if let Ok(()) = quit.try_recv() {
+            break;
+        }
         match intcode.execute_til(&mut program, &mut input) {
             Ok(output) => {
                 outstate = outstate.next(output).expect("Valid Output.");
@@ -174,6 +204,7 @@ fn run_program(mut program: Vec<i64>) -> (i64, i64) {
             Err(e) => panic!("{e}"),
         }
     }
+
     (starting_blocks, score)
 }
 
