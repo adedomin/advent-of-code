@@ -69,7 +69,7 @@ enum OutState {
     Init,
     X(i64),
     Y(i64, i64),
-    XYTile(usize, usize, TileId),
+    XYTile(u16, u16, TileId),
     Score(i64),
 }
 
@@ -79,8 +79,8 @@ enum OutError {
     InvalidTileId,
 }
 
-fn to_idx(i: i64) -> Result<usize, OutError> {
-    usize::try_from(i).or(Err(OutError::NegativeIndex))
+fn to_screen_idx(i: i64) -> Result<u16, OutError> {
+    u16::try_from(i).or(Err(OutError::NegativeIndex))
 }
 
 impl OutState {
@@ -90,7 +90,9 @@ impl OutState {
             OutState::X(o1) => OutState::Y(o1, out),
             OutState::Y(-1, 0) => OutState::Score(out),
             OutState::Score(_) => OutState::X(out),
-            OutState::Y(o1, o2) => OutState::XYTile(to_idx(o1)?, to_idx(o2)?, out.try_into()?),
+            OutState::Y(o1, o2) => {
+                OutState::XYTile(to_screen_idx(o1)?, to_screen_idx(o2)?, out.try_into()?)
+            }
             OutState::XYTile(_, _, _) => OutState::X(out),
         })
     }
@@ -122,20 +124,29 @@ fn get_terminal() -> (RawTerminal<std::fs::File>, Receiver<()>) {
 }
 
 #[cfg(feature = "term")]
-fn write_game_state<W: WriteT + AsFd>(tty: &mut RawTerminal<W>, tiles: &[Vec<TileId>], score: i64) {
-    let gameboard = tiles
-        .iter()
-        .flat_map(|line| line.iter().map(|&t| char::from(t)).chain(['\r', '\n']))
-        .collect::<String>();
+fn write_score<W: WriteT + AsFd>(tty: &mut RawTerminal<W>, maxy: u16, score: i64) {
     write!(
         tty,
-        "{}Score: {score}\r\n{gameboard}",
+        "{}Score: {score}{}",
         termion::cursor::Goto(1, 1),
+        termion::cursor::Goto(1, maxy + 2)
     )
     .unwrap();
 }
 
-fn set_tile(tiles: &mut Vec<Vec<TileId>>, x: usize, y: usize, new_tile: TileId) {
+#[cfg(feature = "term")]
+fn write_tile<W: WriteT + AsFd>(tty: &mut RawTerminal<W>, x: u16, y: u16, maxy: u16, tile: TileId) {
+    write!(
+        tty,
+        "{}{tile}{}",
+        termion::cursor::Goto(x + 1, y + 2),
+        termion::cursor::Goto(1, maxy + 2)
+    )
+    .unwrap();
+}
+
+fn set_tile(tiles: &mut Vec<Vec<TileId>>, x: u16, y: u16, new_tile: TileId) {
+    let (x, y) = (x as usize, y as usize);
     let line = match tiles.get_mut(y) {
         Some(line) => line,
         None => {
@@ -181,6 +192,12 @@ fn run_program(mut program: Vec<i64>) -> (i64, i64) {
                 match outstate {
                     OutState::XYTile(x, y, tile) => {
                         set_tile(&mut tiles, x, y, tile);
+                        #[cfg(feature = "term")]
+                        {
+                            write_tile(&mut tty, x, y, tiles.len() as u16, tile);
+                            #[cfg(debug_assertions)]
+                            sleep(Duration::from_millis(10));
+                        }
                         match tile {
                             TileId::Paddle => paddle_x = x,
                             TileId::Ball => ball_x = x,
@@ -188,27 +205,30 @@ fn run_program(mut program: Vec<i64>) -> (i64, i64) {
                             _ => (),
                         }
                     }
-                    OutState::Score(s) => score = s,
+                    OutState::Score(s) => {
+                        score = s;
+                        #[cfg(feature = "term")]
+                        write_score(&mut tty, tiles.len() as u16, score);
+                    }
                     _ => (),
                 }
             }
-            Err(IntCodeErr::NeedInput) => {
-                #[cfg(feature = "term")]
-                {
-                    write_game_state(&mut tty, &tiles, score);
-                    #[cfg(debug_assertions)]
-                    sleep(Duration::from_millis(10));
-                }
-                match ball_x.cmp(&paddle_x) {
-                    std::cmp::Ordering::Less => input = Some(-1),
-                    std::cmp::Ordering::Equal => input = Some(0),
-                    std::cmp::Ordering::Greater => input = Some(1),
-                }
-            }
+            Err(IntCodeErr::NeedInput) => match ball_x.cmp(&paddle_x) {
+                std::cmp::Ordering::Less => input = Some(-1),
+                std::cmp::Ordering::Equal => input = Some(0),
+                std::cmp::Ordering::Greater => input = Some(1),
+            },
             Err(IntCodeErr::OutOfBounds(fault)) => {
                 brk(fault, &mut program).expect("Resize program")
             }
-            Err(IntCodeErr::End) => break,
+            Err(IntCodeErr::End) => {
+                // draw final board
+                #[cfg(feature = "term")]
+                {
+                    write_score(&mut tty, tiles.len() as u16, score);
+                }
+                break;
+            }
             Err(e) => panic!("{e}"),
         }
     }
