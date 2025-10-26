@@ -110,17 +110,17 @@ fn get_op(pc: usize, program: &[i64]) -> Result<Oper, IntCodeErr> {
 
 fn get_mode(pc: usize, rb: i64, mode: PMode, program: &[i64]) -> Result<i64, IntCodeErr> {
     match mode {
-        PMode::Pos => get_pos(pc, program),
+        PMode::Pos => get_pos(pc, 0, program),
+        PMode::Rel => get_pos(pc, rb, program),
         PMode::Imm => get_imm(pc, program),
-        PMode::Rel => get_rel(pc, rb, program),
     }
 }
 
-fn get_pos(pc: usize, program: &[i64]) -> Result<i64, IntCodeErr> {
+fn get_pos(pc: usize, offset: i64, program: &[i64]) -> Result<i64, IntCodeErr> {
     let value = program
         .get(pc)
         .ok_or(IntCodeErr::OutOfBounds(pc))
-        .and_then(|&idx| from_intcode(idx))
+        .and_then(|&idx| from_intcode(idx + offset))
         .and_then(|idx| program.get(idx).ok_or(IntCodeErr::OutOfBounds(idx)))?;
     Ok(*value)
 }
@@ -128,12 +128,6 @@ fn get_pos(pc: usize, program: &[i64]) -> Result<i64, IntCodeErr> {
 fn get_imm(pc: usize, program: &[i64]) -> Result<i64, IntCodeErr> {
     let value = program.get(pc).ok_or(IntCodeErr::OutOfBounds(pc))?;
     Ok(*value)
-}
-
-fn get_rel(pc: usize, rb: i64, program: &[i64]) -> Result<i64, IntCodeErr> {
-    let imm = get_imm(pc, program)?;
-    let rel = from_intcode(imm + rb)?;
-    get_imm(rel, program)
 }
 
 fn set_mode(
@@ -144,30 +138,20 @@ fn set_mode(
     value: i64,
 ) -> Result<(), IntCodeErr> {
     match mode {
-        PMode::Pos => set_pos(pc, program, value),
-        PMode::Rel => set_rel(pc, rb, program, value),
+        PMode::Pos => set_pos(pc, 0, program, value),
+        PMode::Rel => set_pos(pc, rb, program, value),
         PMode::Imm => Err(IntCodeErr::ImmediateOutputMode),
     }
 }
 
-fn set_pos(pc: usize, program: &mut [i64], value: i64) -> Result<(), IntCodeErr> {
-    let idx = program
+fn set_pos(pc: usize, offset: i64, program: &mut [i64], update: i64) -> Result<(), IntCodeErr> {
+    let value = program
         .get(pc)
         .ok_or(IntCodeErr::OutOfBounds(pc))
-        .and_then(|&addr| from_intcode(addr))?;
-    program
-        .get_mut(idx)
-        .map(|val| *val = value)
-        .ok_or(IntCodeErr::OutOfBounds(idx))
-}
-
-fn set_rel(pc: usize, rb: i64, program: &mut [i64], value: i64) -> Result<(), IntCodeErr> {
-    let imm = get_imm(pc, program)?;
-    let rel = from_intcode(imm + rb)?;
-    program
-        .get_mut(rel)
-        .map(|val| *val = value)
-        .ok_or(IntCodeErr::OutOfBounds(rel))
+        .and_then(|&idx| from_intcode(idx + offset))
+        .and_then(|idx| program.get_mut(idx).ok_or(IntCodeErr::OutOfBounds(idx)))?;
+    *value = update;
+    Ok(())
 }
 
 #[derive(Copy, Clone, Default, Debug)]
