@@ -1,14 +1,10 @@
 use std::{
+    cmp::Ordering,
     fmt::Write,
     io::{self},
 };
 #[cfg(feature = "term")]
-use std::{
-    io::Write as WriteT,
-    os::fd::AsFd,
-    sync::mpsc::{self, Receiver},
-    thread,
-};
+use std::{io::Write as WriteT, os::fd::AsFd, sync::atomic::AtomicBool, thread};
 
 #[cfg(all(feature = "term", debug_assertions))]
 use std::{thread::sleep, time::Duration};
@@ -99,28 +95,27 @@ impl OutState {
 }
 
 #[cfg(feature = "term")]
-fn get_terminal() -> (RawTerminal<std::fs::File>, Receiver<()>) {
+static STOP: AtomicBool = AtomicBool::new(false);
+
+#[cfg(feature = "term")]
+fn get_terminal() -> RawTerminal<std::fs::File> {
     let mut tty = get_tty()
         .ok()
         .and_then(|tty| tty.into_raw_mode().ok())
         .expect("Need a raw tty.");
     write!(tty, "{}", termion::clear::All).unwrap();
-    let quit = {
-        let (send, recv) = mpsc::sync_channel(1);
-        thread::spawn(move || {
-            for k in get_tty().expect("Should be able to get input.").keys() {
-                if matches!(
-                    k.expect("to decode key"),
-                    Key::Ctrl('c') | Key::Ctrl('d') | Key::Ctrl('z') | Key::Esc
-                ) {
-                    _ = send.send(());
-                    break;
-                }
+    thread::spawn(move || {
+        for k in get_tty().expect("Should be able to get input.").keys() {
+            if matches!(
+                k.expect("to decode key"),
+                Key::Ctrl('c') | Key::Ctrl('d') | Key::Ctrl('z') | Key::Esc
+            ) {
+                STOP.store(true, std::sync::atomic::Ordering::Relaxed);
+                break;
             }
-        });
-        recv
-    };
-    (tty, quit)
+        }
+    });
+    tty
 }
 
 #[cfg(feature = "term")]
@@ -160,10 +155,10 @@ fn run_program(mut program: Vec<i64>) -> (i64, i64) {
     program[0] = QUARTERS;
 
     #[cfg(feature = "term")]
-    let (mut tty, quit) = get_terminal();
+    let mut tty = get_terminal();
     loop {
         #[cfg(feature = "term")]
-        if let Ok(()) = quit.try_recv() {
+        if STOP.load(std::sync::atomic::Ordering::Relaxed) {
             break;
         }
         match intcode.execute_til(&mut program, &mut input) {
@@ -194,9 +189,9 @@ fn run_program(mut program: Vec<i64>) -> (i64, i64) {
                 }
             }
             Err(IntCodeErr::NeedInput) => match ball_x.cmp(&paddle_x) {
-                std::cmp::Ordering::Less => input = Some(-1),
-                std::cmp::Ordering::Equal => input = Some(0),
-                std::cmp::Ordering::Greater => input = Some(1),
+                Ordering::Less => input = Some(-1),
+                Ordering::Equal => input = Some(0),
+                Ordering::Greater => input = Some(1),
             },
             Err(IntCodeErr::OutOfBounds(fault)) => {
                 brk(fault, &mut program).expect("Resize program")
