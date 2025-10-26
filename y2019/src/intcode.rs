@@ -75,7 +75,7 @@ impl TryFrom<i64> for Oper {
     type Error = IntCodeErr;
 
     fn try_from(value: i64) -> Result<Self, Self::Error> {
-        if !(0..=99999).contains(&value) {
+        if !(1..=22299).contains(&value) {
             return Err(IntCodeErr::InvalidOp(value));
         }
         let p3 = PMode::try_from(value / 10i64.pow(4) % 10)?;
