@@ -234,58 +234,64 @@ fn flatten_placeholders(p: &[Prog], from: &[Moves], with: Prog) -> Vec<Prog> {
         .collect_vec()
 }
 
-fn all_sub(s: &[Moves]) -> impl Iterator<Item = &[Moves]> {
+/// iter::successors() iterators Impl FusedIterator unlike iter::from_fn
+fn all_sub<'a, T: 'a, U: AsRef<[T]> + ?Sized>(s: &'a U) -> impl Iterator<Item = &'a [T]> {
     let mut i = 0;
-    let mut j = 1;
-    std::iter::from_fn(move || {
-        if i == s.len() {
+    let s = s.as_ref();
+    let start = if s.is_empty() { None } else { Some(s) };
+    std::iter::successors(start, move |ns| {
+        if s.len() == i + 1 {
             return None;
         }
-        let ret = Some(&s[i..j]);
-        if j == s.len() {
+        let ns = &ns[..ns.len() - 1];
+        if ns.is_empty() {
             i += 1;
-            j = i + 1;
-        } else {
-            j += 1;
+            return Some(&s[i..]);
         }
-        ret
+        Some(ns)
     })
 }
 
-fn get_program(p: &[Moves]) -> Option<String> {
+// incl newline and comma and base10 ascii encoded numbers.
+const MAX_INSTR_SIZE: usize = 20;
+
+fn get_program(p: &[Moves]) -> Option<VecDeque<u8>> {
     for a_pattern in (2..p.len())
         .rev()
         .map(|i| &p[..i])
-        .filter(|p| get_str_size(p) < 21)
+        .filter(|p| get_str_size(p) < MAX_INSTR_SIZE + 1)
     {
         let a_prog = replace_move_with_prog(p, a_pattern, Prog::A);
         for b_pattern in a_prog
             .iter()
             .flat_map(|bsub| destructure_or_none!(Prog::Place|p| = bsub))
-            .flat_map(|sub| all_sub(sub).filter(|s| get_str_size(s) < 21))
+            .flat_map(|sub| all_sub(sub).filter(|s| get_str_size(s) < MAX_INSTR_SIZE + 1))
         {
             let b_prog = flatten_placeholders(&a_prog, b_pattern, Prog::B);
             for c_pattern in b_prog
                 .iter()
                 .flat_map(|csub| destructure_or_none!(Prog::Place|p| = csub))
-                .flat_map(|sub| all_sub(sub).filter(|s| get_str_size(s) < 21))
+                .flat_map(|sub| all_sub(sub).filter(|s| get_str_size(s) < MAX_INSTR_SIZE + 1))
             {
                 let c_prog = flatten_placeholders(&b_prog, c_pattern, Prog::C);
                 if c_prog
                     .iter()
                     .all(|m| matches!(m, Prog::A | Prog::B | Prog::C))
                 {
-                    let c_p = c_prog.into_iter().map(|m| m.to_string()).join(",");
-                    if c_p.len() > 19 {
+                    let c_p = c_prog.into_iter().join(",");
+                    if c_p.len() > MAX_INSTR_SIZE {
                         continue;
                     }
-                    return Some(format!(
-                        "{}\n{}\n{}\n{}\nn\n",
-                        c_p,
-                        a_pattern.iter().map(|m| m.to_string()).join(","),
-                        b_pattern.iter().map(|m| m.to_string()).join(","),
-                        c_pattern.iter().map(|m| m.to_string()).join(","),
-                    ));
+                    let mut vd = VecDeque::new();
+                    write!(
+                        vd,
+                        "{c_p}\n{}\n{}\n{}\nn\n",
+                        a_pattern.iter().join(","),
+                        b_pattern.iter().join(","),
+                        c_pattern.iter().join(","),
+                    )
+                    .unwrap();
+                    return Some(vd);
                 }
             }
         }
@@ -293,8 +299,9 @@ fn get_program(p: &[Moves]) -> Option<String> {
     None
 }
 
-/// I'm so lost. finding all valid branching paths that terminate take 2^14 paths.
-/// none of them seem valid though? not sure... this is a secondary attempt based on whiteboarding.
+/// Finding all valid branching paths takes a very long time.
+/// It seems like there are many valid programs and paths however.
+/// This is the lowest coding effort sln.
 fn get_path_and_program(
     map: &FlatVec2D<Scaff>,
     mut inter: Intersect,
@@ -304,7 +311,7 @@ fn get_path_and_program(
         mut dx,
         mut dy,
     }: Pos,
-) -> String {
+) -> VecDeque<u8> {
     let mut path = vec![];
     loop {
         // blow right through intersections, do not branch and traverse all permutations.
@@ -335,7 +342,11 @@ fn get_path_and_program(
         }
     }
     // sanity check. we should have crossed through all intersections (both N&S / E&W doors "open").
-    assert!(inter.into_values().all(|d| d.into_iter().all(|v| v)));
+    assert!(
+        inter.into_values().all(|d| d.into_iter().all(|v| v)),
+        "Did not cross through every intersection. Bad path."
+    );
+    // concat Forward movements between turns.
     let path = path
         .into_iter()
         .coalesce(|l, r| match (l, r) {
@@ -343,21 +354,19 @@ fn get_path_and_program(
             _ => Err((l, r)),
         })
         .collect_vec();
-    get_program(&path).expect("Valid intcode ascii program")
+    get_program(&path).expect("Valid Intcode ascii program")
 }
 
-fn part2(mut prog: Vec<i64>, ascii: String) -> i64 {
-    let mut ascii_inp = VecDeque::<u8>::new();
-    write!(ascii_inp, "{ascii}").unwrap();
+fn part2(mut prog: Vec<i64>, mut ascii: VecDeque<u8>) -> i64 {
     let mut intcode = IntCode::default();
-    let mut input = ascii_inp.pop_front().map(i64::from);
+    let mut input = ascii.pop_front().map(i64::from);
     let mut last = 0;
     prog[0] = 2;
     loop {
         match intcode.execute_til(&mut prog, &mut input) {
             Ok(o) => last = o,
-            Err(IntCodeErr::NeedInput) if !ascii_inp.is_empty() => {
-                input = ascii_inp.pop_front().map(i64::from);
+            Err(IntCodeErr::NeedInput) if !ascii.is_empty() => {
+                input = ascii.pop_front().map(i64::from);
             }
             Err(IntCodeErr::OutOfBounds(newbrk)) => {
                 brk(newbrk, &mut prog).expect("to increase program brk")
