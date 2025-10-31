@@ -244,7 +244,6 @@ impl IntCode {
         program: &mut [i64],
         input: &mut I,
     ) -> Result<Option<i64>, IntCodeErr> {
-        // let Oper { p1, p2, p3, opcode } = get_op(self.pc, program)?;
         let Oper { p1, p2, p3, opcode } = get_op(self.pc, program)?;
         macro_rules! arith_op {
             ($oper:path) => {{
