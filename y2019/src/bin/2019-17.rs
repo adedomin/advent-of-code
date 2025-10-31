@@ -358,16 +358,12 @@ fn get_path_and_program(
 }
 
 fn part2(mut prog: Vec<i64>, mut ascii: VecDeque<u8>) -> i64 {
-    let mut intcode = IntCode::default();
-    let mut input = ascii.pop_front().map(i64::from);
     let mut last = 0;
+    let mut intcode = IntCode::default();
     prog[0] = 2;
     loop {
-        match intcode.execute_til(&mut prog, &mut input) {
+        match intcode.execute_til(&mut prog, &mut ascii) {
             Ok(o) => last = o,
-            Err(IntCodeErr::NeedInput) if !ascii.is_empty() => {
-                input = ascii.pop_front().map(i64::from);
-            }
             Err(IntCodeErr::OutOfBounds(newbrk)) => {
                 brk(newbrk, &mut prog).expect("to increase program brk")
             }

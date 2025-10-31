@@ -1,5 +1,5 @@
 use aoc_shared::read_input_to_string;
-use std::io;
+use std::{collections::VecDeque, io};
 
 pub fn read_intcode() -> io::Result<Vec<i64>> {
     let values = read_input_to_string()?;
@@ -12,9 +12,9 @@ pub fn read_intcode() -> io::Result<Vec<i64>> {
 
 #[derive(Copy, Clone, Debug)]
 enum PMode {
-    Pos,
-    Imm,
-    Rel,
+    Pos = 0,
+    Imm = 1,
+    Rel = 2,
 }
 
 impl TryFrom<i64> for PMode {
@@ -44,6 +44,7 @@ enum Op {
     End = 99,
 }
 
+#[derive(Debug)]
 struct Oper {
     p1: PMode,
     p2: PMode,
@@ -173,27 +174,6 @@ pub fn brk(oob: usize, program: &mut Vec<i64>) -> Result<(), IntCodeErr> {
     Ok(())
 }
 
-macro_rules! arith_op {
-    ($self:ident, $p1:ident, $p2:ident, $p3:ident, $program:ident, $oper:path) => {{
-        let p1 = get_mode($self.pc + 1, $self.rb, $p1, $program)?;
-        let p2 = get_mode($self.pc + 2, $self.rb, $p2, $program)?;
-        set_mode($self.pc + 3, $self.rb, $p3, $program, $oper(p1, p2))?;
-        4
-    }};
-}
-
-macro_rules! jmp_op {
-    ($self:ident, $p1:ident, $p2:ident, $program:ident,  $oper:path) => {{
-        let p1 = get_mode($self.pc + 1, $self.rb, $p1, $program)?;
-        if $oper(p1, 0) {
-            let p2 = get_mode($self.pc + 2, $self.rb, $p2, $program).and_then(from_intcode)?;
-            $self.pc = p2;
-            return Ok(None);
-        }
-        3
-    }};
-}
-
 fn lt(p1: i64, p2: i64) -> i64 {
     i64::from(p1 < p2)
 }
@@ -210,12 +190,40 @@ fn jne(p1: i64, p2: i64) -> bool {
     p1 != p2
 }
 
+/// Valid intcode inputs. only two types implement this: `Option<i64>` and `VecDeque<u8>` (ASCII)
+pub trait Input {
+    /// Peek the input so as to not consume it if the input operation fails.
+    fn peek(&self) -> Option<i64>;
+    /// Consume input. no need for old value. old value already used by intcode machine.
+    fn consume(&mut self);
+}
+
+impl Input for Option<i64> {
+    fn peek(&self) -> Option<i64> {
+        *self
+    }
+
+    fn consume(&mut self) {
+        _ = self.take()
+    }
+}
+
+impl Input for VecDeque<u8> {
+    fn peek(&self) -> Option<i64> {
+        self.iter().next().copied().map(i64::from)
+    }
+
+    fn consume(&mut self) {
+        _ = self.pop_front()
+    }
+}
+
 impl IntCode {
     /// Calls `execute` repeatedly til the machine yields, due to IO or Error.
-    pub fn execute_til(
+    pub fn execute_til<I: Input>(
         &mut self,
         program: &mut [i64],
-        input: &mut Option<i64>,
+        input: &mut I,
     ) -> Result<i64, IntCodeErr> {
         loop {
             match self.execute(program, input) {
@@ -231,32 +239,58 @@ impl IntCode {
     ///
     /// e.g. Set input to Some(value) if one gets `IntCodeErr::NeedInput`
     ///      increase the program break with `brk` if you get `IntCodeErr::OutOfBounds`
-    pub fn execute(
+    pub fn execute<I: Input>(
         &mut self,
         program: &mut [i64],
-        input: &mut Option<i64>,
+        input: &mut I,
     ) -> Result<Option<i64>, IntCodeErr> {
+        // let Oper { p1, p2, p3, opcode } = get_op(self.pc, program)?;
         let Oper { p1, p2, p3, opcode } = get_op(self.pc, program)?;
+        macro_rules! arith_op {
+            ($oper:path) => {{
+                let p1 = get_mode(self.pc + 1, self.rb, p1, program)?;
+                let p2 = get_mode(self.pc + 2, self.rb, p2, program)?;
+                // Unlike the Inp Instruction, this does not mutate the input operands.
+                // So it is restart-able after handling errors.
+                set_mode(self.pc + 3, self.rb, p3, program, $oper(p1, p2))?;
+                4
+            }};
+        }
+        macro_rules! jmp_op {
+            ($oper:path) => {{
+                let p1 = get_mode(self.pc + 1, self.rb, p1, program)?;
+                if $oper(p1, 0) {
+                    let p2 = get_mode(self.pc + 2, self.rb, p2, program).and_then(from_intcode)?;
+                    self.pc = p2;
+                    return Ok(None);
+                }
+                3
+            }};
+        }
         self.pc += match opcode {
-            Op::Add => arith_op!(self, p1, p2, p3, program, std::ops::Add::add),
-            Op::Mul => arith_op!(self, p1, p2, p3, program, std::ops::Mul::mul),
+            Op::Add => arith_op!(std::ops::Add::add),
+            Op::Mul => arith_op!(std::ops::Mul::mul),
             Op::Inp => {
-                if let Some(input) = input.take() {
-                    set_mode(self.pc + 1, self.rb, p1, program, input)?;
-                    2
+                if let Some(val) = input.peek() {
+                    // This method could fail for program size being too small.
+                    // Need to mutate the user Inp register after this.
+                    set_mode(self.pc + 1, self.rb, p1, program, val)?;
+                    // consume the input
+                    input.consume();
                 } else {
                     return Err(IntCodeErr::NeedInput);
                 }
+                2
             }
             Op::Out => {
                 let out = get_mode(self.pc + 1, self.rb, p1, program)?;
                 self.pc += 2;
                 return Ok(Some(out));
             }
-            Op::Jit => jmp_op!(self, p1, p2, program, jne),
-            Op::Jif => jmp_op!(self, p1, p2, program, jeq),
-            Op::Lt => arith_op!(self, p1, p2, p3, program, lt),
-            Op::Eq => arith_op!(self, p1, p2, p3, program, eq),
+            Op::Jit => jmp_op!(jne),
+            Op::Jif => jmp_op!(jeq),
+            Op::Lt => arith_op!(lt),
+            Op::Eq => arith_op!(eq),
             Op::Rba => {
                 let p1 = get_mode(self.pc + 1, self.rb, p1, program)?;
                 self.rb += p1;
@@ -270,7 +304,10 @@ impl IntCode {
 
 #[cfg(test)]
 mod tests {
-    use crate::intcode::{IntCode, IntCodeErr};
+    use std::collections::VecDeque;
+    use std::io::Write as _;
+
+    use crate::intcode::{brk, IntCode, IntCodeErr};
 
     #[test]
     fn immediate_mode() {
@@ -297,10 +334,10 @@ mod tests {
     fn output() {
         let mut program = vec![4, 2, 99];
         let mut intcode = IntCode::default();
-        let Ok(Some(out)) = intcode.execute(&mut program, &mut None) else {
-            panic!("unexpected no input.");
+        match intcode.execute(&mut program, &mut None) {
+            Ok(Some(99)) => (),
+            e => panic!("Output did not match 99 or other error occured: {e:?}"),
         };
-        assert_eq!(out, 99);
     }
 
     #[test]
@@ -314,5 +351,58 @@ mod tests {
         let Err(IntCodeErr::OutOfBounds(1985)) = intcode.execute(&mut program, &mut None) else {
             panic!("Did not deref base address correctly; should be asking for memory index 1985.");
         };
+    }
+
+    #[test]
+    fn reentrant_input() {
+        // on day 2019-19, the input instruction wrote out of bounds, consuming the input and losing it.
+        let mut program = vec![3, 100, 4, 100, 99];
+        let mut intcode = IntCode::default();
+        let mut input = Some(100);
+        let Err(IntCodeErr::OutOfBounds(100)) = intcode.execute(&mut program, &mut input) else {
+            panic!("Should be out of bounds.");
+        };
+        assert!(
+            input.is_some(),
+            "FAIL: Input consumed by failing Input instruction."
+        );
+        brk(100, &mut program).unwrap();
+        let Ok(None) = intcode.execute(&mut program, &mut input) else {
+            panic!("Should be successful.");
+        };
+        assert!(
+            input.is_none() && program[100] == 100,
+            "FAIL: Input should have been consumed."
+        );
+        let Ok(Some(100)) = intcode.execute(&mut program, &mut input) else {
+            panic!("Should be successful.");
+        };
+        let Err(IntCodeErr::End) = intcode.execute(&mut program, &mut input) else {
+            panic!("Should be done.");
+        };
+    }
+
+    #[test]
+    fn ascii_machine() {
+        let mut ascii = VecDeque::<u8>::new();
+        writeln!(ascii, "Hello, world!").unwrap();
+
+        // program that loops and reads input til newline (ASCII decimal 10) past end of program.
+        let mut program = vec![109, 13, 109, 1, 203, 0, 2108, 10, 0, 11, 1106, 0, 2, 99];
+        let prog_end = program.len();
+        program.resize_with(prog_end + ascii.len(), i64::default);
+
+        let mut intcode = IntCode::default();
+        match intcode.execute_til(&mut program, &mut ascii) {
+            Err(IntCodeErr::End) => assert_eq!(
+                program[prog_end..]
+                    .iter()
+                    .map(|&i| u8::try_from(i).unwrap())
+                    .collect::<Vec<u8>>(),
+                b"Hello, world!\n",
+                "Machine did not write \"Hello, world!\\n\" to memory."
+            ),
+            res => panic!("Unexpected error: {res:?}"),
+        }
     }
 }
