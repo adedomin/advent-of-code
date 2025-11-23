@@ -83,6 +83,7 @@ fn get_scaffolding(mut prog: Vec<i64>) -> (FlatVec2D<Scaff>, Pos) {
         }
     }
     let ret = pad_to_flat2d(&map, Scaff::Border);
+    debug!("{ret:?}");
     let mut start = None;
     for (x, y) in ret.pad_xyrange() {
         if let Scaff::Bot(b) = ret[(x, y)] {
@@ -110,8 +111,8 @@ fn part1(map: &FlatVec2D<Scaff>) -> (usize, Intersect) {
                     .iter()
                     .all(|Neighbor(s, _, _)| matches!(s, Scaff::Beam))
                     .then_some((x - 1, y - 1))
+                    // for part2.
                     .inspect(|(x, y)| {
-                        // for part2.
                         intersect.insert((x + 1, y + 1), [false; 2]);
                     })
             } else {
@@ -212,11 +213,12 @@ fn flatten_placeholders(p: &[Prog], from: &[Moves], with: &Prog) -> Vec<Prog> {
         .collect_vec()
 }
 
-/// iter::successors() iterators Impl FusedIterator unlike iter::from_fn
+/// Get all substrings in a given slice.
 fn all_sub<'a, T: 'a, U: AsRef<[T]> + ?Sized>(s: &'a U) -> impl Iterator<Item = &'a [T]> {
     let mut i = 0;
     let s = s.as_ref();
     let start = if s.is_empty() { None } else { Some(s) };
+    // iter::successors() iterators Impl FusedIterator unlike iter::from_fn
     std::iter::successors(start, move |ns| {
         if s.len() == i + 1 {
             return None;
@@ -233,34 +235,35 @@ fn all_sub<'a, T: 'a, U: AsRef<[T]> + ?Sized>(s: &'a U) -> impl Iterator<Item = 
 // incl newline and comma and base10 ascii encoded numbers.
 const MAX_INSTR_SIZE: usize = 20;
 
-fn get_patt_perm(prog: &[Prog]) -> impl Iterator<Item = &[Moves]> {
+fn get_patt_perm<'a>(
+    prog: &'a [Prog],
+    with: &'a Prog,
+) -> impl Iterator<Item = (&'a [Moves], Vec<Prog>)> + use<'a> {
     prog.iter()
         .flat_map(|bsub| destructure_or_none!(Prog::Place|p| = bsub))
         .flat_map(|sub| all_sub(sub).filter(|s| get_str_size(s) < MAX_INSTR_SIZE + 1))
+        .map(|patt| (patt, flatten_placeholders(prog, patt, with)))
 }
 
 fn get_program(p: &[Moves]) -> Option<VecDeque<u8>> {
     let base = [Prog::Place(p.to_vec())];
-    for a_pattern in get_patt_perm(&base) {
-        let a_prog = flatten_placeholders(&base, a_pattern, &Prog::A);
-        for b_pattern in get_patt_perm(&a_prog) {
-            let b_prog = flatten_placeholders(&a_prog, b_pattern, &Prog::B);
-            for c_pattern in get_patt_perm(&b_prog) {
-                let c_prog = flatten_placeholders(&b_prog, c_pattern, &Prog::C);
+    for (a_pattern, a_prog) in get_patt_perm(&base, &Prog::A) {
+        for (b_pattern, b_prog) in get_patt_perm(&a_prog, &Prog::B) {
+            for (c_pattern, c_prog) in get_patt_perm(&b_prog, &Prog::C) {
                 if c_prog
                     .iter()
                     .all(|m| matches!(m, Prog::A | Prog::B | Prog::C))
                 {
-                    let c_p = c_prog.into_iter().join(",");
-                    if c_p.len() > MAX_INSTR_SIZE {
+                    let main_r = c_prog.into_iter().join(",");
+                    if main_r.len() > MAX_INSTR_SIZE {
                         continue;
                     }
                     let a = a_pattern.iter().join(",");
                     let b = b_pattern.iter().join(",");
                     let c = c_pattern.iter().join(",");
-                    debug!("{c_p}\n{a}\n{b}\n{c}\nn\n");
+                    debug!("{main_r}\n{a}\n{b}\n{c}\nn\n");
                     let mut vd = VecDeque::new();
-                    write!(vd, "{c_p}\n{a}\n{b}\n{c}\nn\n").unwrap();
+                    write!(vd, "{main_r}\n{a}\n{b}\n{c}\nn\n").unwrap();
                     return Some(vd);
                 }
             }

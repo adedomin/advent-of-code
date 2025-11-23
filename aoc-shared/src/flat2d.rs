@@ -243,31 +243,23 @@ impl<T> IndexMut<(usize, usize, Rot2D)> for FlatVec2D<T> {
 }
 
 /// More robust way of getting dimensions of a textual grid of data.
-/// if the rows are not of equal length, the function will fail by returning None.
-fn get_row_col(input: &[u8]) -> Option<(usize, usize)> {
-    let mut row_len = None;
-    let mut col_len = 0;
-    for row in input
+/// if the rows are not of equal length, the greatest row length is returned.
+///
+/// note that trailing newlines are ignored.
+fn get_row_col(input: &[u8]) -> (usize, usize) {
+    input
         .split(|&b| b == b'\n')
         .rev()
         // remove trailing newlines
         .skip_while(|row| row.is_empty())
-    {
-        match row_len {
-            Some(r) if r != row.len() => return None,
-            None => row_len = Some(row.len()),
-            _ => (),
-        }
-        col_len += 1;
-    }
-    Some((row_len.unwrap_or(0), col_len))
+        .fold((0, 0), |(r, c), row| (r.max(row.len()), c + 1))
 }
 
 pub fn parse_to_flat2d<T>(input: &[u8]) -> FlatVec2D<T>
 where
     T: Default + Clone + From<u8>,
 {
-    let (row_width, col_len) = get_row_col(input).expect("Rows are of uneven lenght!");
+    let (row_width, col_len) = get_row_col(input);
 
     let mut ret = FlatVec2D(vec![T::default(); row_width * col_len], row_width, col_len);
 
@@ -293,7 +285,7 @@ pub fn pad_to_flat2d<T>(input: &[u8], pad: T) -> FlatVec2D<T>
 where
     T: Clone + From<u8>,
 {
-    let (row_width, col_len) = get_row_col(input).expect("Rows are of uneven lenght!");
+    let (row_width, col_len) = get_row_col(input);
     // now pad them
     let row_width = row_width + 2;
     let col_len = col_len + 2;
