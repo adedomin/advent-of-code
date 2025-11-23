@@ -162,36 +162,29 @@ impl FlatVec2D<u8> {
 impl<T> Index<(usize, usize)> for FlatVec2D<T> {
     type Output = T;
 
-    fn index(&self, index: (usize, usize)) -> &Self::Output {
-        let (x, y) = index;
+    fn index(&self, (x, y): (usize, usize)) -> &Self::Output {
         &self.0[flat_coord(x, y, self.1)]
     }
 }
 
 impl<T> IndexMut<(usize, usize)> for FlatVec2D<T> {
-    fn index_mut(&mut self, index: (usize, usize)) -> &mut Self::Output {
-        let (x, y) = index;
+    fn index_mut(&mut self, (x, y): (usize, usize)) -> &mut Self::Output {
         &mut self.0[flat_coord(x, y, self.1)]
     }
 }
 
-pub fn wrap(idx: isize, bounds: isize) -> usize {
-    let idx = idx % bounds;
-    if idx < 0 {
-        (bounds + idx) as usize
-    } else {
-        idx as usize
-    }
+/// alias around rem_euclid
+pub fn wrap(idx: isize, bounds: usize) -> usize {
+    idx.rem_euclid(bounds as isize) as usize
 }
 
 /// This implements wrapping Indices
 impl<T> Index<(isize, isize)> for FlatVec2D<T> {
     type Output = T;
 
-    fn index(&self, index: (isize, isize)) -> &Self::Output {
-        let (x, y) = index;
-        let x = wrap(x, self.1 as isize);
-        let y = wrap(y, self.2 as isize);
+    fn index(&self, (x, y): (isize, isize)) -> &Self::Output {
+        let x = wrap(x, self.1);
+        let y = wrap(y, self.2);
         &self.0[flat_coord(x, y, self.1)]
     }
 }
@@ -238,25 +231,43 @@ pub fn flat_coord_rot(x: usize, y: usize, xdim: usize, ydim: usize, rot: Rot2D) 
 impl<T> Index<(usize, usize, Rot2D)> for FlatVec2D<T> {
     type Output = T;
 
-    fn index(&self, index: (usize, usize, Rot2D)) -> &Self::Output {
-        let (x, y, rot) = index;
+    fn index(&self, (x, y, rot): (usize, usize, Rot2D)) -> &Self::Output {
         &self.0[flat_coord_rot(x, y, self.1, self.2, rot)]
     }
 }
 
 impl<T> IndexMut<(usize, usize, Rot2D)> for FlatVec2D<T> {
-    fn index_mut(&mut self, index: (usize, usize, Rot2D)) -> &mut Self::Output {
-        let (x, y, rot) = index;
+    fn index_mut(&mut self, (x, y, rot): (usize, usize, Rot2D)) -> &mut Self::Output {
         &mut self.0[flat_coord_rot(x, y, self.1, self.2, rot)]
     }
+}
+
+/// More robust way of getting dimensions of a textual grid of data.
+/// if the rows are not of equal length, the function will fail by returning None.
+fn get_row_col(input: &[u8]) -> Option<(usize, usize)> {
+    let mut row_len = None;
+    let mut col_len = 0;
+    for row in input
+        .split(|&b| b == b'\n')
+        .rev()
+        // remove trailing newlines
+        .skip_while(|row| row.is_empty())
+    {
+        match row_len {
+            Some(r) if r != row.len() => return None,
+            None => row_len = Some(row.len()),
+            _ => (),
+        }
+        col_len += 1;
+    }
+    Some((row_len.unwrap_or(0), col_len))
 }
 
 pub fn parse_to_flat2d<T>(input: &[u8]) -> FlatVec2D<T>
 where
     T: Default + Clone + From<u8>,
 {
-    let row_width = input.iter().position(|&chr| chr == b'\n').unwrap();
-    let col_len = ((input.len() - 1) / (row_width + 1)) + 1;
+    let (row_width, col_len) = get_row_col(input).expect("Rows are of uneven lenght!");
 
     let mut ret = FlatVec2D(vec![T::default(); row_width * col_len], row_width, col_len);
 
@@ -282,8 +293,10 @@ pub fn pad_to_flat2d<T>(input: &[u8], pad: T) -> FlatVec2D<T>
 where
     T: Clone + From<u8>,
 {
-    let row_width = input.iter().position(|&chr| chr == b'\n').unwrap() + 2;
-    let col_len = ((input.len() - 1) / (row_width + 1)) + 4;
+    let (row_width, col_len) = get_row_col(input).expect("Rows are of uneven lenght!");
+    // now pad them
+    let row_width = row_width + 2;
+    let col_len = col_len + 2;
 
     let mut ret = FlatVec2D(vec![pad; row_width * col_len], row_width, col_len);
 

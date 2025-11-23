@@ -49,8 +49,8 @@ fn part1_sol(input: &Output) -> Int {
         .iter()
         .map(|(sx, sy, vx, vy)| {
             (
-                aoc_shared::wrap(sx + vx * P1_MOVE, P1_BOUNDS_X) as isize,
-                aoc_shared::wrap(sy + vy * P1_MOVE, P1_BOUNDS_Y) as isize,
+                aoc_shared::wrap(sx + vx * P1_MOVE, P1_BOUNDS_X as usize) as isize,
+                aoc_shared::wrap(sy + vy * P1_MOVE, P1_BOUNDS_Y as usize) as isize,
             )
         })
         .fold([0, 0, 0, 0], |mut acc, (x, y)| {
@@ -104,8 +104,8 @@ fn part2_sol(input: &Output) -> Int {
     for i in 1.. {
         picture.0.fill(false);
         points.iter_mut().for_each(|(x, y, vx, vy)| {
-            *x = aoc_shared::wrap(*x + *vx, P1_BOUNDS_X) as isize;
-            *y = aoc_shared::wrap(*y + *vy, P1_BOUNDS_Y) as isize;
+            *x = aoc_shared::wrap(*x + *vx, P1_BOUNDS_X as usize) as isize;
+            *y = aoc_shared::wrap(*y + *vy, P1_BOUNDS_Y as usize) as isize;
             picture[(*x as usize, *y as usize)] = true;
         });
 

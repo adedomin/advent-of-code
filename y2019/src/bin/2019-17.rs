@@ -4,7 +4,7 @@ use std::{
     io::{self, Write},
 };
 
-use aoc_shared::{destructure_or_none, FlatVec2D, Neighbor};
+use aoc_shared::{debug, destructure_or_none, pad_to_flat2d, FlatVec2D, Neighbor};
 use itertools::Itertools;
 use y2019::intcode::{brk, read_intcode, IntCode, IntCodeErr};
 
@@ -82,33 +82,20 @@ fn get_scaffolding(mut prog: Vec<i64>) -> (FlatVec2D<Scaff>, Pos) {
             Err(e) => panic!("Unexpected ASCII failure: {e}"),
         }
     }
-    let row_width = map.iter().position(|&chr| chr == b'\n').unwrap() + 2;
-    // TODO: Have to fix pad_to_flat2d for odd numbers
-    let col_len = (map.len() - 1).div_ceil(row_width + 1) + 4;
-    let mut ret = FlatVec2D::new(row_width, col_len);
-
-    let mut i = 1;
-    let mut j = 1;
-    let mut start = Pos::default();
-    map.iter().for_each(|&el| {
-        if el == b'\n' {
-            i = 1;
-            j += 1;
-        } else if el != b'\n' {
-            let s = el.into();
-            if let Scaff::Bot(b) = s {
-                start = Pos {
-                    x: i,
-                    y: j,
-                    dx: b.0,
-                    dy: b.1,
-                };
-            }
-            ret[(i, j)] = s;
-            i += 1;
+    let ret = pad_to_flat2d(&map, Scaff::Border);
+    let mut start = None;
+    for (x, y) in ret.pad_xyrange() {
+        if let Scaff::Bot(b) = ret[(x, y)] {
+            start = Some(Pos {
+                x,
+                y,
+                dx: b.0,
+                dy: b.1,
+            });
+            break;
         }
-    });
-    (ret, start)
+    }
+    (ret, start.expect("No start found."))
 }
 
 type Intersect = HashMap<(usize, usize), [bool; 2]>;
@@ -147,16 +134,7 @@ fn get_str_size(s: &[Moves]) -> usize {
     let mut sep = s.len(); // commas are (len - 1) + 1 for newline
     for m in s {
         sep += match m {
-            Moves::Forward(l) => {
-                let is_ten = l / 10;
-                if is_ten == 0 {
-                    1
-                } else if (1..=9).contains(&is_ten) {
-                    2
-                } else {
-                    3
-                }
-            }
+            Moves::Forward(l) if *l != 0 => (l.ilog10() + 1) as usize,
             _ => 1,
         }
     }
@@ -200,11 +178,11 @@ fn get_inter_door((dx, dy): (isize, isize)) -> usize {
     match (dx, dy) {
         N | S => 0,
         E | W => 1,
-        _ => 999,
+        _ => panic!("Invalid cardinal (dx, dy): ({dx}, {dy})."),
     }
 }
 
-fn replace_move_with_prog(m: &[Moves], from: &[Moves], with: Prog) -> Vec<Prog> {
+fn replace_move_with_prog(m: &[Moves], from: &[Moves], with: &Prog) -> Vec<Prog> {
     let mut store = vec![];
     let mut ret = vec![];
     for el in m.iter().cloned() {
@@ -224,12 +202,12 @@ fn replace_move_with_prog(m: &[Moves], from: &[Moves], with: Prog) -> Vec<Prog> 
     ret
 }
 
-fn flatten_placeholders(p: &[Prog], from: &[Moves], with: Prog) -> Vec<Prog> {
+fn flatten_placeholders(p: &[Prog], from: &[Moves], with: &Prog) -> Vec<Prog> {
     p.iter()
         .cloned()
         .flat_map(|p| match p {
             Prog::A | Prog::B | Prog::C => vec![p],
-            Prog::Place(items) => replace_move_with_prog(&items, from, with.clone()),
+            Prog::Place(items) => replace_move_with_prog(&items, from, with),
         })
         .collect_vec()
 }
@@ -255,25 +233,20 @@ fn all_sub<'a, T: 'a, U: AsRef<[T]> + ?Sized>(s: &'a U) -> impl Iterator<Item = 
 // incl newline and comma and base10 ascii encoded numbers.
 const MAX_INSTR_SIZE: usize = 20;
 
+fn get_patt_perm(prog: &[Prog]) -> impl Iterator<Item = &[Moves]> {
+    prog.iter()
+        .flat_map(|bsub| destructure_or_none!(Prog::Place|p| = bsub))
+        .flat_map(|sub| all_sub(sub).filter(|s| get_str_size(s) < MAX_INSTR_SIZE + 1))
+}
+
 fn get_program(p: &[Moves]) -> Option<VecDeque<u8>> {
-    for a_pattern in (2..p.len())
-        .rev()
-        .map(|i| &p[..i])
-        .filter(|p| get_str_size(p) < MAX_INSTR_SIZE + 1)
-    {
-        let a_prog = replace_move_with_prog(p, a_pattern, Prog::A);
-        for b_pattern in a_prog
-            .iter()
-            .flat_map(|bsub| destructure_or_none!(Prog::Place|p| = bsub))
-            .flat_map(|sub| all_sub(sub).filter(|s| get_str_size(s) < MAX_INSTR_SIZE + 1))
-        {
-            let b_prog = flatten_placeholders(&a_prog, b_pattern, Prog::B);
-            for c_pattern in b_prog
-                .iter()
-                .flat_map(|csub| destructure_or_none!(Prog::Place|p| = csub))
-                .flat_map(|sub| all_sub(sub).filter(|s| get_str_size(s) < MAX_INSTR_SIZE + 1))
-            {
-                let c_prog = flatten_placeholders(&b_prog, c_pattern, Prog::C);
+    let base = [Prog::Place(p.to_vec())];
+    for a_pattern in get_patt_perm(&base) {
+        let a_prog = flatten_placeholders(&base, a_pattern, &Prog::A);
+        for b_pattern in get_patt_perm(&a_prog) {
+            let b_prog = flatten_placeholders(&a_prog, b_pattern, &Prog::B);
+            for c_pattern in get_patt_perm(&b_prog) {
+                let c_prog = flatten_placeholders(&b_prog, c_pattern, &Prog::C);
                 if c_prog
                     .iter()
                     .all(|m| matches!(m, Prog::A | Prog::B | Prog::C))
@@ -282,15 +255,12 @@ fn get_program(p: &[Moves]) -> Option<VecDeque<u8>> {
                     if c_p.len() > MAX_INSTR_SIZE {
                         continue;
                     }
+                    let a = a_pattern.iter().join(",");
+                    let b = b_pattern.iter().join(",");
+                    let c = c_pattern.iter().join(",");
+                    debug!("{c_p}\n{a}\n{b}\n{c}\nn\n");
                     let mut vd = VecDeque::new();
-                    write!(
-                        vd,
-                        "{c_p}\n{}\n{}\n{}\nn\n",
-                        a_pattern.iter().join(","),
-                        b_pattern.iter().join(","),
-                        c_pattern.iter().join(","),
-                    )
-                    .unwrap();
+                    write!(vd, "{c_p}\n{a}\n{b}\n{c}\nn\n").unwrap();
                     return Some(vd);
                 }
             }
