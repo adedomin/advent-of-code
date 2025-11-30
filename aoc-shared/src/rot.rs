@@ -49,7 +49,7 @@ pub const fn rot_180(xy: Point) -> Point {
     rot_right(rot_right(xy))
 }
 
-/// Rotate point around origin, clockwise.
+/// Rotate point around origin, counter-clockwise.
 pub const fn rot_left(xy: Point) -> Point {
     rot_right(rot_right(rot_right(xy)))
 }
