@@ -1,14 +1,7 @@
 use std::{collections::HashMap, io};
 
+use aoc_shared::rot::{rot_left, rot_right};
 use y2019::intcode::{brk, read_intcode, IntCode, IntCodeErr};
-
-fn rot_left(xy: (isize, isize)) -> (isize, isize) {
-    rot_right(rot_right(rot_right(xy)))
-}
-
-fn rot_right((x, y): (isize, isize)) -> (isize, isize) {
-    (-y, x)
-}
 
 enum OutState {
     PaintColor,

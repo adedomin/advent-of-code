@@ -4,7 +4,11 @@ use std::{
     io::{self, Write},
 };
 
-use aoc_shared::{debug, destructure_or_none, pad_to_flat2d, FlatVec2D, Neighbor};
+use aoc_shared::{
+    debug, destructure_or_none, pad_to_flat2d,
+    rot::{rot_left, rot_right, EAST as E, NORTH as N, SOUTH as S, WEST as W},
+    FlatVec2D, Neighbor,
+};
 use itertools::Itertools;
 use y2019::intcode::{brk, read_intcode, IntCode, IntCodeErr};
 
@@ -17,18 +21,6 @@ enum Scaff {
     #[default]
     Border,
 }
-
-const fn rot_right((x, y): (isize, isize)) -> (isize, isize) {
-    (-y, x)
-}
-const fn rot_left((x, y): (isize, isize)) -> (isize, isize) {
-    rot_right(rot_right(rot_right((x, y))))
-}
-
-const N: (isize, isize) = (0, -1);
-const E: (isize, isize) = rot_right(N);
-const S: (isize, isize) = rot_right(E);
-const W: (isize, isize) = rot_right(S);
 
 impl From<u8> for Scaff {
     fn from(value: u8) -> Self {

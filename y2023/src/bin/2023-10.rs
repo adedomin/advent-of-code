@@ -2,8 +2,9 @@ use aoc_shared::{array_windows, pad_to_flat2d, read_input, FlatVec2D};
 
 use std::{fmt::Write, io};
 
-#[derive(Clone, Copy)]
+#[derive(Default, Clone, Copy)]
 enum Pipe {
+    #[default]
     Ground,
     Vert,
     Hori,
@@ -45,12 +46,6 @@ impl Pipe {
 
     fn is_bent(&self) -> bool {
         matches!(self, Pipe::NE90 | Pipe::NW90 | Pipe::SW90 | Pipe::SE90)
-    }
-}
-
-impl Default for Pipe {
-    fn default() -> Self {
-        Self::Ground
     }
 }
 
