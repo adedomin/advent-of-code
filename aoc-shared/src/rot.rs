@@ -22,7 +22,6 @@ pub const W: usize = 3;
 
 /// Rotate rhs around lhs, clockwise
 pub const fn rot_right_around((origin_x, origin_y): Point, (x, y): Point) -> Point {
-    // translate to origin
     (-(y - origin_y) + origin_x, (x - origin_x) + origin_y)
 }
 
