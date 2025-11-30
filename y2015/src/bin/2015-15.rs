@@ -1,5 +1,5 @@
 use aoc_shared::{atoi, read_input, Tokenize};
-use std::{cmp, io};
+use std::io;
 
 struct Ingredient {
     cap: i64,
@@ -125,7 +125,7 @@ fn solve_p1(grams: u8, calorie_target: i64, ingredients: &[Ingredient]) -> (i64,
                         (ca + cb, da + db, fa + fb, ta + tb, cla + clb)
                     },
                 );
-                let score = cmp::max(c, 0) * cmp::max(d, 0) * cmp::max(f, 0) * cmp::max(t, 0);
+                let score = c.max(0) * d.max(0) * f.max(0) * t.max(0);
 
                 if max < score {
                     max = score;

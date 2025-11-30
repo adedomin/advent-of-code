@@ -132,7 +132,7 @@ fn part2_sol((p1, p2): Output) -> Solved {
         ret
     }
     let (w1, w2) = rec(&mut memo, p1 as u8 - 1, 0, p2 as u8 - 1, 0);
-    std::cmp::max(w1, w2)
+    w1.max(w2)
 }
 
 fn main() -> io::Result<()> {

@@ -53,7 +53,7 @@ fn solve2(i: &[(Vec<i32>, Vec<i32>)]) -> i32 {
             let next = pos + 1;
             if win != 0 && next < residue.len() {
                 let cur_res = residue[pos];
-                let copy = next..std::cmp::min(res_len, next + (win as usize));
+                let copy = next..(next + win as usize).min(res_len);
                 residue[copy].iter_mut().for_each(|cell| *cell += cur_res);
             };
         });

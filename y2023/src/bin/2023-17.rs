@@ -118,8 +118,8 @@ fn solve(
                 let lx1 = lx1 as usize;
                 let ly1 = ly1 as usize;
 
-                let line_dist = std::cmp::max(x1.abs_diff(lx1), y1.abs_diff(ly1));
-                let oline_dist = std::cmp::max(x.abs_diff(lx), y.abs_diff(ly));
+                let line_dist = x1.abs_diff(lx1).max(y1.abs_diff(ly1));
+                let oline_dist = x.abs_diff(lx).max(y.abs_diff(ly));
                 let turned = !(lx == lx1 && ly == ly1);
 
                 let neigh_cost = (nodes[(x1, y1)] - b'0') as u64;

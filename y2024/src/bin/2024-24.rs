@@ -187,7 +187,7 @@ fn part2_sol<'a>(wires: Vec<(&'a str, (Op, [&'a str; 2]))>) -> String {
         .filter_map(|(out, _)| {
             if let Some(num) = out.strip_prefix('z') {
                 let zn = num.parse::<i32>().unwrap();
-                zmax = std::cmp::max(zmax, zn);
+                zmax = zmax.max(zn);
                 Some((*out, zn))
             } else {
                 None

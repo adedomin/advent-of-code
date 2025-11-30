@@ -166,7 +166,7 @@ fn run_program(mut program: Vec<i64>) -> (i64, i64) {
                 outstate = outstate.next(output).expect("Valid Output.");
                 match outstate {
                     OutState::XYTile(x, y, tile) => {
-                        max_y = std::cmp::max(max_y, y);
+                        max_y = max_y.max(y);
                         #[cfg(feature = "term")]
                         {
                             write_tile(&mut tty, x, y, max_y, tile);

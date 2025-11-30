@@ -41,9 +41,9 @@ fn run_program(mut program: Vec<i64>, start: i64) -> i64 {
                         };
                         x += dx;
                         y += dy;
-                        minx = std::cmp::min(minx, x);
-                        miny = std::cmp::min(miny, y);
-                        maxx = std::cmp::max(maxx, x);
+                        minx = minx.min(x);
+                        miny = miny.min(y);
+                        maxx = maxx.max(x);
                         OutState::PaintColor
                     }
                 };

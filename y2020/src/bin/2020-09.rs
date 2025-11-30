@@ -34,8 +34,8 @@ fn part2_sol(input: &Output, inval: i64) -> Solved {
                     input[i..j]
                         .iter()
                         .fold((i64::MAX, i64::MIN), |(min, max), &num| {
-                            let min = std::cmp::min(num, min);
-                            let max = std::cmp::max(num, max);
+                            let min = num.min(min);
+                            let max = num.max(max);
                             (min, max)
                         });
                 assert!(min != i64::MAX && max != i64::MIN && min != max);

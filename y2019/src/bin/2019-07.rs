@@ -22,7 +22,7 @@ fn run_program(program: &[i64]) -> i64 {
                 }
             }
         });
-        std::cmp::max(last, acc)
+        last.max(acc)
     })
 }
 
@@ -73,7 +73,7 @@ fn feedback(program: &[i64]) -> i64 {
             })
             .last()
             .unwrap(); // never fails, is always Some(0) at a minimum.
-            std::cmp::max(last, acc)
+            last.max(acc)
         })
 }
 

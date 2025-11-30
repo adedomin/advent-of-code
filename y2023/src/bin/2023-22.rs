@@ -40,7 +40,7 @@ fn parse_input(input: &[u8]) -> Output {
     // add idents to line.
     let mut lines = (1u16..).zip(lines).collect::<Output>();
 
-    lines.sort_unstable_by_key(|(_, Line((_, _, z1), (_, _, z2)))| std::cmp::min(*z1, *z2));
+    lines.sort_unstable_by_key(|(_, Line((_, _, z1), (_, _, z2)))| *z1.min(z2));
     // lines
     //     .iter()
     //     .for_each(|(u, l)| println!("{}: {l:?}", char::from(b'A' + (*u as u8 - 1))));

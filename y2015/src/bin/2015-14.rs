@@ -15,7 +15,7 @@ impl Piecewise {
     fn eval(&self, sec: i64) -> i64 {
         let tot_sec = self.upto + self.rest;
         let linear_full = (sec / tot_sec) * self.upto * self.linear;
-        let rest = std::cmp::min(sec % tot_sec, self.upto);
+        let rest = (sec % tot_sec).min(self.upto);
         linear_full + (rest * self.linear)
     }
 }
