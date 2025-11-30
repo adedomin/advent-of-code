@@ -36,16 +36,42 @@ use std::{
 };
 
 /// Helper to destructure enums like Token::Something
-/// unfortunately Rust won't allow ( ) after a path capture
-///
-///  # Example
-///
-/// `destructure_or_none!(x::y::z|your, list, of, patterns| = val)`
+/// Deprecated: see `inner_or_none`
 #[macro_export]
 macro_rules! destructure_or_none {
     ($name:path |$($parts:ident),* $(,)?| = $value:expr) => {
         if let $name($($parts)*) = $value {
             Some($($parts)*)
+        } else {
+            None
+        }
+    };
+}
+
+/// Helper to destructure enums like Token::Something. This is an improved version of `destructure_or_none`
+/// Rust requires another symbol to separate a path token from a token tree, so the syntax: ::path | (pattern) | is used.
+/// You must wrap your patterns like the examples below.
+/// Note, you cannot use placeholder patterns like (_, x, y); the names of the identifiers are irrelevant.
+///
+///  # Examples
+///
+/// ```
+/// use aoc_shared::inner_or_none;
+///
+/// // useless use of macro to demonstate usage!
+/// assert_eq!(inner_or_none!(Some|(ident)| = Some(1)), Some(1));
+///
+/// enum A { X(u32), Y(u32) }
+/// let y = A::Y(1);
+/// assert_eq!(inner_or_none!(A::X|(x)| = y), None);
+/// let x = A::X(999);
+/// assert_eq!(inner_or_none!(A::X|(x)| = x), Some(999));
+/// ```
+#[macro_export]
+macro_rules! inner_or_none {
+    ($name:path | $parts:tt | = $value:expr) => {
+        if let $name$parts = $value {
+            Some($parts)
         } else {
             None
         }

@@ -1,8 +1,8 @@
-use aoc_shared::{fold_decimal_from, read_input_to_string};
-use itertools::Itertools;
+use aoc_shared::{fold_decimal_from, inner_or_none, read_input_to_string};
+use itertools::{EitherOrBoth, Itertools};
 use std::io;
 
-type Solved = u64;
+type Solved = usize;
 type Output = [Vec<Solved>; 2];
 
 fn parse_input(input: &str) -> Output {
@@ -25,32 +25,14 @@ fn part1_sol([left, right]: &Output) -> Solved {
         .sum::<Solved>()
 }
 
-fn get_counts(v: Vec<Solved>) -> impl Iterator<Item = (Solved, Solved)> {
-    v.into_iter().map(|x| (x, 1)).coalesce(|x, y| {
-        if x.0 == y.0 {
-            Ok((x.0, x.1 + 1))
-        } else {
-            Err((x, y))
-        }
-    })
-}
-
 fn part2_sol([left, right]: Output) -> Solved {
-    let right_counts = get_counts(right).collect::<Vec<(Solved, Solved)>>();
-    get_counts(left)
-        .fold((0, 0), |(mut idx, sum), (lnum, lcount)| {
-            while let Some((rnum, rcount)) = right_counts.get(idx) {
-                match lnum.cmp(rnum) {
-                    // next right number cannot match current left.
-                    std::cmp::Ordering::Less => return (idx, sum),
-                    std::cmp::Ordering::Equal => return (idx, sum + (rnum * rcount * lcount)),
-                    // find next matching right number.
-                    std::cmp::Ordering::Greater => idx += 1,
-                }
-            }
-            (idx, sum) // no more numbers on right match.
+    left.into_iter()
+        .dedup_with_count()
+        .merge_join_by(right.into_iter().dedup_with_count(), |a, b| a.1.cmp(&b.1))
+        .flat_map(|lr| inner_or_none!(EitherOrBoth::Both|(l, r)| = lr))
+        .fold(0, |sum, ((lcount, _), (rcount, rnum))| {
+            sum + (rnum * lcount * rcount)
         })
-        .1
 }
 
 fn main() -> io::Result<()> {
