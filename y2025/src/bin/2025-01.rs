@@ -21,7 +21,7 @@ fn parse_input(i: &str) -> Vec<Int> {
 const DIAL_LEN: Int = 100;
 const DIAL_START: Int = 50;
 
-fn solve(i: &[i32]) -> (Int, Int) {
+fn solve(i: &[Int]) -> (Int, Int) {
     i.iter()
         .fold(((0, 0), DIAL_START), |((p1, p2), dial), rot| {
             let ndial = (dial + rot).rem_euclid(DIAL_LEN);
