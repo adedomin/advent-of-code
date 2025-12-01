@@ -624,6 +624,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "y2025"
+version = "0.1.0"
+dependencies = [
+ "aoc-shared",
+]
+
+[[package]]
 name = "z3"
 version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
