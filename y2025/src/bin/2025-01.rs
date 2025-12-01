@@ -27,7 +27,7 @@ fn solve(i: &[Int]) -> (Int, Int) {
             let sum = dial + rot;
             let ndial = sum.rem_euclid(DIAL_LEN);
             let rot_around = if *rot < 0 {
-                (DIAL_LEN - dial - *rot) / DIAL_LEN - if dial == 0 { 1 } else { 0 } // edge-case, div returns 1 extra on 0.
+                (DIAL_LEN - dial - *rot) / DIAL_LEN - Int::from(dial == 0) // edge-case, div returns 1 extra on 0.
             } else {
                 sum / DIAL_LEN
             };
