@@ -28,7 +28,6 @@ fn solve2(i: &[(Int, Int)]) -> (Int, Int) {
             }
 
             let mid = digits / 2;
-            let is_even = digits.is_multiple_of(2);
             if let Some(pos) = (1..mid + 1)
                 .rev()
                 .filter(|&sub| digits.is_multiple_of(sub))
@@ -39,7 +38,8 @@ fn solve2(i: &[(Int, Int)]) -> (Int, Int) {
                     n == reconstructed
                 })
             {
-                (p1 + n * Int::from(pos == mid && is_even), p2 + n)
+                let is_even = digits.is_multiple_of(2);
+                (p1 + if pos == mid && is_even { n } else { 0 }, p2 + n)
             } else {
                 (p1, p2)
             }
