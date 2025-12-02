@@ -35,7 +35,7 @@ fn solve2(i: &[(Int, Int)]) -> (Int, Int) {
                 .find(|&sublen| {
                     let pow = TEN.pow(sublen);
                     let sub = n % pow;
-                    let reconstructed = (0..digits / sublen).fold(0, |acc, _| acc * pow + sub);
+                    let reconstructed = (1..digits / sublen).fold(sub, |acc, _| acc * pow + sub);
                     n == reconstructed
                 })
             {
