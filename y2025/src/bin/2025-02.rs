@@ -15,42 +15,57 @@ fn parse_input(i: &str) -> Vec<(Int, Int)> {
         .collect::<Vec<_>>()
 }
 
-fn solve(i: &[(Int, Int)]) -> Int {
-    i.iter().flat_map(|&(s, e)| s..(e + 1)).fold(0, |acc, n| {
-        let digits = n.ilog10() + 1;
-        let pow = (10 as Int).pow(digits / 2);
-        let upper = n / pow;
-        let lower = n % pow;
-        if upper == lower { acc + n } else { acc }
-    })
-}
+const TEN: Int = 10;
 
-fn solve2(i: &[(Int, Int)]) -> Int {
-    i.iter().flat_map(|&(s, e)| s..(e + 1)).fold(0, |acc, n| {
-        let nstr = n.to_string();
-        let len = nstr.len();
-        if len < 2 {
-            return acc;
-        }
-
-        let nb = nstr.as_bytes();
-        for i in 1..(len / 2 + 1) {
-            let mut chunks = nb.chunks_exact(i);
-            if !chunks.remainder().is_empty() {
-                continue;
-            } else if chunks.all(|chunk| &nb[..i] == chunk) {
-                return acc + n;
+fn solve2(i: &[(Int, Int)]) -> (Int, Int) {
+    i.iter()
+        .flat_map(|&(s, e)| s..(e + 1))
+        .fold((0, 0), |(p1, p2), n| {
+            let digits = n.ilog10() + 1;
+            // must have at least 2 digits to "repeat" any pattern.
+            if digits < 2 {
+                return (p1, p2);
             }
-        }
-        acc
-    })
+
+            // midpoint of decimal number
+            let mid = digits / 2;
+            let midpoint = TEN.pow(mid);
+            let upper = n / midpoint;
+            let lower = n % midpoint;
+            // P1: 464464 -> 464 | 464 -> 464 == 464
+            if upper == lower {
+                return (p1 + n, p2 + n);
+            };
+
+            // P2: decimal number of n digits of 1's
+            let all_ones = (TEN.pow(digits) - 1) / 9;
+            // detect numbers like 333333 444444, 22, etc.
+            if n == n % TEN /* first digit */ * all_ones {
+                return (p1, p2 + n);
+            }
+
+            // P2: check all patterns in-between the ones we checked above.
+            // e.g. 123123123 -> 123 * 3
+            if (2..(digits / 2))
+                .filter(|&sub| digits.is_multiple_of(sub))
+                .any(|sublen| {
+                    let pow = TEN.pow(sublen);
+                    let sub = n % pow;
+                    let reconstructed = (0..digits / sublen).fold(0, |acc, _| acc * pow + sub);
+                    n == reconstructed
+                })
+            {
+                (p1, p2 + n)
+            } else {
+                (p1, p2)
+            }
+        })
 }
 
 fn main() -> io::Result<()> {
     let input = read_input_to_string()?;
     let input = parse_input(&input);
-    let part1 = solve(&input);
-    let part2 = solve2(&input);
+    let (part1, part2) = solve2(&input);
     println!("Part1 {part1}  Part2 {part2}");
     Ok(())
 }
