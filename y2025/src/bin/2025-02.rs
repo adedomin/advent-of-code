@@ -35,9 +35,10 @@ fn solve2(i: &[(Int, Int)]) -> Int {
 
         let nb = nstr.as_bytes();
         for i in 1..(len / 2 + 1) {
-            if !len.is_multiple_of(i) {
+            let mut chunks = nb.chunks_exact(i);
+            if !chunks.remainder().is_empty() {
                 continue;
-            } else if nb.chunks_exact(i).all(|chunk| &nb[..i] == chunk) {
+            } else if chunks.all(|chunk| &nb[..i] == chunk) {
                 return acc + n;
             }
         }
