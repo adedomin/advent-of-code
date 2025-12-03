@@ -39,18 +39,21 @@ fn parse_input(i: &str) -> Vec<Vec<u8>> {
 // }
 
 fn solve2<const N: usize>(arr: &[Vec<u8>]) -> u64 {
-    let mut ans: Vec<u8> = Vec::with_capacity(N);
     arr.iter()
         .map(|bank| {
             assert!(bank.len() >= N, "battery bank too small!");
-            ans.clear();
-            bank.iter().enumerate().for_each(|(i, &batt)| {
-                while bank.len() + ans.len() - i > N && ans.pop_if(|val| *val < batt).is_some() {}
-                if ans.len() < N {
-                    ans.push(batt);
+            let mut s = [0u8; N];
+            let mut si = 0;
+            bank.iter().enumerate().for_each(|(bi, &batt)| {
+                while si > 0 && bank.len() + si - bi > s.len() && s[si - 1] < batt {
+                    si -= 1;
+                }
+                if si < s.len() {
+                    s[si] = batt;
+                    si += 1;
                 }
             });
-            ans.iter().fold(0, |acc, &n| acc * 10 + n as u64)
+            s.into_iter().fold(0, |acc, n| acc * 10 + n as u64)
         })
         .sum()
 }
