@@ -50,16 +50,13 @@ fn solve2<const N: usize>(arr: &[Vec<u8>]) -> u64 {
                     .enumerate()
                     .skip(off + 1)
                     .take(bank.len() - off - (N - i))
-                    .fold((off + 1, bank[off]), |(off, b), (idx, batt)| {
+                    .fold((off, bank[off]), |(off, b), (idx, batt)| {
                         match b.cmp(batt) {
-                            Ordering::Less => (
-                                idx + 1, // must offset idx by 1 for next loop itr
-                                *batt,
-                            ),
+                            Ordering::Less => (idx, *batt),
                             Ordering::Equal | Ordering::Greater => (off, b),
                         }
                     });
-                off = noff;
+                off = noff + 1; // incr for next digit after.
                 ans = ans * 10 + digit as u64;
             }
             ans
