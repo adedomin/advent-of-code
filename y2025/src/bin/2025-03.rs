@@ -43,9 +43,9 @@ fn solve2<const N: usize>(arr: &[Vec<u8>]) -> u64 {
         .map(|bank| {
             assert!(bank.len() >= N, "battery bank too small!");
             let mut off = 0;
-            let mut ans = [0u8; N];
-            ans.iter_mut().enumerate().for_each(|(i, ans_p)| {
-                (off, *ans_p) = bank
+            let mut ans = 0;
+            for i in 0..N {
+                let (noff, digit) = bank
                     .iter()
                     .enumerate()
                     .skip(off + 1)
@@ -59,8 +59,10 @@ fn solve2<const N: usize>(arr: &[Vec<u8>]) -> u64 {
                             Ordering::Equal | Ordering::Greater => (off, b),
                         }
                     });
-            });
-            ans.into_iter().fold(0u64, |acc, n| acc * 10 + n as u64)
+                off = noff;
+                ans = ans * 10 + digit as u64;
+            }
+            ans
         })
         .sum()
 }
