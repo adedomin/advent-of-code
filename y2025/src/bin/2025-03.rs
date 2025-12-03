@@ -1,4 +1,4 @@
-use std::{cmp::Ordering, io};
+use std::io;
 
 use aoc_shared::read_input_to_string;
 
@@ -39,27 +39,18 @@ fn parse_input(i: &str) -> Vec<Vec<u8>> {
 // }
 
 fn solve2<const N: usize>(arr: &[Vec<u8>]) -> u64 {
+    let mut ans: Vec<u8> = Vec::with_capacity(N);
     arr.iter()
         .map(|bank| {
             assert!(bank.len() >= N, "battery bank too small!");
-            let mut off = 0;
-            let mut ans = 0;
-            for i in 0..N {
-                let (noff, digit) = bank
-                    .iter()
-                    .enumerate()
-                    .skip(off + 1)
-                    .take(bank.len() - off - (N - i))
-                    .fold((off, bank[off]), |(off, b), (idx, batt)| {
-                        match b.cmp(batt) {
-                            Ordering::Less => (idx, *batt),
-                            Ordering::Equal | Ordering::Greater => (off, b),
-                        }
-                    });
-                off = noff + 1; // incr for next digit after.
-                ans = ans * 10 + digit as u64;
-            }
-            ans
+            ans.clear();
+            bank.iter().enumerate().for_each(|(i, &batt)| {
+                while bank.len() + ans.len() - i > N && ans.pop_if(|val| *val < batt).is_some() {}
+                if ans.len() < N {
+                    ans.push(batt);
+                }
+            });
+            ans.iter().fold(0, |acc, &n| acc * 10 + n as u64)
         })
         .sum()
 }
