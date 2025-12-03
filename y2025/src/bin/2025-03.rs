@@ -41,10 +41,7 @@ fn parse_input(i: &str) -> Vec<Vec<u8>> {
 fn solve2<const N: usize>(arr: &[Vec<u8>]) -> u64 {
     arr.iter()
         .map(|bank| {
-            assert!(
-                bank.len() >= N,
-                "battery bank too small! must be greater than 11."
-            );
+            assert!(bank.len() >= N, "battery bank too small!");
             let mut off = 0;
             let mut ans = [0u8; N];
             ans.iter_mut().enumerate().for_each(|(i, ans_p)| {
