@@ -45,18 +45,21 @@ fn solve2<const N: usize>(arr: &[Vec<u8>]) -> u64 {
                 bank.len() >= N,
                 "battery bank too small! must be greater than 11."
             );
-            let mut pos = 0;
+            let mut off = 0;
             let mut ans = [0u8; N];
             ans.iter_mut().enumerate().for_each(|(i, ans_p)| {
-                (pos, *ans_p) = bank
+                (off, *ans_p) = bank
                     .iter()
                     .enumerate()
-                    .skip(pos + 1)
-                    .take(bank.len() - pos - (N - i))
-                    .fold((pos + 1, bank[pos]), |(pos, b), (idx, batt)| {
+                    .skip(off + 1)
+                    .take(bank.len() - off - (N - i))
+                    .fold((off + 1, bank[off]), |(off, b), (idx, batt)| {
                         match b.cmp(batt) {
-                            Ordering::Less => (idx + 1, *batt),
-                            Ordering::Equal | Ordering::Greater => (pos, b),
+                            Ordering::Less => (
+                                idx + 1, // must offset idx by 1 for next loop itr
+                                *batt,
+                            ),
+                            Ordering::Equal | Ordering::Greater => (off, b),
                         }
                     });
             });
