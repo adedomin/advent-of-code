@@ -40,8 +40,7 @@ fn solve(map: &Output) -> (usize, usize) {
     let (ex, ey) = end.expect("expected an end.");
     // find start dir
     let (mut dx, mut dy) = map
-        .get_neigh_cardinal(sx as usize, sy as usize)
-        .into_iter()
+        .get_neigh_card_iter((sx as usize, sy as usize))
         .find_map(|Neighbor(t, x, y)| {
             if matches!(t, X::Hash) {
                 None

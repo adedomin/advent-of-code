@@ -71,17 +71,13 @@ fn solve(input: &FlatVec2D<u8>) -> (i32, i32) {
             let digit = input[(x, y)];
             if digit.is_ascii_digit() {
                 num = fold_decimal(num, &digit);
-                let neigh = input.get_neigh(x, y);
-                if !is_part_num {
-                    is_part_num = neigh
-                        .iter()
-                        .any(|Neighbor(v, ..)| !v.is_ascii_digit() && **v != b'.');
-                }
                 gear.extend(
-                    neigh
-                        .iter()
-                        .filter(|n| *(n.0) == b'*')
-                        .map(|Neighbor(_, gx, gy)| (*gx, *gy)),
+                    input
+                        .get_neigh_iter((x, y))
+                        .inspect(|Neighbor(v, _, _)| {
+                            is_part_num |= !v.is_ascii_digit() && **v != b'.';
+                        })
+                        .filter_map(|Neighbor(v, gx, gy)| (*v == b'*').then_some((gx, gy))),
                 );
             } else {
                 mut_ans(&mut sum, &mut gears, num, is_part_num, take(&mut gear));

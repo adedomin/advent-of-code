@@ -55,42 +55,6 @@ impl<T> FlatVec2D<T> {
         }
     }
 
-    /// Get all adjacent (including diagonal) neighbors, filtering for those out of bounds.
-    pub fn get_neigh(&self, x: usize, y: usize) -> Vec<Neighbor<&T>> {
-        let x = x as isize;
-        let y = y as isize;
-        #[rustfmt::skip]
-        let move_mat = vec![
-            (x - 1, y - 1), (x, y - 1), (x + 1, y - 1),
-            (x - 1, y    ),             (x + 1, y    ),
-            (x - 1, y + 1), (x, y + 1), (x + 1, y + 1),
-        ];
-        self.get_neigh_real(move_mat)
-    }
-
-    /// Get all cardinally adjacent neighbors (N, S, E, W), filtering for those out of bounds.
-    pub fn get_neigh_cardinal(&self, x: usize, y: usize) -> Vec<Neighbor<&T>> {
-        let x = x as isize;
-        let y = y as isize;
-        #[rustfmt::skip]
-        let move_mat = vec![
-                        (x, y - 1),
-            (x - 1, y),             (x + 1, y),
-                        (x, y + 1),
-        ];
-        self.get_neigh_real(move_mat)
-    }
-
-    fn get_neigh_real(&self, mut move_mat: Vec<(isize, isize)>) -> Vec<Neighbor<&T>> {
-        move_mat
-            .drain(..)
-            .filter(|&(x, y)| {
-                (x > -1 && x < (self.1 as isize)) && (y > -1 && y < (self.2 as isize))
-            })
-            .map(|(x, y)| Neighbor(&self[(x as usize, y as usize)], x as usize, y as usize))
-            .collect::<Vec<Neighbor<&T>>>()
-    }
-
     pub fn get_neigh_iter(&self, (x, y): (usize, usize)) -> impl Iterator<Item = Neighbor<&T>> {
         let x = x as isize;
         let y = y as isize;
