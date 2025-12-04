@@ -27,8 +27,7 @@ fn solve(nodes: &FlatVec2D<MazeCell>, start: XY, end: XY, is_part2: bool) -> usi
                 }
                 curr_track[(*x, *y)] = true;
                 let unexplored = nodes
-                    .get_neigh_cardinal(*x, *y)
-                    .into_iter()
+                    .get_neigh_card_iter((*x, *y))
                     .filter(|Neighbor(n, nx, ny)| n.can_traverse(*nx, *ny, *x, *y, is_part2))
                     .map(|Neighbor(_, nx, ny)| Explore { at: (nx, ny) })
                     .collect::<Vec<DfsNode>>();

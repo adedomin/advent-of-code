@@ -99,8 +99,7 @@ fn part1(map: &FlatVec2D<Scaff>) -> (usize, Intersect) {
         .pad_xyrange()
         .flat_map(|(x, y)| {
             if let Scaff::Beam = map[(x, y)] {
-                map.get_neigh_cardinal(x, y)
-                    .iter()
+                map.get_neigh_card_iter((x, y))
                     .all(|Neighbor(s, _, _)| matches!(s, Scaff::Beam))
                     .then_some((x - 1, y - 1))
                     // for part2.

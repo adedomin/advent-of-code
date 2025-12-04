@@ -53,8 +53,7 @@ fn part1_sol(corrupt: &Output, (bx, by): (Int, Int), corr_amt: Int) -> Option<In
             return Some(cost);
         }
 
-        map.get_neigh_cardinal(x, y)
-            .into_iter()
+        map.get_neigh_card_iter((x, y))
             .for_each(|Neighbor(_, nx, ny)| {
                 dij.push((nx, ny), cost + 1);
             });

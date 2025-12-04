@@ -30,8 +30,7 @@ fn find_reachable(trails: &mut FlatVec2D<Int>, map: &Output, (x, y): (usize, usi
         }
 
         trails[(x, y)] = map
-            .get_neigh_cardinal(x, y)
-            .into_iter()
+            .get_neigh_card_iter((x, y))
             .flat_map(|Neighbor(slope, x, y)| {
                 if cs.0 + 1 == slope.0 {
                     rec(trails, uniq, map, (x, y))

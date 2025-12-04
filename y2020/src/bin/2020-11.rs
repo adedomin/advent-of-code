@@ -42,8 +42,7 @@ fn part1_sol(map: &Output) -> Solved {
                     continue;
                 }
                 let occupied = map
-                    .get_neigh(x, y)
-                    .into_iter()
+                    .get_neigh_iter((x, y))
                     .filter(|neigh| matches!(neigh.0, Seat::Occupied))
                     .count();
                 match map[(x, y)] {

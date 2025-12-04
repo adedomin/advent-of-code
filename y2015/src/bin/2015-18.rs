@@ -24,8 +24,7 @@ fn part1_sol(
         for y in 0..ymax {
             for x in 0..xmax {
                 let neigh_on_cnt = input
-                    .get_neigh(x, y)
-                    .iter()
+                    .get_neigh_iter((x, y))
                     .filter(|Neighbor(chr, _, _)| **chr == b'#')
                     .count();
                 if input[(x, y)] != b'#' && neigh_on_cnt == 3 {
