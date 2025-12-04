@@ -91,12 +91,53 @@ impl<T> FlatVec2D<T> {
             .collect::<Vec<Neighbor<&T>>>()
     }
 
+    pub fn get_neigh_iter(&self, (x, y): (usize, usize)) -> impl Iterator<Item = Neighbor<&T>> {
+        let x = x as isize;
+        let y = y as isize;
+        #[rustfmt::skip]
+        let move_mat: [(isize, isize); 8] = [
+            (x - 1, y - 1), (x, y - 1), (x + 1, y - 1),
+            (x - 1, y    ),             (x + 1, y    ),
+            (x - 1, y + 1), (x, y + 1), (x + 1, y + 1),
+        ];
+        self.get_neigh_iter_real(move_mat)
+    }
+
+    pub fn get_neigh_card_iter(
+        &self,
+        (x, y): (usize, usize),
+    ) -> impl Iterator<Item = Neighbor<&T>> {
+        let x = x as isize;
+        let y = y as isize;
+        #[rustfmt::skip]
+        let move_mat: [(isize, isize); 4] = [
+                            (x, y - 1),
+            (x - 1, y    ),             (x + 1, y    ),
+                            (x, y + 1),
+        ];
+        self.get_neigh_iter_real(move_mat)
+    }
+
+    pub fn get_neigh_iter_real<const N: usize>(
+        &self,
+        move_mat: [(isize, isize); N],
+    ) -> impl Iterator<Item = Neighbor<&T>> {
+        move_mat
+            .into_iter()
+            .filter_map(|(x, y)| self.to_bounds(x, y))
+            .map(|(x, y)| Neighbor(&self[(x, y)], x, y))
+    }
+
     pub fn pad_in_bounds(&self, x: usize, y: usize) -> bool {
         (1..self.1 - 1).contains(&x) && (1..self.2 - 1).contains(&y)
     }
 
     pub fn in_bounds(&self, x: isize, y: isize) -> bool {
         (x > -1 && x < (self.1 as isize)) && (y > -1 && y < (self.2 as isize))
+    }
+
+    pub fn to_bounds(&self, x: isize, y: isize) -> Option<(usize, usize)> {
+        self.in_bounds(x, y).then_some((x as usize, y as usize))
     }
 
     pub fn xrange(&self) -> std::ops::Range<usize> {

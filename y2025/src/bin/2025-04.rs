@@ -22,10 +22,9 @@ fn solve(input: &FlatVec2D<Fork>, to_remove: &mut Vec<(usize, usize)>) -> usize 
     input
         .xyrange()
         .filter(|&xy| matches!(input[xy], Fork::Paper))
-        .filter(|&(x, y)| {
+        .filter(|&xy| {
             input
-                .get_neigh(x, y)
-                .into_iter()
+                .get_neigh_iter(xy)
                 .filter(|Neighbor(t, _, _)| matches!(t, Fork::Paper))
                 .count()
                 < 4
