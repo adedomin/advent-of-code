@@ -40,10 +40,7 @@ fn main() -> io::Result<()> {
     let mut to_remove = Vec::with_capacity(input.0.len());
     let part1 = solve(&input, &mut to_remove);
     let mut part2 = part1;
-    loop {
-        if to_remove.is_empty() {
-            break;
-        }
+    while !to_remove.is_empty() {
         to_remove.drain(..).for_each(|xy| input[xy] = Fork::Floor);
         part2 += solve(&input, &mut to_remove)
     }
