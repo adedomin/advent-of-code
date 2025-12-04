@@ -18,6 +18,14 @@ WALK
 ";
 
 // I'll be honest, I just started with P1 and just shoved instructions in til it worked.
+//
+// Same as p1, jump onto islands with one new caveat.
+// one of the island problems looked like: #.#.##.##.#
+// we need to check 8 (H) ahead and cancel out our C & D Jump condition if true.
+//
+// Another Island pair: #.##.##..#
+// forces us to jump right away after landing on #.#<-#. by checking for the dead spot in 2 (B)
+// But only, again, if D (4) can be landed on.
 const P2_SPRING_SCRIPT: &str = "\
 NOT C T
 AND D T
