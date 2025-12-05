@@ -1,4 +1,4 @@
-use std::io;
+use std::{cmp::Ordering, io};
 
 use aoc_shared::read_input_to_string;
 
@@ -25,20 +25,31 @@ fn parse_input(i: &str) -> (Vec<(u64, u64)>, Vec<u64>) {
             false
         }
     });
-    let ids = ids
+    let mut ids = ids
         .split_ascii_whitespace()
         .map(|num| num.parse::<u64>().expect("Valid number."))
         .collect::<Vec<_>>();
+    ids.sort_unstable();
     (ranges, ids)
 }
 
 fn main() -> io::Result<()> {
     let input = read_input_to_string()?;
     let (ranges, ids) = parse_input(input.trim());
-    let part1 = ids
-        .iter()
-        .filter(|id| ranges.iter().any(|(s, e)| (s..=e).contains(id)))
-        .count();
+    let part1 = {
+        let mut ri = 0;
+        ids.iter().fold(0, |acc, id| {
+            while let Some((s, e)) = ranges.get(ri) {
+                match id.cmp(e) {
+                    Ordering::Less | Ordering::Equal => {
+                        return acc + u64::from((s..=e).contains(&id));
+                    }
+                    Ordering::Greater => ri += 1,
+                }
+            }
+            acc
+        })
+    };
     let part2 = ranges.iter().map(|(s, e)| e - s + 1).sum::<u64>();
     println!("Part1 {part1}  Part2 {part2}");
     Ok(())
