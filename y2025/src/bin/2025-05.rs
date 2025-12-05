@@ -17,12 +17,12 @@ fn parse_input(i: &str) -> (Vec<(u64, u64)>, Vec<u64>) {
     // dedup_by starts from the start at the rhs, and the candidate on the lhs
     ranges.dedup_by(|(cand_s, cand_e), (_curr_s, curr_e)| {
         // because of sort order, cand_s being -le curr_e means its in the range.
-        if cand_s <= curr_e {
-            // still have to pick the biggest of the two...
-            *curr_e = *cand_e.max(curr_e);
-            true
-        } else {
-            false
+        match cand_s.cmp(&curr_e) {
+            Ordering::Less | Ordering::Equal => {
+                *curr_e = *cand_e.max(curr_e);
+                true
+            }
+            Ordering::Greater => false,
         }
     });
     let mut ids = ids
