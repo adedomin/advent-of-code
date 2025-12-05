@@ -40,11 +40,10 @@ fn main() -> io::Result<()> {
         let mut ri = 0;
         ids.iter().fold(0, |acc, id| {
             while let Some((s, e)) = ranges.get(ri) {
-                match id.cmp(e) {
-                    Ordering::Less | Ordering::Equal => {
-                        return acc + u64::from((s..=e).contains(&id));
-                    }
-                    Ordering::Greater => ri += 1,
+                if id <= e {
+                    return acc + u64::from(s <= id);
+                } else {
+                    ri += 1;
                 }
             }
             acc
