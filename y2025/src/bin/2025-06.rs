@@ -9,86 +9,81 @@ enum Op {
     Mul,
 }
 
-fn parse_solve_1(i: &str) -> (Vec<(Int, Op)>, Int) {
-    let mut itr = i.split('\n').rev();
-    let operators = itr
+impl Op {
+    fn exec(&self, lhs: Int, rhs: Int) -> Int {
+        match self {
+            Op::Add => lhs + rhs,
+            Op::Mul => lhs * rhs,
+        }
+    }
+}
+
+fn parse_opt(i: &str) -> Vec<Op> {
+    i.split('\n')
+        .rev()
+        .skip_while(|line| line.is_empty())
+        .take(1)
         .next()
         .map(|opstr| {
             opstr
                 .split_ascii_whitespace()
                 .map(|op| match op {
-                    "+" => (0, Op::Add),
-                    "*" => (1, Op::Mul),
-                    _ => panic!("invalid operator: {opstr}"),
+                    "+" => Op::Add,
+                    "*" => Op::Mul,
+                    _ => panic!("Invalid Op: {op}"),
                 })
                 .collect::<Vec<_>>()
         })
-        .unwrap();
-    let sum = itr
-        .flat_map(|line| {
-            line.split_ascii_whitespace()
-                .enumerate()
-                .map(|(i, num)| (i, num.parse::<Int>().expect("number")))
-        })
-        .fold(
-            operators
-                .iter()
-                .map(|(start, _)| *start)
-                .collect::<Vec<Int>>(),
-            |mut acc, (i, n)| {
-                acc[i] = match operators[i].1 {
-                    Op::Add => acc[i] + n,
-                    Op::Mul => acc[i] * n,
-                };
-                acc
-            },
-        )
-        .into_iter()
-        .sum();
-    (operators, sum)
+        .expect("one line")
 }
 
-fn parse_solve_2(ops: Vec<(Int, Op)>, i: &str) -> Int {
-    let mut nums_i = 0;
-    let mut nums = vec![vec![]; ops.len()];
-    let grid = i
+fn parse_p1(i: &str, oplen: usize) -> Vec<Vec<Int>> {
+    let mut ret = vec![vec![]; oplen];
+    i.split_ascii_whitespace()
+        .flat_map(|s| s.parse::<Int>().ok())
+        .enumerate()
+        .for_each(|(i, n)| ret[i % oplen].push(n));
+    ret
+}
+
+fn parse_p2(i: &str, oplen: usize) -> Vec<Vec<Int>> {
+    let mut ret_i = 0;
+    let mut ret = vec![vec![]; oplen];
+    let mut grid = i
         .split('\n')
         .map(|line| line.as_bytes())
         .collect::<Vec<&[u8]>>();
-    // I think the numbers are properly padded...
-    for x in 0..grid[0].len() {
-        let mut num = None;
-        for y in 0..grid.len() - 1 {
-            let g = grid[y][x];
-            if g.is_ascii_digit() {
-                let g = (g - b'0') as Int;
-                num = Some(num.unwrap_or(0) * 10 + g);
+    _ = grid.pop(); // remove last line
+    assert!(!grid.is_empty(), "grid should have numbers.");
+    let max_x = grid.iter().max_by_key(|line| line.len()).unwrap().len();
+    for x in 0..max_x {
+        let mut n = None;
+        for y in 0..grid.len() {
+            if let Some(g) = grid.get(y).and_then(|gl| gl.get(x))
+                && g.is_ascii_digit()
+            {
+                n = Some(n.unwrap_or(0) * 10 + (g - b'0') as Int);
             }
         }
-        if let Some(num) = num {
-            nums[nums_i].push(num);
+        if let Some(n) = n.take() {
+            ret[ret_i].push(n);
         } else {
-            nums_i += 1;
+            // spacer
+            ret_i += 1;
         }
     }
-    ops.into_iter()
-        .zip(nums)
-        .map(|((_, op), nums)| {
-            nums.into_iter()
-                .reduce(|acc, n| match op {
-                    Op::Add => acc + n,
-                    Op::Mul => acc * n,
-                })
-                .expect("one number")
-        })
-        .sum()
+    ret
 }
 
 fn main() -> io::Result<()> {
     let input = read_input_to_string()?;
-    let input = input.trim();
-    let (ops, part1) = parse_solve_1(input);
-    let part2 = parse_solve_2(ops, input);
-    println!("Part1 {part1}  Part2 {part2}");
+    let ops = parse_opt(&input);
+    let [p1, p2] = [parse_p1(&input, ops.len()), parse_p2(&input, ops.len())].map(|p| {
+        p.into_iter()
+            .zip(ops.iter())
+            .map(|(nums, op)| nums.into_iter().reduce(|l, r| op.exec(l, r)).unwrap())
+            .sum::<Int>()
+    });
+    println!("Part1 {p1}  Part2 {p2}");
     Ok(())
 }
