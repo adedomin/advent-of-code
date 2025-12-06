@@ -4,12 +4,9 @@ use aoc_shared::read_input_to_string;
 
 type Int = u64;
 
-fn parse_opt(i: &str) -> Vec<impl Fn(Int, Int) -> Int> {
+fn parse_opt(i: &str) -> Vec<fn(Int, Int) -> Int> {
     i.split('\n')
-        .rev()
-        .skip_while(|line| line.is_empty())
-        .take(1)
-        .next()
+        .next_back()
         .map(|opstr| {
             opstr
                 .split_ascii_whitespace()
@@ -39,7 +36,7 @@ fn parse_p2(i: &str, oplen: usize) -> Vec<Vec<Int>> {
         .split('\n')
         .map(|line| line.as_bytes())
         .collect::<Vec<&[u8]>>();
-    _ = grid.pop(); // remove last line
+    _ = grid.pop(); // remove operators line.
     assert!(!grid.is_empty(), "grid should have numbers.");
     let max_x = grid.iter().max_by_key(|line| line.len()).unwrap().len();
     for x in 0..max_x {
@@ -66,8 +63,9 @@ fn parse_p2(i: &str, oplen: usize) -> Vec<Vec<Int>> {
 
 fn main() -> io::Result<()> {
     let input = read_input_to_string()?;
-    let ops = parse_opt(&input);
-    let [p1, p2] = [parse_p1(&input, ops.len()), parse_p2(&input, ops.len())].map(|p| {
+    let input = input.trim();
+    let ops = parse_opt(input);
+    let [p1, p2] = [parse_p1(input, ops.len()), parse_p2(input, ops.len())].map(|p| {
         p.into_iter()
             .zip(ops.iter())
             .map(|(nums, op)| nums.into_iter().reduce(op).unwrap())
