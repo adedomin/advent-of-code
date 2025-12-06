@@ -33,8 +33,8 @@ fn parse_p1(i: &str, oplen: usize) -> Vec<Vec<Int>> {
 }
 
 fn parse_p2(i: &str, oplen: usize) -> Vec<Vec<Int>> {
-    let mut ret_i = 0;
-    let mut ret = vec![vec![]; oplen];
+    let mut ret_t = vec![];
+    let mut ret = Vec::with_capacity(oplen);
     let mut grid = i
         .split('\n')
         .map(|line| line.as_bytes())
@@ -52,12 +52,15 @@ fn parse_p2(i: &str, oplen: usize) -> Vec<Vec<Int>> {
             }
         }
         if let Some(n) = n.take() {
-            ret[ret_i].push(n);
-        } else {
-            // spacer
-            ret_i += 1;
+            ret_t.push(n);
+        } else if !ret_t.is_empty() {
+            ret.push(std::mem::take(&mut ret_t));
         }
     }
+    if !ret_t.is_empty() {
+        ret.push(std::mem::take(&mut ret_t));
+    }
+    assert_eq!(ret.len(), oplen, "invalid column layout.");
     ret
 }
 
