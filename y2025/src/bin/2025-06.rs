@@ -4,21 +4,7 @@ use aoc_shared::read_input_to_string;
 
 type Int = u64;
 
-enum Op {
-    Add,
-    Mul,
-}
-
-impl Op {
-    fn exec(&self, lhs: Int, rhs: Int) -> Int {
-        match self {
-            Op::Add => lhs + rhs,
-            Op::Mul => lhs * rhs,
-        }
-    }
-}
-
-fn parse_opt(i: &str) -> Vec<Op> {
+fn parse_opt(i: &str) -> Vec<impl Fn(Int, Int) -> Int> {
     i.split('\n')
         .rev()
         .skip_while(|line| line.is_empty())
@@ -28,8 +14,8 @@ fn parse_opt(i: &str) -> Vec<Op> {
             opstr
                 .split_ascii_whitespace()
                 .map(|op| match op {
-                    "+" => Op::Add,
-                    "*" => Op::Mul,
+                    "+" => std::ops::Add::add,
+                    "*" => std::ops::Mul::mul,
                     _ => panic!("Invalid Op: {op}"),
                 })
                 .collect::<Vec<_>>()
@@ -81,7 +67,7 @@ fn main() -> io::Result<()> {
     let [p1, p2] = [parse_p1(&input, ops.len()), parse_p2(&input, ops.len())].map(|p| {
         p.into_iter()
             .zip(ops.iter())
-            .map(|(nums, op)| nums.into_iter().reduce(|l, r| op.exec(l, r)).unwrap())
+            .map(|(nums, op)| nums.into_iter().reduce(op).unwrap())
             .sum::<Int>()
     });
     println!("Part1 {p1}  Part2 {p2}");
