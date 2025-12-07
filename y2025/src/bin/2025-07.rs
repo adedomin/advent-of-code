@@ -1,4 +1,4 @@
-use std::{collections::HashSet, io};
+use std::io;
 
 use aoc_shared::{FlatVec2D, parse_to_flat2d, read_input};
 
@@ -20,53 +20,23 @@ impl From<u8> for Lab {
     }
 }
 
-fn solve(input: &FlatVec2D<Lab>, (x, mut y): (usize, usize)) -> usize {
+fn solve(input: &FlatVec2D<Lab>, (sx, sy): (usize, usize)) -> (usize, usize) {
     let mut splits = 0;
-    let mut xs = HashSet::from([x]);
-    let mut xs_swap = HashSet::default();
-    while y < input.2 {
-        xs.drain().for_each(|x| {
-            if let Lab::Splitter = input[(x, y)] {
-                xs_swap.extend([x.saturating_sub(1), (x + 1).min(input.1 - 1)]);
+    let mut timelines = vec![0; input.1];
+    timelines[sx] = 1;
+
+    for y in sy..input.2 {
+        for x in input.xrange() {
+            if timelines[x] != 0 && matches!(input[(x, y)], Lab::Splitter) {
                 splits += 1;
-            } else {
-                xs_swap.insert(x);
+                let t = std::mem::take(&mut timelines[x]);
+                _ = [x.checked_sub(1), (x + 1 < input.1).then_some(x + 1)]
+                    .map(|x| x.map(|x| timelines[x] += t));
             }
-        });
-        std::mem::swap(&mut xs, &mut xs_swap);
-        y += 1;
-    }
-    splits
-}
-
-fn split_timeline(
-    memo: &mut FlatVec2D<usize>,
-    map: &FlatVec2D<Lab>,
-    tl: usize,
-    (x, y): (usize, usize),
-) -> usize {
-    if y >= map.2 {
-        return tl;
-    } else if memo[(x, y)] != 0 {
-        return memo[(x, y)];
+        }
     }
 
-    let ntl = if let Lab::Splitter = map[(x, y)] {
-        [x.checked_sub(1), ((x + 1) < map.1).then_some(x + 1)]
-            .iter()
-            .filter_map(|x| x.map(|x| split_timeline(memo, map, tl, (x, y))))
-            .sum()
-    } else {
-        split_timeline(memo, map, tl, (x, y + 1))
-    };
-
-    memo[(x, y)] = ntl;
-    ntl
-}
-
-fn solve2(input: &FlatVec2D<Lab>, xy: (usize, usize)) -> usize {
-    let mut memo = FlatVec2D::new(input.1, input.2);
-    split_timeline(&mut memo, input, 1, xy)
+    (splits, timelines.into_iter().sum())
 }
 
 fn main() -> io::Result<()> {
@@ -76,8 +46,8 @@ fn main() -> io::Result<()> {
         .xyrange()
         .find(|&xy| matches!(input[xy], Lab::Start))
         .expect("No Start on the map.");
-    let part1 = solve(&input, start);
-    let part2 = solve2(&input, start);
+    let (part1, part2) = solve(&input, start);
+    // let part2 = solve2(&input, start);
     println!("Part1 {part1}  Part2 {part2}");
     Ok(())
 }
