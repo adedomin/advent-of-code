@@ -51,17 +51,14 @@ fn split_timeline(
         return memo[(x, y)];
     }
 
-    let mut ntl = 0;
-    if let Lab::Splitter = map[(x, y)] {
-        if let Some(lx) = x.checked_sub(1) {
-            ntl += split_timeline(memo, map, tl, (lx, y));
-        }
-        if (x + 1) < map.1 {
-            ntl += split_timeline(memo, map, tl, (x + 1, y));
-        }
+    let ntl = if let Lab::Splitter = map[(x, y)] {
+        [x.checked_sub(1), ((x + 1) < map.1).then_some(x + 1)]
+            .iter()
+            .filter_map(|x| x.map(|x| split_timeline(memo, map, tl, (x, y))))
+            .sum()
     } else {
-        ntl = split_timeline(memo, map, tl, (x, y + 1));
-    }
+        split_timeline(memo, map, tl, (x, y + 1))
+    };
 
     memo[(x, y)] = ntl;
     ntl
