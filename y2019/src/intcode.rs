@@ -190,7 +190,7 @@ fn jne(p1: i64, p2: i64) -> bool {
     p1 != p2
 }
 
-/// Valid intcode inputs. only two types implement this: `Option<i64>` and `VecDeque<u8>` (ASCII)
+/// Valid intcode inputs. only two types implement this: `Option<i64>`, `VecDeque<T>` (ASCII)
 pub trait Input {
     /// Peek the input so as to not consume it if the input operation fails.
     fn peek(&self) -> Option<i64>;
@@ -208,7 +208,11 @@ impl Input for Option<i64> {
     }
 }
 
-impl Input for VecDeque<u8> {
+impl<T> Input for VecDeque<T>
+where
+    i64: From<T>,
+    T: Copy,
+{
     fn peek(&self) -> Option<i64> {
         self.iter().next().copied().map(i64::from)
     }
