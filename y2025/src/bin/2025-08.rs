@@ -31,38 +31,28 @@ fn dist_pow2(lj: &[Int; 3], rj: &[Int; 3]) -> Int {
 const P1_LIM: usize = 1000;
 
 fn conn(
-    mut cid: usize,
+    cid: usize,
     circuits: &mut HashMap<usize, Vec<usize>>,
-    cmap: &mut [Option<usize>],
+    cmap: &mut [usize],
     (l, r): (usize, usize),
 ) -> usize {
-    match (&cmap[l], &cmap[r]) {
-        (None, None) => {
-            circuits.insert(cid, vec![l, r]);
-            cmap[l] = Some(cid);
-            cmap[r] = Some(cid);
-            cid += 1;
-        }
-        (None, Some(rcid)) => {
-            let key = circuits.get_mut(rcid).unwrap();
-            key.push(l);
-            cmap[l] = Some(*rcid);
-        }
-        (Some(lcid), None) => {
-            let key = circuits.get_mut(lcid).unwrap();
-            key.push(r);
-            cmap[r] = Some(*lcid);
-        }
-        (Some(lcid), Some(rcid)) if lcid != rcid => {
-            let mut lc = circuits.remove(lcid).unwrap();
-            lc.extend(circuits.remove(rcid).unwrap());
-            lc.iter().for_each(|i| cmap[*i] = Some(cid));
-            circuits.insert(cid, lc);
-            cid += 1;
-        }
-        _ => (),
+    let (lc, rc) = (&cmap[l], &cmap[r]);
+    if lc == rc {
+        return cid;
     }
-    cid
+
+    let mut lc = circuits.remove(lc).unwrap();
+    let mut rc = circuits.remove(rc).unwrap();
+    let c = if lc.len() < rc.len() {
+        rc.extend(lc);
+        rc
+    } else {
+        lc.extend(rc);
+        lc
+    };
+    c.iter().for_each(|i| cmap[*i] = cid);
+    circuits.insert(cid, c);
+    cid + 1
 }
 
 fn solve(input: &[[Int; 3]]) -> (usize, Int) {
@@ -71,9 +61,12 @@ fn solve(input: &[[Int; 3]]) -> (usize, Int) {
         .map(|(l, r)| Reverse((dist_pow2(&input[l], &input[r]), (l, r))))
         .collect::<BinaryHeap<Reverse<(Int, (usize, usize))>>>();
 
-    let mut cid = 0usize;
-    let mut circuits: HashMap<usize, Vec<usize>, _> = HashMap::new();
-    let mut circuit_map = vec![None; input.len()];
+    let mut circuit_map = (0..input.len()).collect::<Vec<usize>>();
+    let mut circuits: HashMap<usize, Vec<usize>, _> = circuit_map
+        .iter()
+        .map(|&i| (i, vec![i]))
+        .collect::<HashMap<usize, Vec<usize>>>();
+    let mut cid = circuits.len();
     for _ in 0..P1_LIM {
         if let Some(Reverse((_d, lr))) = dists.pop() {
             cid = conn(cid, &mut circuits, &mut circuit_map, lr);
