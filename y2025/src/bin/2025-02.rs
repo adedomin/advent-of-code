@@ -1,4 +1,4 @@
-use std::io;
+use std::{collections::HashSet, io};
 
 use aoc_shared::read_input_to_string;
 
@@ -16,40 +16,70 @@ fn parse_input(i: &str) -> Vec<(Int, Int)> {
 }
 
 const TEN: Int = 10;
+const PATS_1: [(u32, Int); 5] = [
+    (1, 11),     // 2
+    (2, 101),    // 4
+    (3, 1001),   // 6
+    (4, 10001),  // 8
+    (5, 100001), // 10
+];
+const PATS_2: [(u32, Int); 7] = [
+    (1, 111),       // 3
+    (1, 11111),     // 5
+    (2, 10101),     // 6
+    (1, 1111111),   // 7
+    (2, 1010101),   // 8
+    (3, 1001001),   // 9
+    (2, 101010101), // 10
+];
 
-fn solve2(i: &[(Int, Int)]) -> (Int, Int) {
-    i.iter()
-        .flat_map(|&(s, e)| s..(e + 1))
-        .fold((0, 0), |(p1, p2), n| {
-            let digits = n.ilog10() + 1;
-            // must have at least 2 digits to "repeat" any pattern.
-            if digits < 2 {
-                return (p1, p2);
-            }
+fn repeating(pat: &[(u32, Int)]) -> impl Iterator<Item = Int> {
+    let mut i = 0;
+    let mut range = TEN.pow(pat[i].0 - 1)..TEN.pow(pat[i].0);
+    std::iter::successors(Some(pat[i].1 * range.next().unwrap()), move |_| {
+        if let Some(n) = range.next() {
+            Some(pat[i].1 * n)
+        } else if i + 1 < pat.len() {
+            i += 1;
+            range = TEN.pow(pat[i].0 - 1)..TEN.pow(pat[i].0);
+            Some(pat[i].1 * range.next().unwrap())
+        } else {
+            None
+        }
+    })
+}
 
-            let mid = digits / 2;
-            if let Some(pos) = (1..mid + 1)
-                .rev()
-                .filter(|&sub| digits.is_multiple_of(sub))
-                .find(|&sublen| {
-                    let pow = TEN.pow(sublen);
-                    let sub = n % pow;
-                    let reconstructed = (1..digits / sublen).fold(sub, |acc, _| acc * pow + sub);
-                    n == reconstructed
-                })
-            {
-                let is_even = digits.is_multiple_of(2);
-                (p1 + if pos == mid && is_even { n } else { 0 }, p2 + n)
+fn solve(input: &[(Int, Int)], range: &[(u32, Int)], dupes: &mut HashSet<Int>) -> Int {
+    let mut i = 0;
+    let mut acc = 0;
+    'out: for r in repeating(range) {
+        loop {
+            if let Some(&(s, e)) = input.get(i) {
+                if r <= e {
+                    if s <= r && dupes.insert(r) {
+                        acc += r
+                    }
+                    continue 'out;
+                } else if r > e {
+                    i += 1;
+                }
             } else {
-                (p1, p2)
+                // no more ranges.
+                break 'out;
             }
-        })
+        }
+    }
+    acc
 }
 
 fn main() -> io::Result<()> {
     let input = read_input_to_string()?;
-    let input = parse_input(&input);
-    let (part1, part2) = solve2(&input);
+    let mut input = parse_input(&input);
+    input.sort_unstable();
+    // the part2 ranges overlap slightly.
+    let mut dupes = HashSet::new();
+    let part1 = solve(&input, &PATS_1, &mut dupes);
+    let part2 = solve(&input, &PATS_2, &mut dupes) + part1;
     println!("Part1 {part1}  Part2 {part2}");
     Ok(())
 }
