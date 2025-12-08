@@ -1,8 +1,4 @@
-use std::{
-    cmp::Reverse,
-    collections::{BinaryHeap, HashMap},
-    io,
-};
+use std::{cmp::Reverse, collections::BinaryHeap, io};
 
 use aoc_shared::read_input_to_string;
 
@@ -30,29 +26,17 @@ fn dist_pow2(lj: &[Int; 3], rj: &[Int; 3]) -> Int {
 
 const P1_LIM: usize = 1000;
 
-fn conn(
-    cid: usize,
-    circuits: &mut HashMap<usize, Vec<usize>>,
-    cmap: &mut [usize],
-    (l, r): (usize, usize),
-) -> usize {
-    let (lc, rc) = (&cmap[l], &cmap[r]);
+fn conn(cmap: &mut [usize], (l, r): (usize, usize)) -> bool {
+    let (lc, rc) = (cmap[l], cmap[r]);
     if lc == rc {
-        return cid;
+        return false;
     }
-
-    let mut lc = circuits.remove(lc).unwrap();
-    let mut rc = circuits.remove(rc).unwrap();
-    let c = if lc.len() < rc.len() {
-        rc.extend(lc);
-        rc
-    } else {
-        lc.extend(rc);
-        lc
-    };
-    c.iter().for_each(|i| cmap[*i] = cid);
-    circuits.insert(cid, c);
-    cid + 1
+    cmap.iter_mut().for_each(|c| {
+        if *c == rc {
+            *c = lc;
+        }
+    });
+    true
 }
 
 fn solve(input: &[[Int; 3]]) -> (usize, Int) {
@@ -61,30 +45,27 @@ fn solve(input: &[[Int; 3]]) -> (usize, Int) {
         .map(|(l, r)| Reverse((dist_pow2(&input[l], &input[r]), (l, r))))
         .collect::<BinaryHeap<Reverse<(Int, (usize, usize))>>>();
 
-    let mut circuit_map = (0..input.len()).collect::<Vec<usize>>();
-    let mut circuits: HashMap<usize, Vec<usize>, _> = circuit_map
-        .iter()
-        .map(|&i| (i, vec![i]))
-        .collect::<HashMap<usize, Vec<usize>>>();
-    let mut cid = circuits.len();
+    let mut circuits = (0..input.len()).collect::<Vec<usize>>();
+    let mut circuits_len = circuits.len();
     for _ in 0..P1_LIM {
         if let Some(Reverse((_d, lr))) = dists.pop() {
-            cid = conn(cid, &mut circuits, &mut circuit_map, lr);
+            if conn(&mut circuits, lr) {
+                circuits_len -= 1;
+            }
         } else {
             panic!("Not enough junctions to connect!");
         }
     }
 
     // part1
-    let mut x = circuits
-        .values()
-        .map(|c| c.len())
-        .collect::<BinaryHeap<_>>();
+    let mut hist = vec![0; circuits.len()];
+    circuits.iter().for_each(|&c| hist[c] += 1);
+    hist.sort_unstable();
     let mut i = 0;
     let mut last = usize::MIN;
     let mut part1 = 1;
     while i < 3 {
-        if let Some(n) = x.pop()
+        if let Some(n) = hist.pop()
             && n != last
         {
             part1 *= n;
@@ -97,10 +78,12 @@ fn solve(input: &[[Int; 3]]) -> (usize, Int) {
 
     // part2
     let mut last = (0, 0);
-    while circuits.len() != 1 {
+    while circuits_len != 1 {
         if let Some(Reverse((_d, lr))) = dists.pop() {
             last = lr;
-            cid = conn(cid, &mut circuits, &mut circuit_map, lr);
+            if conn(&mut circuits, lr) {
+                circuits_len -= 1;
+            }
         } else {
             panic!("Not enough junctions to connect!");
         }
