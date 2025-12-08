@@ -55,7 +55,7 @@ fn parse_p2(i: &str, oplen: usize) -> Vec<Vec<Int>> {
         }
     }
     if !ret_t.is_empty() {
-        ret.push(std::mem::take(&mut ret_t));
+        ret.push(ret_t);
     }
     assert_eq!(ret.len(), oplen, "invalid column layout.");
     ret
