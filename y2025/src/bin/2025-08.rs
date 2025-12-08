@@ -74,7 +74,8 @@ fn solve(input: &[[Int; 3]]) -> (usize, Int) {
             panic!("Not enough junctions to connect!");
         }
     }
-    // println!("{circuits:?}\n{circuit_map:?}");
+
+    // part1
     let mut x = circuits
         .values()
         .map(|c| c.len())
