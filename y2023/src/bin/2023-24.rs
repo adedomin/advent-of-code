@@ -1,7 +1,7 @@
 use aoc_shared::{read_input, try_atoi, Token, Tokenize};
 use itertools::Itertools;
 use std::io;
-use z3::{ast::Ast, Solver};
+use z3::{ast::Int, Solver};
 
 #[derive(Debug)]
 struct Line {
@@ -115,17 +115,16 @@ fn solve2d(i: &[Line]) -> usize {
 }
 
 fn solve3d(i: Vec<Line>) -> Option<u64> {
-    let ctx = z3::Context::new(&z3::Config::new());
-    let solver = Solver::new(&ctx);
-    let x = z3::ast::Int::new_const(&ctx, "x");
-    let y = z3::ast::Int::new_const(&ctx, "y");
-    let z = z3::ast::Int::new_const(&ctx, "z");
-    let dx = z3::ast::Int::new_const(&ctx, "dx");
-    let dy = z3::ast::Int::new_const(&ctx, "dy");
-    let dz = z3::ast::Int::new_const(&ctx, "dz");
+    let solver = Solver::new();
+    let x = Int::fresh_const("x");
+    let y = Int::fresh_const("y");
+    let z = Int::fresh_const("z");
+    let dx = Int::fresh_const("dx");
+    let dy = Int::fresh_const("dy");
+    let dz = Int::fresh_const("dz");
     // time should be greater than zero and constrains the finder appropriately, otherwise
     // it will loop for some time.
-    let zero = z3::ast::Int::new_const(&ctx, 0);
+    let zero = Int::from(0);
     i.into_iter().enumerate().for_each(
         |(
             pos,
@@ -138,14 +137,14 @@ fn solve3d(i: Vec<Line>) -> Option<u64> {
                 vz,
             },
         )| {
-            let ti = z3::ast::Int::new_const(&ctx, format!("t{pos}"));
+            let ti = Int::fresh_const(&format!("t{pos}"));
             let vx_dx = vx + &dx;
             let vy_dy = vy + &dy;
             let vz_dz = vz + &dz;
-            solver.assert(&ti.ge(&zero));
-            solver.assert(&(px + &ti * vx_dx)._eq(&x));
-            solver.assert(&(py + &ti * vy_dy)._eq(&y));
-            solver.assert(&(pz + &ti * vz_dz)._eq(&z));
+            solver.assert(ti.ge(&zero));
+            solver.assert((px + &ti * vx_dx).eq(&x));
+            solver.assert((py + &ti * vy_dy).eq(&y));
+            solver.assert((pz + &ti * vz_dz).eq(&z));
         },
     );
     match solver.check() {

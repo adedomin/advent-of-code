@@ -5,3 +5,4 @@ edition = "2024"
 
 [dependencies]
 aoc-shared = { path = "../aoc-shared" }
+z3 = { version = "0.19" }
