@@ -36,19 +36,20 @@ fn parse_input(i: &str) -> (Vec<(u64, u64)>, Vec<u64>) {
 fn main() -> io::Result<()> {
     let input = read_input_to_string()?;
     let (ranges, ids) = parse_input(input.trim());
-    let part1 = {
-        let mut ri = 0;
-        ids.iter().fold(0, |acc, id| {
-            while let Some((s, e)) = ranges.get(ri) {
-                if id <= e {
-                    return acc + u64::from(s <= id);
-                } else {
-                    ri += 1;
-                }
+    let mut part1 = 0;
+    let mut ri = 0;
+    'out: for id in ids {
+        while let Some(&(s, e)) = ranges.get(ri) {
+            if id <= e {
+                part1 += u64::from(s <= id);
+                continue 'out;
+            } else {
+                ri += 1;
             }
-            acc
-        })
-    };
+        }
+        // no more ranges, moot to check further.
+        break 'out;
+    }
     let part2 = ranges.iter().map(|(s, e)| e - s + 1).sum::<u64>();
     println!("Part1 {part1}  Part2 {part2}");
     Ok(())

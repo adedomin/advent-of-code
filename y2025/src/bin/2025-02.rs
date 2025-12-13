@@ -53,21 +53,17 @@ fn solve(input: &[(Int, Int)], range: &[(u32, Int)], dupes: &mut HashSet<Int>) -
     let mut i = 0;
     let mut acc = 0;
     'out: for r in repeating(range) {
-        loop {
-            if let Some(&(s, e)) = input.get(i) {
-                if r <= e {
-                    if s <= r && dupes.insert(r) {
-                        acc += r
-                    }
-                    continue 'out;
-                } else if r > e {
-                    i += 1;
+        while let Some(&(s, e)) = input.get(i) {
+            if r <= e {
+                if s <= r && dupes.insert(r) {
+                    acc += r
                 }
-            } else {
-                // no more ranges.
-                break 'out;
+                continue 'out;
+            } else if r > e {
+                i += 1;
             }
         }
+        break 'out;
     }
     acc
 }
