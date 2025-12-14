@@ -1,4 +1,4 @@
-use std::{collections::HashMap, io};
+use std::{collections::HashMap, io, vec::Vec};
 
 use aoc_shared::read_input_to_string;
 
@@ -33,7 +33,7 @@ fn parse_input(i: &str) -> (Vec<Vec<usize>>, Option<[usize; 3]>) {
             })
             .collect::<Vec<_>>();
         if pathmap.len() <= slot_idx {
-            pathmap.resize_with(slot_idx + 1, std::vec::Vec::new);
+            pathmap.resize_with(slot_idx + 1, Vec::default);
         }
         pathmap[slot_idx].extend(paths);
     });
@@ -42,7 +42,7 @@ fn parse_input(i: &str) -> (Vec<Vec<usize>>, Option<[usize; 3]>) {
     let fft = idmap.get(FFT);
     // if out is the last label
     if pathmap.len() < idmap.len() {
-        pathmap.resize_with(idmap.len(), std::vec::Vec::new);
+        pathmap.resize_with(idmap.len(), Vec::default);
     }
     let p2_indicies = match (svr, dac, fft) {
         (Some(s), Some(d), Some(f)) => Some([*s, *d, *f]),
