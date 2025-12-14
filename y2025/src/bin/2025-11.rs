@@ -103,7 +103,6 @@ fn recurse_paths2(
 
 fn solve2(pathmap: &[Vec<usize>], svr: usize, dac: usize, fft: usize) -> usize {
     let mut memo = vec![None; pathmap.len()];
-    println!("{svr}, {dac}, {fft}, {pathmap:?}");
     recurse_paths2(&mut memo, pathmap, svr, dac, fft, [false; 2])
 }
 
