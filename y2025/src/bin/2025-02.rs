@@ -51,12 +51,11 @@ fn repeating(pat: &[(u32, Int)]) -> impl Iterator<Item = Int> {
 
 fn solve(input: &[(Int, Int)], range: &[(u32, Int)], dupes: &mut HashSet<Int>) -> Int {
     let mut i = 0;
-    let mut acc = 0;
     'out: for r in repeating(range) {
         while let Some(&(s, e)) = input.get(i) {
             if r <= e {
-                if s <= r && dupes.insert(r) {
-                    acc += r
+                if s <= r {
+                    dupes.insert(r);
                 }
                 continue 'out;
             } else if r > e {
@@ -65,7 +64,7 @@ fn solve(input: &[(Int, Int)], range: &[(u32, Int)], dupes: &mut HashSet<Int>) -
         }
         break 'out;
     }
-    acc
+    dupes.iter().sum()
 }
 
 fn main() -> io::Result<()> {
@@ -75,7 +74,7 @@ fn main() -> io::Result<()> {
     // the part2 ranges overlap slightly.
     let mut dupes = HashSet::new();
     let part1 = solve(&input, &PATS_1, &mut dupes);
-    let part2 = solve(&input, &PATS_2, &mut dupes) + part1;
+    let part2 = solve(&input, &PATS_2, &mut dupes);
     println!("Part1 {part1}  Part2 {part2}");
     Ok(())
 }
