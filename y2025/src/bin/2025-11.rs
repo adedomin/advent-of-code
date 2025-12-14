@@ -78,7 +78,6 @@ fn recurse_paths2(
     fft: usize,
     mut seen: [bool; 2],
 ) -> usize {
-    println!("{curr}:{seen:?}");
     if pathmap[curr].is_empty() {
         return usize::from(seen == [true; 2]);
     } else if let Some((v, s)) = memo[curr]
