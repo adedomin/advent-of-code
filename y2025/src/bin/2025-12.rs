@@ -9,15 +9,15 @@ fn parse_solve(input: &str) -> usize {
         .take_while(|line| !line.is_empty())
         .filter(|line| {
             let mut iter = line.split([':', ' ']);
-            let (x, y) = iter
+            let (w, h) = iter
                 .next()
                 .expect("counts: AxB")
                 .split_once('x')
                 .expect("AxB");
-            let x = x.parse::<u32>().expect("valid num");
-            let y = y.parse::<u32>().expect("valid num");
-            let areas = iter.flat_map(|n| n.parse::<u32>().ok()).sum::<u32>();
-            x * y / 8 > areas
+            let w = w.parse::<u32>().expect("valid num");
+            let h = h.parse::<u32>().expect("valid num");
+            let sum_pres = iter.flat_map(|n| n.parse::<u32>().ok()).sum::<u32>();
+            w * h / 8 > sum_pres
         })
         .count()
 }
