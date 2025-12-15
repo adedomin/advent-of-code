@@ -27,16 +27,20 @@ fn parse_input(i: &str) -> (HashMap<&str, usize>, Vec<Vec<usize>>) {
     (idmap, pathmap2)
 }
 
+const NONE_SEEN: u8 = 0;
+const DAC_SEEN: u8 = 0b1;
+const FFT_SEEN: u8 = 0b10;
+const DACFFT_SEEN: u8 = 0b11;
+
 fn recurse_paths2(
-    memo: &mut [Option<(usize, [bool; 2])>],
+    memo: &mut [Option<(usize, u8)>],
     pathmap: &[Vec<usize>],
     curr: usize,
-    dac: usize,
-    fft: usize,
-    mut seen: [bool; 2],
+    [dac, fft]: [usize; 2],
+    mut seen: u8,
 ) -> usize {
     if pathmap[curr].is_empty() {
-        return usize::from(seen == [true; 2]);
+        return usize::from(seen == DACFFT_SEEN);
     } else if let Some((v, s)) = memo[curr]
         && s == seen
     {
@@ -44,14 +48,14 @@ fn recurse_paths2(
     }
 
     if curr == dac {
-        seen[0] = true;
+        seen |= DAC_SEEN;
     } else if curr == fft {
-        seen[1] = true;
+        seen |= FFT_SEEN;
     }
 
     let ret = pathmap[curr]
         .iter()
-        .map(|p| recurse_paths2(memo, pathmap, *p, dac, fft, seen))
+        .map(|p| recurse_paths2(memo, pathmap, *p, [dac, fft], seen))
         .sum();
     memo[curr] = Some((ret, seen));
     ret
@@ -59,12 +63,12 @@ fn recurse_paths2(
 
 fn solve(pathmap: &[Vec<usize>], start: usize) -> usize {
     let mut memo = vec![None; pathmap.len()];
-    recurse_paths2(&mut memo, pathmap, start, usize::MAX, usize::MAX, [true; 2])
+    recurse_paths2(&mut memo, pathmap, start, [usize::MAX; 2], DACFFT_SEEN)
 }
 
 fn solve2(pathmap: &[Vec<usize>], svr: usize, dac: usize, fft: usize) -> usize {
     let mut memo = vec![None; pathmap.len()];
-    recurse_paths2(&mut memo, pathmap, svr, dac, fft, [false; 2])
+    recurse_paths2(&mut memo, pathmap, svr, [dac, fft], NONE_SEEN)
 }
 
 fn main() -> io::Result<()> {
