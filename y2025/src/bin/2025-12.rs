@@ -9,11 +9,7 @@ fn parse_solve(input: &str) -> usize {
         .take_while(|line| !line.is_empty())
         .filter(|line| {
             let mut iter = line.split([':', ' ']);
-            let (w, h) = iter
-                .next()
-                .expect("counts: AxB")
-                .split_once('x')
-                .expect("AxB");
+            let (w, h) = iter.next().expect("WxH").split_once('x').expect("WxH");
             let w = w.parse::<u32>().expect("valid num");
             let h = h.parse::<u32>().expect("valid num");
             let sum_pres = iter.flat_map(|n| n.parse::<u32>().ok()).sum::<u32>();
