@@ -1,4 +1,4 @@
-use aoc_shared::{array_windows, fold_decimal_from, read_input_to_string};
+use aoc_shared::{fold_decimal_from, read_input_to_string};
 use std::io;
 
 type Output = Vec<Vec<Solved>>;
@@ -31,7 +31,9 @@ fn is_safe(report: &[i32], part2: bool) -> bool {
     } else {
         panic!("Invalid report, must have at least 2 numbers");
     };
-    let itr = array_windows(report).position(|&[l, r]| !safe_distance(l, r, sign));
+    let itr = report
+        .array_windows()
+        .position(|&[l, r]| !safe_distance(l, r, sign));
     match itr {
         Some(i) if part2 => (i.saturating_sub(1)..i + 2).any(|i| {
             let (l, r) = report.split_at(i);
@@ -48,7 +50,7 @@ fn is_safe(report: &[i32], part2: bool) -> bool {
                     .expect("Two numbers should be in this report???")
                     .signum();
                 let check_break = l.last().is_none_or(|&ll| safe_distance(ll, r[0], sign));
-                let rem = array_windows(r).all(|&[l, r]| safe_distance(l, r, sign));
+                let rem = r.array_windows().all(|&[l, r]| safe_distance(l, r, sign));
                 check_break && rem
             }
         }),

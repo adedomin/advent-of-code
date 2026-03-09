@@ -1,10 +1,11 @@
-use aoc_shared::{array_windows, parse_to_flat2d, read_input, FlatVec2D};
+use aoc_shared::{parse_to_flat2d, read_input, FlatVec2D};
 use std::io;
 
 // find geometric median, input is sorted by order of traversal.
 fn geomed(points: &[i64]) -> i64 {
     let max = points.len() as i64;
-    array_windows(points)
+    points
+        .array_windows()
         .enumerate()
         .map(|(p, [xy1, xy2])| {
             let pos = p as i64;

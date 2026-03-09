@@ -1,6 +1,6 @@
 use std::io;
 
-use aoc_shared::{array_windows, read_input_to_string};
+use aoc_shared::read_input_to_string;
 
 type Int = i64;
 type Point = (Int, Int);
@@ -30,7 +30,8 @@ fn to_lines(input: &[Point]) -> Vec<(Point, Point)> {
     let mut iclone = input.to_vec();
     // add trailer to complete the poly
     iclone.push(iclone[0]);
-    array_windows(&iclone)
+    iclone
+        .array_windows()
         .map(|&[p1, p2]| order_tup(p1, p2))
         .collect::<Vec<_>>()
 }

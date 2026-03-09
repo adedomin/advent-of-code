@@ -1,4 +1,4 @@
-use aoc_shared::{array_windows, fold_decimal, read_input, RecordGrouper, Sentinel, Token};
+use aoc_shared::{fold_decimal, read_input, RecordGrouper, Sentinel, Token};
 use std::{collections::HashSet, io};
 
 fn plot_line((x1, y1): (i64, i64), (x2, y2): (i64, i64)) -> impl Iterator<Item = (i64, i64)> {
@@ -142,7 +142,8 @@ fn parse_input(input: &[u8]) -> ParticleMap {
                 .0
         })
         .flat_map(|coords| {
-            array_windows(&coords)
+            coords
+                .array_windows()
                 .flat_map(|&[start, end]| plot_line(start, end))
                 .collect::<Vec<(i64, i64)>>()
         })

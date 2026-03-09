@@ -50,9 +50,9 @@ const LHS_TERM: u8 = 255;
 fn parse_input2<'a>(replace: &[Replacer<'a>], molecule: &'a [u8]) -> (Vec<u8>, Vec<u8>) {
     let mut last = 0u8;
     let mut tok_list: HashMap<&[u8], u8> =
-        HashMap::from_iter(replace.iter().cloned().map(|Replacer(find, _)| {
+        HashMap::from_iter(replace.iter().map(|Replacer(find, _)| {
             last += 1;
-            (find, last)
+            (*find, last)
         }));
 
     // I don't feel like building my own.

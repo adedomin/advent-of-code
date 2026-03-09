@@ -17,8 +17,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-mod array_window;
-pub use array_window::*;
 mod tokenizer;
 pub use tokenizer::*;
 mod flat2d;

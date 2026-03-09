@@ -1,4 +1,4 @@
-use aoc_shared::{array_windows, debug, read_input};
+use aoc_shared::{debug, read_input};
 use std::{collections::HashSet, io};
 
 const VOWELS: &[u8] = b"aeiou";
@@ -9,7 +9,8 @@ fn good_word(word: &[u8]) -> bool {
     }
 
     let vowels_cnt = word.iter().filter(|&chr| VOWELS.contains(chr)).count() > 2;
-    let double_letters = array_windows(word)
+    let double_letters = word
+        .array_windows()
         .try_fold(false, |acc, &[a, b]| {
             if matches!(
                 (a, b),
@@ -37,7 +38,7 @@ fn good_word_p2(word: &[u8]) -> bool {
         return false;
     }
 
-    let (_, duplicates, _) = array_windows(word).fold(
+    let (_, duplicates, _) = word.array_windows().fold(
         (HashSet::new(), HashSet::new(), None),
         |(mut uniq, mut dups, last), &[a, b]| {
             // we have to reject overlapping pair
@@ -63,7 +64,7 @@ fn good_word_p2(word: &[u8]) -> bool {
 
     // detects xyx where *x* is separated by one char. this applies to aaa as well, where the separator
     // is identical.
-    let split_pairs = array_windows(word).filter(|&[a, _, c]| a == c).count();
+    let split_pairs = word.array_windows().filter(|&[a, _, c]| a == c).count();
 
     debug!(
         "duplicates: {duplicates} > 0 && split_pairs: {split_pairs} > 0 ; word: {}",

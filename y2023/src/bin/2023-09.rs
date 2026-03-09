@@ -1,4 +1,4 @@
-use aoc_shared::{array_windows, atoi, read_input, Token, Tokenize};
+use aoc_shared::{atoi, read_input, Token, Tokenize};
 use itertools::Itertools;
 use std::io;
 
@@ -62,7 +62,9 @@ impl<T: num::Integer + Clone + Copy> Iterator for Triangles<T> {
             self.first = false;
             Some((self.degree, self.last.clone()))
         } else {
-            self.last = array_windows(&self.last)
+            self.last = self
+                .last
+                .array_windows()
                 .map(|&[l, r]| r - l)
                 .collect::<Vec<_>>();
             self.degree += 1;

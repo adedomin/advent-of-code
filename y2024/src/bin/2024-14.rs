@@ -1,4 +1,4 @@
-use aoc_shared::{array_windows, read_input_to_string, FlatVec2D};
+use aoc_shared::{read_input_to_string, FlatVec2D};
 use itertools::Itertools;
 use std::io;
 
@@ -76,9 +76,12 @@ fn part1_sol(input: &Output) -> Int {
 ///
 /// If pixels are neatly together in some fashion, it's assumed the picture distortion is *low*.
 fn calc_disorder(picture: &FlatVec2D<bool>) -> (f64, f64, f64) {
-    let (mis, set) = array_windows(&picture.0).fold((0f64, 0f64), |(mis, set), [l, r]| {
-        (mis + f64::from(l != r), set + f64::from(*l))
-    });
+    let (mis, set) = picture
+        .0
+        .array_windows()
+        .fold((0f64, 0f64), |(mis, set), [l, r]| {
+            (mis + f64::from(l != r), set + f64::from(*l))
+        });
     // there has to be at least one set pixel (>0)
     (mis / set, mis, set)
 }

@@ -1,4 +1,4 @@
-use aoc_shared::{array_windows, read_input};
+use aoc_shared::read_input;
 use std::io;
 
 const START_OF_HEAD_OFF: usize = 4;
@@ -21,12 +21,14 @@ macro_rules! ne_for_all_permut {
 
 fn main() -> io::Result<()> {
     let input = read_input()?;
-    let part1 = array_windows(&input)
+    let part1 = input
+        .array_windows()
         .position(|[a, b, c, d]| ne_for_all_permut!(a, b, c, d))
         .expect("No start of packet found")
         + START_OF_HEAD_OFF;
 
-    let part2 = array_windows(&input)
+    let part2 = input
+        .array_windows()
         .position(|[a, b, c, d, e, f, g, h, i, j, k, l, m, n]| {
             ne_for_all_permut!(a, b, c, d, e, f, g, h, i, j, k, l, m, n)
         })

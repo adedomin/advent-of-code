@@ -3,17 +3,12 @@ use std::{collections::HashMap, io};
 
 type Output = FlatVec2D<Rocks>;
 
-#[derive(Clone, Copy, Eq, PartialEq, Hash)]
+#[derive(Clone, Copy, Default, Eq, PartialEq, Hash)]
 enum Rocks {
     Rounded,
     Square,
+    #[default]
     Empty,
-}
-
-impl Default for Rocks {
-    fn default() -> Self {
-        Self::Empty
-    }
 }
 
 impl From<u8> for Rocks {

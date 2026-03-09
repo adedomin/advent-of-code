@@ -1,4 +1,4 @@
-use aoc_shared::{array_windows, pad_to_flat2d, read_input, FlatVec2D};
+use aoc_shared::{pad_to_flat2d, read_input, FlatVec2D};
 
 use std::{fmt::Write, io};
 
@@ -138,7 +138,8 @@ fn solve(grid: &FlatVec2D<Pipe>) -> (i64, i64) {
     }
 
     // shoelace algorithm - (perimiter / 2) since this is a "closed" polygon the perimeter does not count towards area.
-    let area = array_windows(&area)
+    let area = area
+        .array_windows()
         .map(|&[(x1, y1), (x2, y2)]| x1 * y2 - x2 * y1)
         .sum::<i64>()
         .abs()

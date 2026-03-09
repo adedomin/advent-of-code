@@ -1,4 +1,4 @@
-use aoc_shared::{array_windows, fold_decimal_from, read_input_to_string};
+use aoc_shared::{fold_decimal_from, read_input_to_string};
 use std::io;
 
 type Output = Vec<i64>;
@@ -14,7 +14,8 @@ fn parse_input(input: &str) -> Output {
 }
 
 fn part1_sol(input: &Output) -> Solved {
-    *array_windows::<_, PREAMBLE>(input)
+    *input
+        .array_windows::<PREAMBLE>()
         .find(|nums| {
             let (preamble, last) = nums.split_at(PREAMBLE - 1);
             !preamble

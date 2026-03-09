@@ -1,4 +1,4 @@
-use aoc_shared::{array_windows, destructure_or_none, read_input, Token, Tokenize};
+use aoc_shared::{destructure_or_none, read_input, Token, Tokenize};
 use std::io;
 
 fn parse_input_1(input: &[u8]) -> i32 {
@@ -73,12 +73,14 @@ fn parse_input_2(input: &[u8]) -> i32 {
             word_pad.extend(word);
             word_pad.extend([0u8; 4]);
             let w1 = extract_num(
-                array_windows(&word_pad)
+                word_pad
+                    .array_windows()
                     .find(|w| extract_num(w) != 10)
                     .expect("to find one number"),
             );
             let w2 = extract_num_back(
-                array_windows(&word_pad)
+                word_pad
+                    .array_windows()
                     .rfind(|w| extract_num_back(w) != 10)
                     .unwrap(),
             );
