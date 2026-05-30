@@ -101,12 +101,10 @@ fn find_match(lhs: &[Scanner], rhs: &[Scanner]) -> Option<(Scanner, Vec<Scanner>
         for &rbeacon in rhs {
             for (rot_idx, &rot) in gen_rot_vector(rbeacon).iter().enumerate() {
                 let slope = manhattan_slope(lbeacon, rot);
-                match slope_maps.get_mut(&slope) {
-                    Some(slope) => slope.incr(),
-                    None => {
-                        slope_maps.insert(slope, MatchKind { count: 1, rot_idx });
-                    }
-                }
+                slope_maps
+                    .entry(slope)
+                    .or_insert(MatchKind { count: 0, rot_idx })
+                    .incr();
             }
         }
     }
