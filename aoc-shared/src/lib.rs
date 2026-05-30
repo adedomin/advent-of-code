@@ -154,28 +154,3 @@ pub fn advanced_cli() -> (Vec<u8>, Option<impl Write>, HashMap<String, String>) 
         (buf, w, o)
     }
 }
-
-pub enum Sentinel<T> {
-    Unset(T),
-    Value(T),
-}
-
-impl<T> Sentinel<T> {
-    pub fn map<F: FnOnce(&T) -> T>(&self, fun: F) -> Sentinel<T> {
-        match self {
-            Sentinel::Unset(v) => Sentinel::Value(fun(v)),
-            Sentinel::Value(v) => Sentinel::Value(fun(v)),
-        }
-    }
-
-    pub fn map_mv<F: FnOnce(T)>(self, fun: F) {
-        match self {
-            Sentinel::Unset(v) => fun(v),
-            Sentinel::Value(v) => fun(v),
-        }
-    }
-
-    pub fn is_unset(&self) -> bool {
-        matches!(self, Sentinel::Unset(_))
-    }
-}

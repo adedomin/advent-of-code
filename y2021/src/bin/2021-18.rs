@@ -333,15 +333,7 @@ fn parse(input: Vec<u8>) -> Vec<Snailnum> {
                 i += 1;
                 nodes.push(Snailnum::default());
             }
-            Token::End => {
-                if nodes
-                    .last()
-                    .expect("Expected at least one Snailnum.")
-                    .is_empty()
-                {
-                    nodes.pop();
-                }
-            }
+            Token::End => _ = nodes.pop_if(|v| v.is_empty()),
             _ => (),
         }
     }
@@ -384,7 +376,7 @@ fn solve(snails: &[Snailnum]) -> (u64, u64) {
 pub fn main() -> io::Result<()> {
     let input = read_input()?;
     let parsed = parse(input);
-    let sum = solve(&parsed);
-    println!("Part1 {:?}", sum);
+    let (p1, p2) = solve(&parsed);
+    println!("Part1 {}, Part2 {}", p1, p2);
     Ok(())
 }

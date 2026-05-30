@@ -72,31 +72,17 @@ fn main() -> io::Result<()> {
     let input = read_input()?;
     let parsed_input = parse_input(&input);
     let part1 = parsed_input
-        .iter()
-        .by_ref()
-        .filter_map(|(_, sizeof)| {
-            if *sizeof > 100_000 {
-                None
-            } else {
-                Some(sizeof)
-            }
-        })
+        .values()
+        .filter(|&&sizeof| sizeof <= 100_000)
         .sum::<usize>();
 
     let rootfs: Vec<&[u8]> = vec![b"/"];
     let fs_used = *parsed_input.get(&rootfs).expect("no root directory");
     let fs_used = FS_AVAIL - fs_used;
     let target = fs_used.abs_diff(FS_TARGET);
-
     let part2 = parsed_input
-        .iter()
-        .filter_map(|(_, sizeof)| {
-            if target <= *sizeof {
-                Some(*sizeof)
-            } else {
-                None
-            }
-        })
+        .values()
+        .filter_map(|&sizeof| (target <= sizeof).then_some(sizeof))
         .min()
         .expect("No single directory big enough to meet filesystem free space goals.");
 

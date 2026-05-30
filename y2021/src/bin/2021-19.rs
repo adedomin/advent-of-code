@@ -3,54 +3,29 @@ use std::{
     io,
 };
 
-use aoc_shared::{fold_decimal, read_input, AoCTokenizer, Token};
+use aoc_shared::read_input_to_string;
 use itertools::Itertools;
 
 type Scanner = (i32, i32, i32);
 
-fn parse(input: Vec<u8>) -> Vec<Vec<Scanner>> {
+fn parse(input: &str) -> Vec<Vec<Scanner>> {
     let mut ret = vec![];
-    let mut curr_scanner = vec![];
-    let mut neg = false;
-    let mut xyz = [0i32; 3];
-    let mut xyz_p = 0usize;
-    let mut is_scan = false;
-
-    for token in AoCTokenizer::new(&input) {
-        match token {
-            Token::Something(scan_delim) if scan_delim == b"scanner" => {
-                if !curr_scanner.is_empty() {
-                    ret.push(curr_scanner);
-                    curr_scanner = vec![];
-                }
-                is_scan = true;
+    let mut scanner = vec![];
+    input.lines().for_each(|line| {
+        let split = line
+            .split(',')
+            .flat_map(|s| s.trim().parse::<i32>().ok())
+            .collect::<Vec<i32>>();
+        if split.len() != 3 {
+            if !scanner.is_empty() {
+                ret.push(std::mem::take(&mut scanner));
             }
-            Token::Something(num) if !is_scan => {
-                let num = num.iter().fold(0i32, fold_decimal);
-                let num = if neg { -num } else { num };
-                xyz[xyz_p] = num;
-                xyz_p += 1;
-                neg = false;
-            }
-            Token::Delimiter(neg_del) => neg = neg_del == b'-',
-            Token::Newline if xyz_p == 3 => {
-                curr_scanner.push((xyz[0], xyz[1], xyz[2]));
-                neg = false;
-                xyz_p = 0usize;
-            }
-            Token::Newline => {
-                neg = false;
-                xyz_p = 0usize;
-                is_scan = false;
-            }
-            Token::End => {
-                if !curr_scanner.is_empty() {
-                    ret.push(curr_scanner);
-                    curr_scanner = vec![];
-                }
-            }
-            _ => (),
+            return;
         }
+        scanner.push((split[0], split[1], split[2]));
+    });
+    if !scanner.is_empty() {
+        ret.push(std::mem::take(&mut scanner));
     }
     ret
 }
@@ -163,15 +138,13 @@ fn solve(sensor_readings: Vec<Vec<Scanner>>) -> (i32, u32) {
     let mut next_round = VecDeque::from_iter(sensor_readings);
     let mut scanners = vec![(0, 0, 0)];
     let mut start = next_round.pop_front().unwrap();
-    while !next_round.is_empty() {
-        while let Some(cmp) = next_round.pop_front() {
-            if let Some((scanner, found)) = find_match(&start, &cmp) {
-                scanners.push(scanner);
-                start = found;
-                break;
-            } else {
-                next_round.push_back(cmp);
-            }
+    while let Some(cmp) = next_round.pop_front() {
+        if let Some((scanner, found)) = find_match(&start, &cmp) {
+            scanners.push(scanner);
+            start = found;
+            continue;
+        } else {
+            next_round.push_back(cmp);
         }
     }
     let p2 = scanners
@@ -189,8 +162,8 @@ fn solve(sensor_readings: Vec<Vec<Scanner>>) -> (i32, u32) {
 }
 
 pub fn main() -> io::Result<()> {
-    let input = read_input()?;
-    let sensor_readings = parse(input);
+    let input = read_input_to_string()?;
+    let sensor_readings = parse(&input);
     let (p1, p2) = solve(sensor_readings);
     println!("Part1 {}, Part2 {}", p1, p2);
     Ok(())

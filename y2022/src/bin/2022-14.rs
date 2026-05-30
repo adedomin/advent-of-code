@@ -1,4 +1,4 @@
-use aoc_shared::{fold_decimal, read_input, RecordGrouper, Sentinel, Token};
+use aoc_shared::{fold_decimal, read_input, RecordGrouper, Token};
 use std::{collections::HashSet, io};
 
 fn plot_line((x1, y1): (i64, i64), (x2, y2): (i64, i64)) -> impl Iterator<Item = (i64, i64)> {
@@ -124,21 +124,19 @@ fn parse_input(input: &[u8]) -> ParticleMap {
         .map(|token_grp| {
             token_grp
                 .iter()
-                .fold(
-                    (Vec::new(), Sentinel::Unset(0)),
-                    |(mut acc, xcoord), token| match token {
-                        Token::Something(num) if xcoord.is_unset() => {
-                            (acc, Sentinel::Value(num.iter().fold(0i64, fold_decimal)))
-                        }
-                        Token::Something(num) => {
-                            xcoord.map_mv(|xcoord| {
-                                acc.push((xcoord, num.iter().fold(0i64, fold_decimal)));
-                            });
-                            (acc, Sentinel::Unset(0))
-                        }
-                        _ => (acc, xcoord),
-                    },
-                )
+                .fold((Vec::new(), None), |(mut acc, xcoord), token| match token {
+                    Token::Something(num) => {
+                        let num = num.iter().fold(0i64, fold_decimal);
+                        let xcoord = if let Some(xc) = xcoord {
+                            acc.push((xc, num));
+                            None
+                        } else {
+                            Some(num)
+                        };
+                        (acc, xcoord)
+                    }
+                    _ => (acc, xcoord),
+                })
                 .0
         })
         .flat_map(|coords| {
