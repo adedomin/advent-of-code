@@ -104,7 +104,7 @@ fn parse_input(input: &[u8]) -> (DesertMachine, InverseMap) {
         let (i, label) = match ty {
             CType::Broadcast(_) => {
                 let (i, _) = tag(b"broadcaster")(i)?;
-                (i, [b'Z', b'Z'])
+                (i, *b"ZZ")
             }
             CType::FlipFlop(_) | CType::Conjunction(_) => {
                 let (i, label) = take_while1(is_alphabetic)(i)?;
@@ -162,9 +162,9 @@ fn parse_input(input: &[u8]) -> (DesertMachine, InverseMap) {
     (DesertMachine { state, edges }, inverse_map)
 }
 
-const BROADCAST: Label = [b'Z', b'Z'];
-const BUTTON: Label = [b'Z', b'Y'];
-const RX: Label = [b'r', b'x'];
+const BROADCAST: Label = *b"ZZ";
+const BUTTON: Label = *b"ZY";
+const RX: Label = *b"rx";
 
 fn cycle(input: &mut DesertMachine, checked: &[Label]) -> (u64, u64, Vec<bool>) {
     let mut low = 0u64;
