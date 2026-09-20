@@ -174,12 +174,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "itoa"
-version = "1.0.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "af150ab688ff2122fcef229be89cb50dd66af9e01a4ff320cc137eecc9bacc38"
-
-[[package]]
 name = "libc"
 version = "0.2.151"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -535,7 +529,6 @@ version = "0.1.0"
 dependencies = [
  "aoc-shared",
  "itertools 0.12.0",
- "itoa",
  "md5",
  "num",
  "rayon",
@@ -586,7 +579,6 @@ dependencies = [
  "aoc-shared",
  "bitvec",
  "itertools 0.12.0",
- "itoa",
  "nom",
  "num",
  "z3",

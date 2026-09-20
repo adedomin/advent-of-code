@@ -1,4 +1,5 @@
 use aoc_shared::read_input;
+use core::fmt::NumBuffer;
 use itertools::Itertools;
 use std::io;
 
@@ -15,8 +16,8 @@ fn main() -> io::Result<()> {
             .iter()
             .dedup_with_count()
             .flat_map(|(count, el)| {
-                let mut b = itoa::Buffer::new();
-                let mut b = b.format(count).as_bytes().to_owned();
+                let mut b = NumBuffer::new();
+                let mut b = count.format_into(&mut b).as_bytes().to_owned();
                 b.push(*el);
                 b
             })
@@ -30,8 +31,8 @@ fn main() -> io::Result<()> {
             .iter()
             .dedup_with_count()
             .flat_map(|(count, el)| {
-                let mut b = itoa::Buffer::new();
-                let mut b = b.format(count).as_bytes().to_owned();
+                let mut b = NumBuffer::new();
+                let mut b = count.format_into(&mut b).as_bytes().to_owned();
                 b.push(*el);
                 b
             })

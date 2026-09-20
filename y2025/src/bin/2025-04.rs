@@ -21,13 +21,13 @@ impl From<u8> for Fork {
 fn solve(input: &FlatVec2D<Fork>, to_remove: &mut Vec<(usize, usize)>) -> usize {
     input
         .xyrange()
-        .filter(|&xy| matches!(input[xy], Fork::Paper))
         .filter(|&xy| {
-            input
-                .get_neigh_iter(xy)
-                .filter(|Neighbor(t, _, _)| matches!(t, Fork::Paper))
-                .count()
-                < 4
+            matches!(input[xy], Fork::Paper)
+                && input
+                    .get_neigh_iter(xy)
+                    .filter(|Neighbor(t, _, _)| matches!(t, Fork::Paper))
+                    .count()
+                    < 4
         })
         .inspect(|&xy| to_remove.push(xy))
         .count()

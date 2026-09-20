@@ -1,4 +1,5 @@
 use aoc_shared::{destructure_or_none, fold_decimal, read_input, try_atoi, GroupTokenize, Token};
+use core::fmt::NumBuffer;
 use std::io;
 
 type Output = Vec<(u64, u64)>;
@@ -58,17 +59,13 @@ fn main() -> io::Result<()> {
         .map(|&(cons, rec)| solve(cons, rec))
         .product::<u64>();
     let (constraint, record) = races.iter().fold((0, 0), |(cons, rec), &(c, r)| {
-        let mut b = itoa::Buffer::new();
-        let ci = b.format(c);
-        let mut b2 = itoa::Buffer::new();
-        let ri = b2.format(r);
+        let mut b = NumBuffer::new();
+        let ci = c.format_into(&mut b);
+        let mut b2 = NumBuffer::new();
+        let ri = r.format_into(&mut b2);
         (
-            ci.as_bytes()
-                .iter()
-                .fold(cons, fold_decimal),
-            ri.as_bytes()
-                .iter()
-                .fold(rec, fold_decimal),
+            ci.as_bytes().iter().fold(cons, fold_decimal),
+            ri.as_bytes().iter().fold(rec, fold_decimal),
         )
     });
     let part2 = solve(constraint, record);

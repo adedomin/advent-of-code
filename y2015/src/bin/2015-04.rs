@@ -5,8 +5,8 @@ use std::io;
 fn solve<const LEADING: usize>(key: &str) -> Option<u64> {
     let leading = [b'0'; LEADING];
     (0..u64::MAX).into_par_iter().find_first(|&num| {
-        let mut buffer = itoa::Buffer::new();
-        let postfix = buffer.format(num);
+        let mut buffer = core::fmt::NumBuffer::new();
+        let postfix = num.format_into(&mut buffer);
         let mut message = key.to_owned();
         message.push_str(postfix);
         let res = format!("{:?}", md5::compute(&message));

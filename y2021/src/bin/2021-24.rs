@@ -38,22 +38,6 @@ fn s_to_reg(s: &str) -> usize {
     }
 }
 
-fn add(a: Int, b: Int) -> Int {
-    a + b
-}
-
-fn mul(a: Int, b: Int) -> Int {
-    a * b
-}
-
-fn div(a: Int, b: Int) -> Int {
-    a / b
-}
-
-fn modu(a: Int, b: Int) -> Int {
-    a % b
-}
-
 fn eql(a: Int, b: Int) -> Int {
     (a == b) as Int
 }
@@ -68,11 +52,11 @@ fn parse_input(input: &str) -> Output {
                 ret.push((Input(lhs), vec![]));
                 continue;
             }
-            "add" => add,
-            "mul" => mul,
-            "div" => div,
-            "mod" => modu,
-            "eql" => eql,
+            "add" => std::ops::Add::add,
+            "mul" => std::ops::Mul::mul,
+            "div" => std::ops::Div::div,
+            "mod" => std::ops::Rem::rem,
+            "eql" => eql, // std::cmp::PartialEq::eq is int -> int -> bool, not int -> int -> int
             _ => panic!("invalid opcode"),
         };
 
