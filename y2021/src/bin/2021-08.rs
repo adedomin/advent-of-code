@@ -115,15 +115,19 @@ pub fn main() -> io::Result<()> {
         sets.len().is_multiple_of(14),
         "input is malformed; missing patterns."
     );
-    let (p1, p2) = sets.chunks_exact(14).fold((0, 0), |(p1, p2), segments| {
-        let (signal, digits) = segments.split_at(10);
-        (
-            p1 + digits.iter().fold(0, |acc, dig| {
-                acc + [2, 3, 4, 7].contains(&dig.count_ones()) as i32
-            }),
-            p2 + solve(signal, digits),
-        )
-    });
+    let (p1, p2) = sets
+        .as_chunks::<14>()
+        .0
+        .iter()
+        .fold((0, 0), |(p1, p2), segments| {
+            let (signal, digits) = segments.split_at(10);
+            (
+                p1 + digits.iter().fold(0, |acc, dig| {
+                    acc + [2, 3, 4, 7].contains(&dig.count_ones()) as i32
+                }),
+                p2 + solve(signal, digits),
+            )
+        });
     println!("Part1 {}, Part2 {}", p1, p2);
     Ok(())
 }
